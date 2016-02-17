@@ -1,2 +1,1 @@
-# lider-ahenk-network-inventory
-Lider Ahenk Network Inventory Plug-in
+# lider-console-network-inventory

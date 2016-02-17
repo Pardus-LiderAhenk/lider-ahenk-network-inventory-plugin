@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            id="tr.org.liderahenk.liderconsole.commands.category"
+            name="%category.name">
+      </category>         
+      <command
+            categoryId="tr.org.liderahenk.liderconsole.commands.category"
+            id="tr.org.liderahenk.liderconsole.commands.NetworkInventory"            
+            name="%command.name">
+      </command>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="tr.org.liderahenk.network.inventory.handlers.NetworkInventoryHandler"
+            commandId="tr.org.liderahenk.liderconsole.commands.NetworkInventory">
+			<enabledWhen>
+		       <and>
+		          <with
+		                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.available">
+		             <equals
+		                   value="true">
+		             </equals>
+		          </with>
+		          <with
+		                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.privilegesForSelectedItem">
+		             <iterate operator="or">
+		                <or>
+		                   <equals
+		                         value="ALL">
+		                   </equals>
+		                </or>
+		             </iterate>
+		          </with>
+		       </and>
+	    	</enabledWhen>
+      </handler>
+   </extension>
+   
+   <extension 
+   			point="org.eclipse.ui.menus">
+         <menuContribution
+            locationURI="menu:tr.org.liderahenk.liderconsole.menus.Lider?after=additions">
+            <command
+                  commandId="tr.org.liderahenk.liderconsole.commands.NetworkInventory"
+                  id="tr.org.liderahenk.liderconsole.command.NetworkInventory"
+                  icon="icons/networkInventory.png"
+                  tooltip="%command.name">
+				    <visibleWhen>
+				       <and>
+				          <with
+				                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.available">
+				             <equals
+				                   value="true">
+				             </equals>
+				          </with>
+				          <with
+				                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.privilegesForSelectedItem">
+				             <iterate operator="or">
+				                <or>
+				                   <equals
+				                         value="ALL">
+				                   </equals>
+				                </or>
+				             </iterate>
+				          </with>
+				       </and>
+				    </visibleWhen>
+            </command>
+      </menuContribution>
+         
+      <menuContribution
+            locationURI="toolbar:tr.org.liderahenk.liderconsole.toolbars.Lider?after=additions">
+            <command
+                  commandId="tr.org.liderahenk.liderconsole.commands.NetworkInventory"
+                  id="tr.org.liderahenk.liderconsole.command.NetworkInventory"
+                  icon="icons/networkInventory.png"
+                  tooltip="%command.name">
+					<visibleWhen>
+				       <and>
+				          <with
+				                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isEntrySelected">
+				             <equals
+				                   value="true">
+				             </equals>
+				          </with>
+				          <with
+				                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.privilegesForSelectedItem">
+				             <iterate operator="or">
+				                <or>
+				                   <equals
+				                         value="ALL">
+				                   </equals>
+				                </or>
+				             </iterate>
+				          </with>
+				       </and>
+				    </visibleWhen>                   
+            </command>             
+      </menuContribution> 
+  </extension>
+  
+ <extension
+     point="org.eclipse.ui.editors">
+      <editor
+            class="tr.org.liderahenk.network.inventory.editors.NetworkInventoryEditor"
+            icon="icons/networkInventory.png"
+            id="tr.org.liderahenk.network.inventory.editors.NetworkInventoryEditor"
+            name="%command.name">
+      </editor>  
+   </extension>
+</plugin>
