@@ -1,9 +1,10 @@
 package tr.org.liderahenk.network.inventory.commands;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
+import org.codehaus.jackson.map.ObjectMapper;
+import org.nmap4j.data.nmaprun.Host;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +14,8 @@ import tr.org.liderahenk.lider.core.api.plugin.ICommandContext;
 import tr.org.liderahenk.lider.core.api.plugin.ICommandResult;
 import tr.org.liderahenk.lider.core.api.plugin.ICommandResultFactory;
 import tr.org.liderahenk.lider.core.api.plugin.IPluginDbService;
+import tr.org.liderahenk.network.inventory.dto.NmapParametersDto;
+import tr.org.liderahenk.network.inventory.utils.network.NetworkUtils;
 
 /**
  * This class is responsible for scanning network and retrieving information
@@ -34,19 +37,53 @@ public class NetworkScanCommand extends BaseCommand {
 
 	@Override
 	public ICommandResult execute(ICommandContext context) {
-		
+
 		logger.debug("Executing command.");
-		
+
+		ArrayList<Host> hosts = null;
+
 		Map<String, Object> parameterMap = context.getRequest().getParameterMap();
-		
-		// TODO 
-		
-		ICommandResult commandResult = resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this,
-				new HashMap<String, Object>());
+		Boolean readLast = (Boolean) parameterMap.get("readLast");
+		// Find last network scan!
+		if (readLast != null && readLast.booleanValue()) {
+			// TODO
+		}
+		// New network scan.
+		else {
+
+			// Nmap parameters
+			ObjectMapper mapper = new ObjectMapper();
+			NmapParametersDto nmapParams = null;
+			try {
+				nmapParams = mapper.readValue(mapper.writeValueAsBytes(parameterMap.get("nmapParams")),
+						NmapParametersDto.class);
+			} catch (Exception e) {
+				logger.error(e.getMessage(), e);
+				ArrayList<String> messages = new ArrayList<String>();
+				messages.add("Couldn't find or parse nmap parameters. Please see error log for more details.");
+				return resultFactory.create(CommandResultStatus.ERROR, messages, this);
+			}
+			logger.debug("Nmap parameters: {}", nmapParams);
+
+			// TODO nmapParams, ip listesini thread'lere böl!
+			try {
+				hosts = NetworkUtils.scanNetwork(nmapParams.getIpRange(), nmapParams.getPorts(),
+						nmapParams.getSudoUsername(), nmapParams.getSudoPassword(), nmapParams.getTimingTemplate());
+			} catch (Exception e) {
+				logger.error(e.getMessage(), e);
+				ArrayList<String> messages = new ArrayList<String>();
+				messages.add("Couldn't scan network. Please see error log for more details.");
+				return resultFactory.create(CommandResultStatus.ERROR, messages, this);
+			}
+
+			logger.debug("Scan finished, found hosts: {}", hosts);
+
+			// TODO Save scan result to the database
+		}
 
 		logger.info("Command executed successfully.");
-		
-		return commandResult;
+
+		return resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this);
 	}
 
 	@Override

@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import junit.framework.TestCase;
-import tr.org.liderahenk.network.inventory.model.NmapParameters;
+import tr.org.liderahenk.network.inventory.dto.NmapParametersDto;
 import tr.org.liderahenk.network.inventory.utils.StringUtils;
 
 @RunWith(JUnit4.class)
@@ -41,7 +41,7 @@ public class NetworkUtilsTest extends TestCase {
 	
 	@Test
 	public void networkShouldBeScanned() throws IOException, InterruptedException {
-		NmapParameters params = new NmapParameters();
+		NmapParametersDto params = new NmapParametersDto();
 		ArrayList<String> ipList = new ArrayList<String>();
 		ipList.add("192.168.1.40");
 		ipList.add("192.168.1.41");

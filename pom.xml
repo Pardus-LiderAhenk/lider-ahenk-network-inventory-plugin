@@ -25,6 +25,7 @@
 		<checkstyle.maven.plugin.version>2.12</checkstyle.maven.plugin.version>
 		<java.version>1.6</java.version>
 		<junit.version>4.12</junit.version>
+		<mockito.version>1.10.19</mockito.version>
 		<log4j.version>1.2.17</log4j.version>
 		<slf4j.version>1.6.1</slf4j.version>
 		<lider.ahenk.version>1.0.0-SNAPSHOT</lider.ahenk.version>
@@ -32,6 +33,7 @@
 		<aries.blueprint.version>1.1.0</aries.blueprint.version>
 		<tycho.version>0.23.0</tycho.version>
 		<jsch.version>0.10</jsch.version>
+		<geronimo.jpa.version>1.1</geronimo.jpa.version>
 	</properties>
 
 	<licenses>
@@ -151,6 +153,11 @@
 				<artifactId>vngx-jsch</artifactId>
 				<version>${jsch.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>org.apache.geronimo.specs</groupId>
+				<artifactId>geronimo-jpa_2.0_spec</artifactId>
+				<version>${geronimo.jpa.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
@@ -221,6 +228,12 @@
 			<artifactId>junit</artifactId>
 			<version>${junit.version}</version>
 			<optional>true</optional>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>${mockito.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

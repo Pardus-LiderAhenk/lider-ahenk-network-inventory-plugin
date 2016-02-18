@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import tr.org.liderahenk.network.inventory.contants.Constants;
-import tr.org.liderahenk.network.inventory.model.NmapParameters;
 
 /**
  * Utility class which provides common network methods (such as
@@ -115,26 +114,26 @@ public class NetworkUtils {
 		return ipRanges;
 	}
 	
-	public static ArrayList<Host> scanNetwork(NmapParameters params) throws IOException, InterruptedException {
+	public static ArrayList<Host> scanNetwork(String ipRange, String ports, String sudoUsername, String sudoPassword, String timingTemplate) throws IOException, InterruptedException {
 		
-		logger.info("Scanning network with parameters: {}", params);
+		logger.debug("Scanning network with parameters IP range: {}, ports: {}, username: {}, timing template: {}", new Object[]{ ipRange, ports, sudoUsername, timingTemplate });
 
 		try {
 			
 			LiderNmap4j nmap = new LiderNmap4j(Constants.NMAP_CONFIG.NMAP_PATH);
-			nmap.includeHosts(params.getIpRange());
+			nmap.includeHosts(ipRange);
 			
 			// Build flags
 			StringBuilder flags = new StringBuilder(" -v ");
-			if (params.getPorts() != null && !params.getPorts().isEmpty()) {
-				flags.append(" -p ").append(params.getPorts());
+			if (ports != null && !ports.isEmpty()) {
+				flags.append(" -p ").append(ports);
 			}
-			if (params.getSudoPassword() != null && !params.getSudoPassword().isEmpty()) {
-				nmap.useSudo(params.getSudoUsername() == null ? "root" : params.getSudoUsername(), params.getSudoPassword());
+			if (sudoPassword != null && !sudoPassword.isEmpty()) {
+				nmap.useSudo(sudoUsername == null ? "root" : sudoUsername, sudoPassword);
 				flags.append(" -O --osscan-guess ");
 			}
-			if (params.getTimingTemplate() != null && !params.getTimingTemplate().isEmpty()) {
-				flags.append(" -T").append(params.getTimingTemplate()).append(" ");
+			if (timingTemplate != null && !timingTemplate.isEmpty()) {
+				flags.append(" -T").append(timingTemplate).append(" ");
 			}
 			nmap.addFlags(flags.toString());
 
