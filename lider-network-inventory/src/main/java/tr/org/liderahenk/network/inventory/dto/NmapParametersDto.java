@@ -8,7 +8,7 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import tr.org.liderahenk.network.inventory.utils.network.NetworkUtils;
 
 /**
- * Data transfer object for network mapper parameters.
+ * Data transfer object class for network mapper parameters.
  * 
  * @author <a href="mailto:emre.akkaya@agem.com.tr">Emre Akkaya</a>
  * @see tr.org.liderahenk.network.inventory.entities.ScanResult
