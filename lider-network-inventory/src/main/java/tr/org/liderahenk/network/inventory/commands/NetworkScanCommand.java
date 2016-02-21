@@ -1,10 +1,24 @@
 package tr.org.liderahenk.network.inventory.commands;
 
+import java.io.IOException;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RunnableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.nmap4j.data.nmaprun.Host;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +28,10 @@ import tr.org.liderahenk.lider.core.api.plugin.ICommandContext;
 import tr.org.liderahenk.lider.core.api.plugin.ICommandResult;
 import tr.org.liderahenk.lider.core.api.plugin.ICommandResultFactory;
 import tr.org.liderahenk.lider.core.api.plugin.IPluginDbService;
-import tr.org.liderahenk.network.inventory.dto.NmapParametersDto;
+import tr.org.liderahenk.network.inventory.contants.Constants;
+import tr.org.liderahenk.network.inventory.dto.ScanResultDto;
+import tr.org.liderahenk.network.inventory.dto.ScanResultHostDto;
+import tr.org.liderahenk.network.inventory.runnables.RunnableNmap;
 import tr.org.liderahenk.network.inventory.utils.network.NetworkUtils;
 
 /**
@@ -35,55 +52,130 @@ public class NetworkScanCommand extends BaseCommand {
 	private IOperationLogService logService;
 	private IPluginDbService pluginDbService;
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public ICommandResult execute(ICommandContext context) {
 
 		logger.debug("Executing command.");
 
-		ArrayList<Host> hosts = null;
+		ScanResultDto scanResultDto = null;
 
+		// Read command parameters.
 		Map<String, Object> parameterMap = context.getRequest().getParameterMap();
 		Boolean readLast = (Boolean) parameterMap.get("readLast");
+		String ipRange = (String) parameterMap.get("ipRange");
+		String ports = (String) parameterMap.get("ports");
+		String sudoUsername = (String) parameterMap.get("sudoUsername");
+		String sudoPassword = (String) parameterMap.get("sudoPassword");
+		String timingTemplate = (String) parameterMap.get("timingTemplate");
+
+		logger.debug("Parameter map: {}", parameterMap);
+
 		// Find last network scan!
 		if (readLast != null && readLast.booleanValue()) {
-			// TODO
+			// TODO scanResult
 		}
 		// New network scan.
 		else {
 
-			// Nmap parameters
-			ObjectMapper mapper = new ObjectMapper();
-			NmapParametersDto nmapParams = null;
-			try {
-				nmapParams = mapper.readValue(mapper.writeValueAsBytes(parameterMap.get("nmapParams")),
-						NmapParametersDto.class);
-			} catch (Exception e) {
-				logger.error(e.getMessage(), e);
-				ArrayList<String> messages = new ArrayList<String>();
-				messages.add("Couldn't find or parse nmap parameters. Please see error log for more details.");
-				return resultFactory.create(CommandResultStatus.ERROR, messages, this);
-			}
-			logger.debug("Nmap parameters: {}", nmapParams);
+			// Create new instance to send back to Lider Console
+			scanResultDto = new ScanResultDto(ipRange, timingTemplate, ports, sudoUsername, sudoPassword, new Date(),
+					Collections.synchronizedList(new ArrayList<ScanResultHostDto>()));
 
-			// TODO nmapParams, ip listesini thread'lere böl!
+			// If user provides an IP range, scan only it!
+			// otherwise find all IP addresses on the connected networks
+			List<String> ipAddresses = null;
 			try {
-				hosts = NetworkUtils.scanNetwork(nmapParams.getIpRange(), nmapParams.getPorts(),
-						nmapParams.getSudoUsername(), nmapParams.getSudoPassword(), nmapParams.getTimingTemplate());
-			} catch (Exception e) {
-				logger.error(e.getMessage(), e);
-				ArrayList<String> messages = new ArrayList<String>();
-				messages.add("Couldn't scan network. Please see error log for more details.");
-				return resultFactory.create(CommandResultStatus.ERROR, messages, this);
+				if (ipRange != null && !ipRange.isEmpty()) {
+					ipAddresses = NetworkUtils.convertToIpList(ipRange);
+				} else {
+					ipAddresses = NetworkUtils.findIpAddresses();
+				}
+			} catch (UnknownHostException e1) {
+				e1.printStackTrace();
+			} catch (SocketException e1) {
+				e1.printStackTrace();
 			}
 
-			logger.debug("Scan finished, found hosts: {}", hosts);
+			// Scan network via threads.
+			// Each thread is responsible for a limited number of hosts!
+			if (ipAddresses != null && !ipAddresses.isEmpty()) {
 
-			// TODO Save scan result to the database
+				// Create thread pool executor!
+				LinkedBlockingQueue<Runnable> taskQueue = new LinkedBlockingQueue<Runnable>();
+				final List<Runnable> running = Collections.synchronizedList(new ArrayList());
+				ThreadPoolExecutor executor = new ThreadPoolExecutor(Constants.SSH_CONFIG.NUM_THREADS,
+						Constants.SSH_CONFIG.NUM_THREADS, 0L, TimeUnit.MILLISECONDS, taskQueue,
+						Executors.defaultThreadFactory()) {
+
+					@Override
+					protected <T> RunnableFuture<T> newTaskFor(final Runnable runnable, T value) {
+						return new FutureTask<T>(runnable, value) {
+							@Override
+							public String toString() {
+								return runnable.toString();
+							}
+						};
+					}
+
+					@Override
+					protected void beforeExecute(Thread t, Runnable r) {
+						super.beforeExecute(t, r);
+						running.add(r);
+					}
+
+					@Override
+					protected void afterExecute(Runnable r, Throwable t) {
+						super.afterExecute(r, t);
+						running.remove(r);
+						logger.debug("Running threads: {}", running);
+					}
+				};
+				
+				logger.debug("Created thread pool executor for network scan.");
+
+				// Calculate number of the hosts a thread can process
+				int numberOfHosts = ipAddresses.size();
+				int hostsPerThread = numberOfHosts / Constants.SSH_CONFIG.NUM_THREADS;
+
+				logger.debug("Hosts: {}, Threads:{}, Host per Thread: {}",
+						new Object[] { numberOfHosts, Constants.SSH_CONFIG.NUM_THREADS, hostsPerThread });
+
+				// Create & execute threads
+				for (int i = 0; i < numberOfHosts; i += hostsPerThread) {
+					int toIndex = i + hostsPerThread;
+					List<String> ipSubList = ipAddresses.subList(i,
+							toIndex < ipAddresses.size() ? toIndex : ipAddresses.size() - 1);
+					String ipSubRange = NetworkUtils.convertToIpRange(ipSubList);
+
+					RunnableNmap nmap = new RunnableNmap(scanResultDto, ipSubRange, ports, sudoUsername, sudoPassword,
+							timingTemplate);
+					executor.execute(nmap);
+				}
+
+				executor.shutdown();
+
+				// Insert new scan result record
+				// TODO pluginDbService
+			}
+
 		}
 
 		logger.info("Command executed successfully.");
 
-		return resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this);
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			resultMap.put("result", mapper.writeValueAsString(scanResultDto));
+		} catch (JsonGenerationException e) {
+			logger.error(e.getMessage(), e);
+		} catch (JsonMappingException e) {
+			logger.error(e.getMessage(), e);
+		} catch (IOException e) {
+			logger.error(e.getMessage(), e);
+		}
+
+		return resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this, resultMap);
 	}
 
 	@Override

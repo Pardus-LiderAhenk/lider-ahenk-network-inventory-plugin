@@ -8,29 +8,51 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
  * Data transfer object class for scanned hosts.
  * 
  * @author <a href="mailto:emre.akkaya@agem.com.tr">Emre Akkaya</a>
- * @see tr.org.liderahenk.network.inventory.entities.Host
+ * @see tr.org.liderahenk.network.inventory.entities.ScanResultHost
  *
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class HostDto implements Serializable {
+public class ScanResultHostDto implements Serializable {
 
 	private static final long serialVersionUID = -8656776657244404940L;
-	
+
 	private String hostname;
-	
+
+	private String ip;
+
+	private boolean isHostUp;
+
 	private String openPorts;
-	
+
 	private String osGuess;
-	
+
 	private String distance;
-	
+
 	private String uptime;
-	
+
 	private String mac;
-	
+
 	private String vendor;
-	
+
 	// TODO additional info about ahenk-installed machines
+
+	public ScanResultHostDto() {
+		super();
+	}
+
+	public ScanResultHostDto(String hostname, String ip, boolean isHostUp, String openPorts, String osGuess,
+			String distance, String uptime, String mac, String vendor) {
+		super();
+		this.hostname = hostname;
+		this.ip = ip;
+		this.isHostUp = isHostUp;
+		this.openPorts = openPorts;
+		this.osGuess = osGuess;
+		this.distance = distance;
+		this.uptime = uptime;
+		this.mac = mac;
+		this.vendor = vendor;
+	}
 
 	public String getHostname() {
 		return hostname;
@@ -87,5 +109,21 @@ public class HostDto implements Serializable {
 	public void setVendor(String vendor) {
 		this.vendor = vendor;
 	}
-	
+
+	public String getIp() {
+		return ip;
+	}
+
+	public void setIp(String ip) {
+		this.ip = ip;
+	}
+
+	public boolean isHostUp() {
+		return isHostUp;
+	}
+
+	public void setHostUp(boolean isHostUp) {
+		this.isHostUp = isHostUp;
+	}
+
 }

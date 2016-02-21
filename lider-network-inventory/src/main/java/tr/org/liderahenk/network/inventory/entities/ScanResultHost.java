@@ -13,47 +13,54 @@ import javax.persistence.Table;
  * Entity class for scanned hosts.
  * 
  * @author <a href="mailto:emre.akkaya@agem.com.tr">Emre Akkaya</a>
- * @see tr.org.liderahenk.network.inventory.dto.HostDto
+ * @see tr.org.liderahenk.network.inventory.dto.ScanResultHostDto
  *
  */
 @Entity
-@Table(name = "PLGN_NETWORK_INVENTORY_HOSTS")
-public class Host {
-	
+@Table(name = "P_NETWORK_SCAN_RESULT_HOST")
+public class ScanResultHost {
+
 	@Id
 	@GeneratedValue
 	@Column(name = "HOST_ID")
 	private Integer id;
-	
+
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "SCAN_RESULT_ID")
 	private ScanResult scanResult;
-	
+
 	private String hostname;
-	
+
+	private String ip;
+
+	private boolean isHostUp;
+
 	private String openPorts;
-	
+
 	private String osGuess;
-	
+
 	private String distance;
-	
+
 	private String uptime;
-	
+
 	private String mac;
-	
+
 	private String vendor;
-	
+
 	// TODO additional info about ahenk-installed machines
 
-	public Host() {
+	public ScanResultHost() {
 		super();
 	}
-	
-	public Host(Integer id, String hostname, String openPorts, String osGuess, String distance, String uptime,
-			String mac, String vendor) {
+
+	public ScanResultHost(Integer id, ScanResult scanResult, String hostname, String ip, boolean isHostUp,
+			String openPorts, String osGuess, String distance, String uptime, String mac, String vendor) {
 		super();
 		this.id = id;
+		this.scanResult = scanResult;
 		this.hostname = hostname;
+		this.ip = ip;
+		this.isHostUp = isHostUp;
 		this.openPorts = openPorts;
 		this.osGuess = osGuess;
 		this.distance = distance;
@@ -62,14 +69,22 @@ public class Host {
 		this.vendor = vendor;
 	}
 
+	public String getIp() {
+		return ip;
+	}
+
+	public void setIp(String ip) {
+		this.ip = ip;
+	}
+
 	public Integer getId() {
 		return id;
 	}
-	
+
 	public void setId(Integer id) {
 		this.id = id;
 	}
-	
+
 	public ScanResult getScanResult() {
 		return scanResult;
 	}
@@ -133,5 +148,13 @@ public class Host {
 	public void setVendor(String vendor) {
 		this.vendor = vendor;
 	}
-	
+
+	public boolean isHostUp() {
+		return isHostUp;
+	}
+
+	public void setHostUp(boolean isHostUp) {
+		this.isHostUp = isHostUp;
+	}
+
 }

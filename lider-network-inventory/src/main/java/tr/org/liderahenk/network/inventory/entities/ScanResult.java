@@ -14,24 +14,22 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 /**
- * Entity class for network parameters.
+ * Entity class for network scan results.
  * 
  * @author <a href="mailto:emre.akkaya@agem.com.tr">Emre Akkaya</a>
- * @see tr.org.liderahenk.network.inventory.dto.NmapParametersDto
+ * @see tr.org.liderahenk.network.inventory.dto.ScanResultDto
  *
  */
 @Entity
-@Table(name = "PLGN_NETWORK_INVENTORY_SCAN_RESULT")
+@Table(name = "P_NETWORK_SCAN_RESULT")
 public class ScanResult {
 
 	@Id
 	@GeneratedValue
 	@Column(name = "SCAN_RESULT_ID")
-	private Integer id;
+	private Long id;
 
 	private String ipRange;
-
-	private List<String> ipList;
 
 	private String timingTemplate;
 
@@ -43,19 +41,18 @@ public class ScanResult {
 
 	private Date scanDate;
 
-	@OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-	private List<Host> hosts = new ArrayList<Host>(0);
+	@OneToMany(mappedBy = "scanResult", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+	private List<ScanResultHost> hosts = new ArrayList<ScanResultHost>(0);
 
 	public ScanResult() {
 		super();
 	}
 
-	public ScanResult(Integer id, String ipRange, List<String> ipList, String timingTemplate, String ports,
-			String sudoUsername, String sudoPassword, Date scanDate, List<Host> hosts) {
+	public ScanResult(Long id, String ipRange, String timingTemplate, String ports, String sudoUsername,
+			String sudoPassword, Date scanDate, List<ScanResultHost> hosts) {
 		super();
 		this.id = id;
 		this.ipRange = ipRange;
-		this.ipList = ipList;
 		this.timingTemplate = timingTemplate;
 		this.ports = ports;
 		this.sudoUsername = sudoUsername;
@@ -64,11 +61,11 @@ public class ScanResult {
 		this.hosts = hosts;
 	}
 
-	public Integer getId() {
+	public Long getId() {
 		return id;
 	}
 
-	public void setId(Integer id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 
@@ -78,14 +75,6 @@ public class ScanResult {
 
 	public void setIpRange(String ipRange) {
 		this.ipRange = ipRange;
-	}
-
-	public List<String> getIpList() {
-		return ipList;
-	}
-
-	public void setIpList(List<String> ipList) {
-		this.ipList = ipList;
 	}
 
 	public String getPorts() {
@@ -128,11 +117,11 @@ public class ScanResult {
 		this.scanDate = scanDate;
 	}
 
-	public List<Host> getHosts() {
+	public List<ScanResultHost> getHosts() {
 		return hosts;
 	}
 
-	public void setHosts(List<Host> hosts) {
+	public void setHosts(List<ScanResultHost> hosts) {
 		this.hosts = hosts;
 	}
 
