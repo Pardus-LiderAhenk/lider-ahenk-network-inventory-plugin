@@ -12,6 +12,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 /**
  * Entity class for network scan results.
@@ -29,16 +31,23 @@ public class ScanResult {
 	@Column(name = "SCAN_RESULT_ID")
 	private Long id;
 
+	@Column(name = "IP_RANGE")
 	private String ipRange;
 
+	@Column(name = "TIMING_TEMPLATE")
 	private String timingTemplate;
 
+	@Column(name = "PORTS")
 	private String ports;
 
+	@Column(name = "USERNAME")
 	private String sudoUsername;
 
+	@Column(name = "PASSWORD")
 	private String sudoPassword;
 
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = "SCAN_DATE")
 	private Date scanDate;
 
 	@OneToMany(mappedBy = "scanResult", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)

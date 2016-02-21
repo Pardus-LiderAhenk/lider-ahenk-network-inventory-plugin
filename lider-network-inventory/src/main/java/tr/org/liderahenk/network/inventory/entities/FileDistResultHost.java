@@ -19,7 +19,7 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "P_FILE_DIST_RESULT_HOST")
 public class FileDistResultHost {
-	
+
 	@Id
 	@GeneratedValue
 	@Column(name = "HOST_ID")
@@ -28,11 +28,14 @@ public class FileDistResultHost {
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "FILE_DIST_RESULT_ID")
 	private FileDistResult fileDistResult;
-	
+
+	@Column(name = "IP_ADDRESS")
 	private String ip;
 
+	@Column(name = "IS_SUCCESSFULL")
 	private boolean success;
 
+	@Column(name = "ERROR_MESSAGE")
 	private String errorMessage;
 
 	public FileDistResultHost() {
@@ -88,5 +91,5 @@ public class FileDistResultHost {
 	public void setErrorMessage(String errorMessage) {
 		this.errorMessage = errorMessage;
 	}
-	
+
 }

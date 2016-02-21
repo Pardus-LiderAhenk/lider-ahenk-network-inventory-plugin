@@ -1,6 +1,5 @@
 package tr.org.liderahenk.network.inventory.entities;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -12,6 +11,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 /**
  * Entity class for file distribution results.
@@ -23,26 +24,35 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "P_FILE_DIST_RESULT")
 public class FileDistResult {
-	
+
 	@Id
 	@GeneratedValue
 	@Column(name = "FILE_DIST_RESULT_ID")
 	private Long id;
-	
-	private ArrayList<String> ipAddresses;
 
+	@Column(name = "IP_ADDRESSES")
+	private String ipAddresses;
+
+	@Column(name = "FILE_NAME")
 	private String fileName;
 
+	@Column(name = "USERNAME")
 	private String username;
 
+	@Column(name = "PASSWORD")
 	private String password;
 
+	@Column(name = "PORT")
 	private Integer port;
 
+	@Column(name = "PRIVATE_KEY")
 	private String privateKey;
 
+	@Column(name = "DESTINATION_DIRECTORY")
 	private String destDirectory;
 
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = "FILE_DIST_DATE")
 	private Date fileDistDate;
 
 	@OneToMany(mappedBy = "fileDistResult", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
@@ -52,8 +62,8 @@ public class FileDistResult {
 		super();
 	}
 
-	public FileDistResult(Long id, ArrayList<String> ipAddresses, String fileName, String username, String password,
-			Integer port, String privateKey, String destDirectory, Date fileDistDate, List<FileDistResultHost> hosts) {
+	public FileDistResult(Long id, String ipAddresses, String fileName, String username, String password, Integer port,
+			String privateKey, String destDirectory, Date fileDistDate, List<FileDistResultHost> hosts) {
 		super();
 		this.id = id;
 		this.ipAddresses = ipAddresses;
@@ -75,11 +85,11 @@ public class FileDistResult {
 		this.id = id;
 	}
 
-	public ArrayList<String> getIpAddresses() {
+	public String getIpAddresses() {
 		return ipAddresses;
 	}
 
-	public void setIpAddresses(ArrayList<String> ipAddresses) {
+	public void setIpAddresses(String ipAddresses) {
 		this.ipAddresses = ipAddresses;
 	}
 

@@ -29,22 +29,31 @@ public class ScanResultHost {
 	@JoinColumn(name = "SCAN_RESULT_ID")
 	private ScanResult scanResult;
 
+	@Column(name = "HOST_NAME")
 	private String hostname;
 
+	@Column(name = "IP_ADDRESS")
 	private String ip;
 
-	private boolean isHostUp;
+	@Column(name = "IS_HOST_UP")
+	private boolean hostUp;
 
+	@Column(name = "OPEN_PORTS")
 	private String openPorts;
 
+	@Column(name = "OS_GUESS")
 	private String osGuess;
 
+	@Column(name = "DISTANCE")
 	private String distance;
 
+	@Column(name = "UPTIME")
 	private String uptime;
 
+	@Column(name = "MAC_ADDRESS")
 	private String mac;
 
+	@Column(name = "MAC_VENDOR")
 	private String vendor;
 
 	// TODO additional info about ahenk-installed machines
@@ -53,14 +62,14 @@ public class ScanResultHost {
 		super();
 	}
 
-	public ScanResultHost(Integer id, ScanResult scanResult, String hostname, String ip, boolean isHostUp,
+	public ScanResultHost(Integer id, ScanResult scanResult, String hostname, String ip, boolean hostUp,
 			String openPorts, String osGuess, String distance, String uptime, String mac, String vendor) {
 		super();
 		this.id = id;
 		this.scanResult = scanResult;
 		this.hostname = hostname;
 		this.ip = ip;
-		this.isHostUp = isHostUp;
+		this.hostUp = hostUp;
 		this.openPorts = openPorts;
 		this.osGuess = osGuess;
 		this.distance = distance;
@@ -150,11 +159,11 @@ public class ScanResultHost {
 	}
 
 	public boolean isHostUp() {
-		return isHostUp;
+		return hostUp;
 	}
 
-	public void setHostUp(boolean isHostUp) {
-		this.isHostUp = isHostUp;
+	public void setHostUp(boolean hostUp) {
+		this.hostUp = hostUp;
 	}
 
 }
