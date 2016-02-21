@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,9 @@ import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +30,9 @@ import tr.org.liderahenk.lider.core.api.plugin.ICommandResult;
 import tr.org.liderahenk.lider.core.api.plugin.ICommandResultFactory;
 import tr.org.liderahenk.lider.core.api.plugin.IPluginDbService;
 import tr.org.liderahenk.network.inventory.contants.Constants;
+import tr.org.liderahenk.network.inventory.dto.FileDistResultDto;
+import tr.org.liderahenk.network.inventory.dto.FileDistResultHostDto;
+import tr.org.liderahenk.network.inventory.dto.ScanResultHostDto;
 import tr.org.liderahenk.network.inventory.runnables.RunnableFileDistributor;
 
 /**
@@ -50,6 +57,9 @@ public class FileDistributionCommand extends BaseCommand {
 
 		logger.debug("Executing command.");
 
+		FileDistResultDto fileDistResultDto = null;
+
+		// Read command parameters.
 		Map<String, Object> parameterMap = context.getRequest().getParameterMap();
 		ArrayList<String> ipAddresses = (ArrayList<String>) parameterMap.get("ipAddresses");
 		File fileToTransfer = getFileInstance((String) parameterMap.get("file"), (String) parameterMap.get("filename"));
@@ -61,7 +71,12 @@ public class FileDistributionCommand extends BaseCommand {
 
 		logger.debug("Parameter map: {}", parameterMap);
 
-		// Distribute the provided file via threads
+		// Create new instance to send back to Lider Console
+		fileDistResultDto = new FileDistResultDto(ipAddresses, fileToTransfer.getName(), username, password, port,
+				privateKey, destDirectory, new Date(),
+				Collections.synchronizedList(new ArrayList<FileDistResultHostDto>()));
+
+		// Distribute the provided file via threads.
 		// Each thread is responsible for a limited number of hosts!
 		if (ipAddresses != null && !ipAddresses.isEmpty() && fileToTransfer != null) {
 
@@ -96,31 +111,47 @@ public class FileDistributionCommand extends BaseCommand {
 				}
 			};
 
+			logger.debug("Created thread pool executor for file distribution.");
+
+			// Calculate number of the hosts a thread can process
 			int numberOfHosts = ipAddresses.size();
 			int hostsPerThread = numberOfHosts / Constants.SSH_CONFIG.NUM_THREADS;
 
 			logger.debug("Hosts: {}, Threads:{}, Host per Thread: {}",
 					new Object[] { numberOfHosts, Constants.SSH_CONFIG.NUM_THREADS, hostsPerThread });
 
+			// Create & execute threads
 			for (int i = 0; i < numberOfHosts; i += hostsPerThread) {
 				int toIndex = i + hostsPerThread;
 				List<String> ipSubList = ipAddresses.subList(i,
 						toIndex < ipAddresses.size() ? toIndex : ipAddresses.size() - 1);
 
-				RunnableFileDistributor nmap4jThread = new RunnableFileDistributor(ipSubList, username, password, port,
+				RunnableFileDistributor distributor = new RunnableFileDistributor(fileDistResultDto, ipSubList, username, password, port,
 						privateKey, fileToTransfer, destDirectory);
-				executor.execute(nmap4jThread);
+				executor.execute(distributor);
 			}
 
 			executor.shutdown();
-		}
 
-		ICommandResult commandResult = resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this,
-				new HashMap<String, Object>());
+			// Insert new distribution result record
+			// TODO pluginDbService
+		}
 
 		logger.info("Command executed successfully.");
 
-		return commandResult;
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			resultMap.put("result", mapper.writeValueAsString(fileDistResultDto));
+		} catch (JsonGenerationException e) {
+			logger.error(e.getMessage(), e);
+		} catch (JsonMappingException e) {
+			logger.error(e.getMessage(), e);
+		} catch (IOException e) {
+			logger.error(e.getMessage(), e);
+		}
+
+		return resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this, resultMap);
 	}
 
 	private File getFileInstance(String contents, String filename) {

@@ -3,12 +3,18 @@ package tr.org.liderahenk.network.inventory.runnables;
 import java.io.File;
 import java.util.List;
 
-import tr.org.liderahenk.network.inventory.exception.CommandExecutionException;
-import tr.org.liderahenk.network.inventory.exception.SSHConnectionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import tr.org.liderahenk.network.inventory.dto.FileDistResultDto;
+import tr.org.liderahenk.network.inventory.dto.FileDistResultHostDto;
 import tr.org.liderahenk.network.inventory.utils.setup.SetupUtils;
 
 public class RunnableFileDistributor implements Runnable {
 
+	private Logger logger = LoggerFactory.getLogger(RunnableFileDistributor.class);
+
+	private FileDistResultDto fileDistResultDto;
 	private List<String> ipList;
 	private String username;
 	private String password;
@@ -17,9 +23,8 @@ public class RunnableFileDistributor implements Runnable {
 	private File fileToTransfer;
 	private String destDirectory;
 
-	// TODO pass also logService here:
-	public RunnableFileDistributor(List<String> ipList, String username, String password, Integer port,
-			String privateKey, File fileToTransfer, String destDirectory) {
+	public RunnableFileDistributor(FileDistResultDto fileDistResultDto, List<String> ipList, String username,
+			String password, Integer port, String privateKey, File fileToTransfer, String destDirectory) {
 		this.ipList = ipList;
 		this.username = username;
 		this.password = password;
@@ -32,14 +37,15 @@ public class RunnableFileDistributor implements Runnable {
 	@Override
 	public void run() {
 		for (String ip : ipList) {
-			// TODO log if action is succesfull or not...
+			FileDistResultHostDto hostDto = null;
 			try {
 				SetupUtils.copyFile(ip, username, password, port, privateKey, fileToTransfer, destDirectory);
-			} catch (SSHConnectionException e) {
-				e.printStackTrace();
-			} catch (CommandExecutionException e) {
-				e.printStackTrace();
+				hostDto = new FileDistResultHostDto(ip, true, null);
+			} catch (Exception e) {
+				logger.error(e.getMessage(), e);
+				hostDto = new FileDistResultHostDto(ip, false, e.getMessage());
 			}
+			fileDistResultDto.getHosts().add(hostDto);
 		}
 	}
 
