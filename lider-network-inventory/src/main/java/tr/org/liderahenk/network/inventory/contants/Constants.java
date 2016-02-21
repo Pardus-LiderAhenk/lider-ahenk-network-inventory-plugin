@@ -7,6 +7,7 @@ public class Constants {
 		public static final int CONNECTION_PORT = 22;
 		public static final int SESSION_TIMEOUT = 6000;
 		public static final int CHANNEL_TIMEOUT = 6000;
+		public static final int NUM_THREADS = 50;
 	}
 	
 	public static final class NMAP_CONFIG {
@@ -15,5 +16,5 @@ public class Constants {
 		public static final int NETWORK_TIMEOUT = 3000;
 		public static final String NMAP_PATH = "/usr";
 	}
-
+	
 }

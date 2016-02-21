@@ -610,13 +610,13 @@ public class SetupUtils {
 	 * @param password
 	 * @param port
 	 * @param privateKey
-	 * @param fileToTranster
+	 * @param fileToTransfer
 	 * @param destDirectory
 	 * @throws SSHConnectionException
 	 * @throws CommandExecutionException
 	 */
 	public static void copyFile(final String ip, final String username, final String password, final Integer port,
-			final String privateKey, final File fileToTranster, final String destDirectory)
+			final String privateKey, final File fileToTransfer, final String destDirectory)
 					throws SSHConnectionException, CommandExecutionException {
 		if (NetworkUtils.isLocal(ip)) {
 
@@ -624,7 +624,7 @@ public class SetupUtils {
 			if (!destinationDir.endsWith("/")) {
 				destinationDir += "/";
 			}
-			destinationDir += fileToTranster.getName();
+			destinationDir += fileToTransfer.getName();
 
 			logger.debug("Copying file to: {}", destinationDir);
 
@@ -633,7 +633,7 @@ public class SetupUtils {
 
 			try {
 
-				in = new FileInputStream(fileToTranster);
+				in = new FileInputStream(fileToTransfer);
 				out = new FileOutputStream(destinationDir);
 
 				byte[] buf = new byte[1024];
@@ -642,7 +642,7 @@ public class SetupUtils {
 					out.write(buf, 0, len);
 				}
 
-				logger.info("File {0} copied successfully", fileToTranster.getName());
+				logger.info("File {0} copied successfully", fileToTransfer.getName());
 
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
@@ -671,10 +671,10 @@ public class SetupUtils {
 
 			SSHManager manager = new SSHManager(ip, username == null ? "root" : username, password, port, privateKey);
 			manager.connect();
-			manager.copyFileToRemote(fileToTranster, destDirectory, false);
+			manager.copyFileToRemote(fileToTransfer, destDirectory, false);
 			manager.disconnect();
 
-			logger.info("File {} copied successfully", fileToTranster.getName());
+			logger.info("File {} copied successfully", fileToTransfer.getName());
 		}
 	}
 
