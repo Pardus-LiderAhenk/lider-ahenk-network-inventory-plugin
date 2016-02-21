@@ -31,6 +31,8 @@ import tr.org.liderahenk.lider.core.api.plugin.IPluginDbService;
 import tr.org.liderahenk.network.inventory.contants.Constants;
 import tr.org.liderahenk.network.inventory.dto.ScanResultDto;
 import tr.org.liderahenk.network.inventory.dto.ScanResultHostDto;
+import tr.org.liderahenk.network.inventory.entities.ScanResult;
+import tr.org.liderahenk.network.inventory.entities.ScanResultHost;
 import tr.org.liderahenk.network.inventory.runnables.RunnableNmap;
 import tr.org.liderahenk.network.inventory.utils.network.NetworkUtils;
 
@@ -131,7 +133,7 @@ public class NetworkScanCommand extends BaseCommand {
 						logger.debug("Running threads: {}", running);
 					}
 				};
-				
+
 				logger.debug("Created thread pool executor for network scan.");
 
 				// Calculate number of the hosts a thread can process
@@ -156,7 +158,7 @@ public class NetworkScanCommand extends BaseCommand {
 				executor.shutdown();
 
 				// Insert new scan result record
-				// TODO pluginDbService
+				pluginDbService.save(getEntityObject(scanResultDto));
 			}
 
 		}
@@ -176,6 +178,39 @@ public class NetworkScanCommand extends BaseCommand {
 		}
 
 		return resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this, resultMap);
+	}
+
+	/**
+	 * Convert data transfer object to entity object.
+	 * 
+	 * @param dto
+	 * @return
+	 */
+	private ScanResult getEntityObject(ScanResultDto dto) {
+		ScanResult entity = new ScanResult(null, dto.getIpRange(), dto.getTimingTemplate(), dto.getPorts(),
+				dto.getSudoUsername(), dto.getSudoPassword(), dto.getScanDate(), null);
+		entity.setHosts(getEntityList(dto.getHosts(), entity));
+		return entity;
+	}
+
+	/**
+	 * Convert list of data transfer objects to list of entity objects.
+	 * 
+	 * @param dtoList
+	 * @param parentEntity
+	 * @return
+	 */
+	private List<ScanResultHost> getEntityList(List<ScanResultHostDto> dtoList, ScanResult parentEntity) {
+		List<ScanResultHost> entityList = new ArrayList<ScanResultHost>();
+		if (dtoList != null) {
+			for (ScanResultHostDto dto : dtoList) {
+				ScanResultHost entity = new ScanResultHost(null, parentEntity, dto.getHostname(), dto.getIp(),
+						dto.isHostUp(), dto.getOpenPorts(), dto.getOsGuess(), dto.getDistance(), dto.getUptime(),
+						dto.getMac(), dto.getVendor());
+				entityList.add(entity);
+			}
+		}
+		return entityList;
 	}
 
 	@Override

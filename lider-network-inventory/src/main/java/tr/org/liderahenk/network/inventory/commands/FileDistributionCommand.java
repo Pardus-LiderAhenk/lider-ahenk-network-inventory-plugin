@@ -32,7 +32,8 @@ import tr.org.liderahenk.lider.core.api.plugin.IPluginDbService;
 import tr.org.liderahenk.network.inventory.contants.Constants;
 import tr.org.liderahenk.network.inventory.dto.FileDistResultDto;
 import tr.org.liderahenk.network.inventory.dto.FileDistResultHostDto;
-import tr.org.liderahenk.network.inventory.dto.ScanResultHostDto;
+import tr.org.liderahenk.network.inventory.entities.FileDistResult;
+import tr.org.liderahenk.network.inventory.entities.FileDistResultHost;
 import tr.org.liderahenk.network.inventory.runnables.RunnableFileDistributor;
 
 /**
@@ -126,15 +127,15 @@ public class FileDistributionCommand extends BaseCommand {
 				List<String> ipSubList = ipAddresses.subList(i,
 						toIndex < ipAddresses.size() ? toIndex : ipAddresses.size() - 1);
 
-				RunnableFileDistributor distributor = new RunnableFileDistributor(fileDistResultDto, ipSubList, username, password, port,
-						privateKey, fileToTransfer, destDirectory);
+				RunnableFileDistributor distributor = new RunnableFileDistributor(fileDistResultDto, ipSubList,
+						username, password, port, privateKey, fileToTransfer, destDirectory);
 				executor.execute(distributor);
 			}
 
 			executor.shutdown();
 
 			// Insert new distribution result record
-			// TODO pluginDbService
+			pluginDbService.save(getEntityObject(fileDistResultDto));
 		}
 
 		logger.info("Command executed successfully.");
@@ -154,6 +155,65 @@ public class FileDistributionCommand extends BaseCommand {
 		return resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this, resultMap);
 	}
 
+	/**
+	 * Convert data transfer object to entity object.
+	 * 
+	 * @param dto
+	 * @return
+	 */
+	private FileDistResult getEntityObject(FileDistResultDto dto) {
+		FileDistResult entity = new FileDistResult(null, joinIpAddresses(dto.getIpAddresses()), dto.getFileName(),
+				dto.getUsername(), dto.getPassword(), dto.getPort(), dto.getPrivateKey(), dto.getDestDirectory(),
+				dto.getFileDistDate(), null);
+		entity.setHosts(getEntityList(dto.getHosts(), entity));
+		return entity;
+	}
+
+	/**
+	 * Convert list of data transfer objects to list of entity objects.
+	 * 
+	 * @param dtoList
+	 * @param parentEntity
+	 * @return
+	 */
+	private List<FileDistResultHost> getEntityList(List<FileDistResultHostDto> dtoList, FileDistResult parentEntity) {
+		List<FileDistResultHost> entityList = new ArrayList<FileDistResultHost>();
+		if (dtoList != null) {
+			for (FileDistResultHostDto dto : dtoList) {
+				FileDistResultHost entity = new FileDistResultHost(null, parentEntity, dto.getIp(), dto.isSuccess(),
+						dto.getErrorMessage());
+				entityList.add(entity);
+			}
+		}
+		return entityList;
+	}
+
+	/**
+	 * Join given IP addresses by comma.
+	 * 
+	 * @param ipAddresses
+	 * @return
+	 */
+	private String joinIpAddresses(ArrayList<String> ipAddresses) {
+		if (ipAddresses != null) {
+			StringBuilder ipAddressStr = new StringBuilder("");
+			for (String ipAddress : ipAddresses) {
+				if (ipAddressStr.length() > 0) {
+					ipAddressStr.append(",");
+				}
+				ipAddressStr.append(ipAddress);
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Create a tempopary file which can be used for SCP.
+	 * 
+	 * @param contents
+	 * @param filename
+	 * @return
+	 */
 	private File getFileInstance(String contents, String filename) {
 		File temp = null;
 		try {
