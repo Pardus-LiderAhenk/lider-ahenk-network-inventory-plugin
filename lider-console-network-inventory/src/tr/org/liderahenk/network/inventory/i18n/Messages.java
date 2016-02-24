@@ -7,7 +7,7 @@ import org.eclipse.osgi.util.NLS;
 
 public class Messages extends NLS {
 
-	private static final String BUNDLE_NAME = "tr.org.liderahenk.liderconsole.networkinventory.i18n.messages";
+	private static final String BUNDLE_NAME = "tr.org.liderahenk.network.inventory.i18n.messages";
 
 	private static final ResourceBundle RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME);
 
