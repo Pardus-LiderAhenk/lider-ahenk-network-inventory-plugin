@@ -48,6 +48,7 @@
 		<module>lider-network-inventory</module>
 		<module>lider-console-network-inventory</module>
 		<module>ahenk-network-inventory</module>
+		<module>lider-feature-network-inventory</module>
 	</modules>
 
 	<build>
@@ -130,7 +131,7 @@
 		<dependencies>
 			<dependency>
 				<groupId>tr.org.liderahenk</groupId>
-				<artifactId>tr.org.liderahenk.lider-core</artifactId>
+				<artifactId>lider-core</artifactId>
 				<version>${lider.ahenk.version}</version>
 			</dependency>
 			<dependency>

@@ -20,7 +20,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>tr.org.liderahenk</groupId>
-			<artifactId>tr.org.liderahenk.lider-core</artifactId>
+			<artifactId>lider-core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.jackson</groupId>
