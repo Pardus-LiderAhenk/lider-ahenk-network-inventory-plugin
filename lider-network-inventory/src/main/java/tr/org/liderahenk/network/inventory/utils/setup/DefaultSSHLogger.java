@@ -1,7 +1,10 @@
 package tr.org.liderahenk.network.inventory.utils.setup;
 
+import java.util.Hashtable;
+
 import org.slf4j.LoggerFactory;
-import org.vngx.jsch.util.Logger;
+
+import com.jcraft.jsch.Logger;
 
 /**
  * DefaultSSHLogger works as a bridge between a logging framework and SSH
@@ -15,47 +18,32 @@ public class DefaultSSHLogger implements Logger {
 
 	private org.slf4j.Logger logger = LoggerFactory.getLogger(DefaultSSHLogger.class);
 
-	@Override
-	public boolean isEnabled(Level level) {
-		return logger.isDebugEnabled() || level != Level.DEBUG;
+	public static Hashtable<Integer, String> name = null;
+
+	static {
+		name = new Hashtable<Integer, String>();
+		name.put(new Integer(DEBUG), "DEBUG: ");
+		name.put(new Integer(INFO), "INFO: ");
+		name.put(new Integer(WARN), "WARN: ");
+		name.put(new Integer(ERROR), "ERROR: ");
+		name.put(new Integer(FATAL), "FATAL: ");
 	}
 
 	@Override
-	public void log(Level level, String message) {
-		if (level == Level.DEBUG) {
+	public boolean isEnabled(int level) {
+		return logger.isDebugEnabled() || level != DEBUG;
+	}
+
+	@Override
+	public void log(int level, String message) {
+		if (level == DEBUG) {
 			logger.debug(message);
-		} else if (level == Level.INFO) {
+		} else if (level == INFO) {
 			logger.info(message);
-		} else if (level == Level.WARN) {
+		} else if (level == WARN) {
 			logger.warn(message);
-		} else if (level == Level.ERROR || level == Level.FATAL) {
+		} else if (level == ERROR || level == FATAL) {
 			logger.error(message);
-		}
-	}
-
-	@Override
-	public void log(Level level, String message, Object... args) {
-		if (level == Level.DEBUG) {
-			logger.debug(message, args);
-		} else if (level == Level.INFO) {
-			logger.info(message, args);
-		} else if (level == Level.WARN) {
-			logger.warn(message, args);
-		} else if (level == Level.ERROR || level == Level.FATAL) {
-			logger.error(message, args);
-		}
-	}
-
-	@Override
-	public void log(Level level, String message, Throwable exception) {
-		if (level == Level.DEBUG) {
-			logger.debug(message, exception);
-		} else if (level == Level.INFO) {
-			logger.info(message, exception);
-		} else if (level == Level.WARN) {
-			logger.warn(message, exception);
-		} else if (level == Level.ERROR || level == Level.FATAL) {
-			logger.error(message, exception);
 		}
 	}
 

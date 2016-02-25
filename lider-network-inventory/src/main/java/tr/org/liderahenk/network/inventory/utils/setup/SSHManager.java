@@ -5,17 +5,16 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vngx.jsch.Channel;
-import org.vngx.jsch.ChannelExec;
-import org.vngx.jsch.ChannelType;
-import org.vngx.jsch.JSch;
-import org.vngx.jsch.Session;
-import org.vngx.jsch.config.SessionConfig;
-import org.vngx.jsch.exception.JSchException;
+
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
 
 import tr.org.liderahenk.network.inventory.contants.Constants;
 import tr.org.liderahenk.network.inventory.exception.CommandExecutionException;
@@ -34,13 +33,14 @@ public class SSHManager {
 
 	private JSch SSHChannel;
 	private Session session;
-	private SessionConfig config;
+	private Properties config;
 
 	private String username;
 	private String password;
 	private String ip;
 	private int port;
 	private String privateKey;
+	private String passphrase;
 
 	/**
 	 * 
@@ -65,10 +65,11 @@ public class SSHManager {
 	 */
 	private void init() {
 		JSch.setLogger(new DefaultSSHLogger());
-		SSHChannel = JSch.getInstance();
-		SessionConfig config = new SessionConfig();
-		config.setProperty("StrictHostKeyChecking", "no");
-		config.setProperty("kex", "diffie-hellman-group1-sha1,diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1,diffie-hellman-group-exchange-sha256");
+		SSHChannel = new JSch();
+		config = new Properties();
+		config.put("kex",
+				"diffie-hellman-group1-sha1,diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1,diffie-hellman-group-exchange-sha256");
+		config.put("StrictHostKeyChecking", "no");
 	}
 
 	/**
@@ -79,14 +80,19 @@ public class SSHManager {
 	 */
 	public void connect() throws SSHConnectionException {
 		try {
-			// TODO how do we set private key & passphrase?
-//			if (privateKey != null && !privateKey.isEmpty()) {
-//				SSHChannel.addIdentity(privateKey);
-//			}
-			session = SSHChannel.createSession(username, ip, port, config);
-			if (password != null && !password.isEmpty()) {
-				session.connect(Constants.SSH_CONFIG.SESSION_TIMEOUT, password.getBytes(StandardCharsets.UTF_8));
+			if (privateKey != null && !privateKey.isEmpty()) {
+				if (passphrase != null || !"".equals(passphrase)) {
+					SSHChannel.addIdentity(privateKey, passphrase.getBytes());
+				}
+				else {
+					SSHChannel.addIdentity(privateKey);
+				}
 			}
+			session = SSHChannel.getSession(username, ip, port);
+			if (password != null && !password.isEmpty()) {
+				session.setPassword(password);
+			}
+			session.setConfig(config);
 			session.connect(Constants.SSH_CONFIG.SESSION_TIMEOUT);
 		} catch (JSchException e) {
 			logger.error(e.getMessage(), e);
@@ -114,7 +120,7 @@ public class SSHManager {
 		logger.info("Command: {}", command);
 
 		try {
-			Channel channel = session.openChannel(ChannelType.EXEC);
+			Channel channel = session.openChannel("exec");
 			
 			((ChannelExec) channel).setCommand(command);
 
@@ -223,7 +229,7 @@ public class SSHManager {
 
 			logger.info("Command: {}", command);
 
-			Channel channel = session.openChannel(ChannelType.EXEC);
+			Channel channel = session.openChannel("exec");
 			((ChannelExec) channel).setCommand(command);
 
 			OutputStream out = channel.getOutputStream();
