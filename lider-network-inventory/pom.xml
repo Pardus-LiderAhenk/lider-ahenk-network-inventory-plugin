@@ -20,7 +20,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>tr.org.liderahenk</groupId>
-			<artifactId>tr.org.liderahenk.lider-core</artifactId>
+			<artifactId>lider-core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.jackson</groupId>
@@ -35,8 +35,8 @@
 			<artifactId>org.apache.aries.blueprint</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.vngx</groupId>
-			<artifactId>vngx-jsch</artifactId>
+			<groupId>com.jcraft</groupId>
+			<artifactId>jsch</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.geronimo.specs</groupId>

@@ -9,7 +9,7 @@
 
 	<service ref="FileDistributionCommand" interface="tr.org.liderahenk.lider.core.api.plugin.ICommand" />
 	<bean id="FileDistributionCommand"
-		class="tr.org.liderahenk.lider.networkinventory.commands.FileDistributionCommand">
+		class="tr.org.liderahenk.network.inventory.commands.FileDistributionCommand">
 		<property name="pluginDbService" ref="pluginDbService" />
 		<property name="logService" ref="logService" />
 		<property name="resultFactory" ref="resultFactory" />
@@ -17,14 +17,14 @@
 
 	<service ref="AhenkInstallationCommand" interface="tr.org.liderahenk.lider.core.api.plugin.ICommand" />
 	<bean id="AhenkInstallationCommand"
-		class="tr.org.liderahenk.lider.networkinventory.commands.AhenkInstallationCommand">
+		class="tr.org.liderahenk.network.inventory.commands.AhenkInstallationCommand">
 		<property name="pluginDbService" ref="pluginDbService" />
 		<property name="logService" ref="logService" />
 		<property name="resultFactory" ref="resultFactory" />
 	</bean>
 	<service ref="NetworkScanCommand" interface="tr.org.liderahenk.lider.core.api.plugin.ICommand" />
 	<bean id="NetworkScanCommand"
-		class="tr.org.liderahenk.lider.networkinventory.commands.NetworkScanCommand">
+		class="tr.org.liderahenk.network.inventory.commands.NetworkScanCommand">
 		<property name="pluginDbService" ref="pluginDbService" />
 		<property name="logService" ref="logService" />
 		<property name="resultFactory" ref="resultFactory" />

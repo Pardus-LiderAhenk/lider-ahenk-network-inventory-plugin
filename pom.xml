@@ -32,7 +32,7 @@
 		<jackson.version>1.9.13</jackson.version>
 		<aries.blueprint.version>1.1.0</aries.blueprint.version>
 		<tycho.version>0.23.0</tycho.version>
-		<jsch.version>0.10</jsch.version>
+		<jsch.version>0.1.53</jsch.version>
 		<geronimo.jpa.version>1.1</geronimo.jpa.version>
 	</properties>
 
@@ -48,6 +48,7 @@
 		<module>lider-network-inventory</module>
 		<module>lider-console-network-inventory</module>
 		<module>ahenk-network-inventory</module>
+		<module>lider-feature-network-inventory</module>
 	</modules>
 
 	<build>
@@ -130,7 +131,7 @@
 		<dependencies>
 			<dependency>
 				<groupId>tr.org.liderahenk</groupId>
-				<artifactId>tr.org.liderahenk.lider-core</artifactId>
+				<artifactId>lider-core</artifactId>
 				<version>${lider.ahenk.version}</version>
 			</dependency>
 			<dependency>
@@ -149,8 +150,8 @@
 				<version>${aries.blueprint.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.vngx</groupId>
-				<artifactId>vngx-jsch</artifactId>
+				<groupId>com.jcraft</groupId>
+				<artifactId>jsch</artifactId>
 				<version>${jsch.version}</version>
 			</dependency>
 			<dependency>

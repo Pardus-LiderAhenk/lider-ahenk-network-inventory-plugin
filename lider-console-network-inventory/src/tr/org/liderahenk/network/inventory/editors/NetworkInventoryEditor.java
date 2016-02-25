@@ -1,15 +1,15 @@
 package tr.org.liderahenk.network.inventory.editors;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -31,6 +31,10 @@ import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.EditorPart;
 
+import tr.org.liderahenk.liderconsole.core.rest.Priority;
+import tr.org.liderahenk.liderconsole.core.rest.RestClient;
+import tr.org.liderahenk.liderconsole.core.rest.RestRequest;
+import tr.org.liderahenk.liderconsole.core.rest.RestResponse;
 import tr.org.liderahenk.liderconsole.core.ui.GenericEditorInput;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
 import tr.org.liderahenk.network.inventory.wizard.AhenkSetupWizard;
@@ -176,7 +180,22 @@ public class NetworkInventoryEditor extends EditorPart {
 		btnScan.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				// TODO scan time!
+				// Create request instance
+				RestRequest request = new RestRequest();
+				request.setPluginName("network-inventory");
+				request.setPluginVersion("1.0.0-SNAPSHOT");
+				request.setCommandId("SCANNETWORK");
+				request.setPriority(Priority.NORMAL);
+				
+				// Populate request parameters
+				Map<String, Object> parameterMap = new HashMap<String, Object>();
+				parameterMap.put("ipRange", txtIpRange.getText());
+				parameterMap.put("timingTemplate", "3");
+				request.setParameterMap(parameterMap);
+				
+				// Post request
+				RestResponse response = RestClient.getInstance().post(request);
+				Map<String, Object> resultMap = response.getResultMap();
 			}
 
 			@Override
