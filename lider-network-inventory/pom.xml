@@ -35,8 +35,8 @@
 			<artifactId>org.apache.aries.blueprint</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.vngx</groupId>
-			<artifactId>vngx-jsch</artifactId>
+			<groupId>com.jcraft</groupId>
+			<artifactId>jsch</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.geronimo.specs</groupId>
