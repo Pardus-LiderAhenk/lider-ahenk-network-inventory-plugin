@@ -2,6 +2,7 @@ package tr.org.liderahenk.network.inventory.commands;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -13,6 +14,7 @@ import tr.org.liderahenk.lider.core.api.plugin.ICommandContext;
 import tr.org.liderahenk.lider.core.api.plugin.ICommandResult;
 import tr.org.liderahenk.lider.core.api.plugin.ICommandResultFactory;
 import tr.org.liderahenk.lider.core.api.plugin.IPluginDbService;
+import tr.org.liderahenk.network.inventory.dto.AhenkSetupConfigDto;
 
 /**
  * This class is responsible for installing Ahenk packages into the specified
@@ -35,6 +37,8 @@ public class AhenkInstallationCommand extends BaseCommand {
 		logger.debug("Executing command.");
 
 		Map<String, Object> parameterMap = context.getRequest().getParameterMap();
+		
+		AhenkSetupConfigDto config = (AhenkSetupConfigDto) parameterMap.get("config");
 
 		// TODO
 

@@ -82,10 +82,15 @@ public class SSHManager {
 		try {
 			if (privateKey != null && !privateKey.isEmpty()) {
 				if (passphrase != null || !"".equals(passphrase)) {
-					SSHChannel.addIdentity(privateKey, passphrase.getBytes());
-				}
-				else {
-					SSHChannel.addIdentity(privateKey);
+					// Actually this connect method was taking only the absolute
+					// path of private key file to add an identity. But while
+					// installing Ahenk from Lider Console it is not possible and we
+					// need to send private key to Lider from Lider Console,
+					// that is why adding identity part of this class is
+					// changed. Now it takes private key as array of bytes.
+					SSHChannel.addIdentity("identity", getFileAsByteArray(privateKey), null, passphrase.getBytes());
+				} else {
+					SSHChannel.addIdentity("identity", getFileAsByteArray(privateKey), null, null);
 				}
 			}
 			session = SSHChannel.getSession(username, ip, port);
@@ -98,6 +103,36 @@ public class SSHManager {
 			logger.error(e.getMessage(), e);
 			throw new SSHConnectionException(e.getMessage());
 		}
+	}
+
+	/**
+	 * Converts the provided file to array of bytes.
+	 * 
+	 * @author Caner Feyzullahoğlu <caner.feyzullahoglu@agem.com.tr>
+	 * 
+	 * @param filePath
+	 *            Absolute path to file
+	 * @return given file as byte[]
+	 */
+	private byte[] getFileAsByteArray(String pathOfFile) {
+
+		FileInputStream fileInputStream = null;
+
+		File file = new File(pathOfFile);
+
+		byte[] byteFile = new byte[(int) file.length()];
+
+		try {
+			fileInputStream = new FileInputStream(file);
+
+			fileInputStream.read(byteFile);
+
+			fileInputStream.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return byteFile;
 	}
 
 	/**
@@ -121,7 +156,7 @@ public class SSHManager {
 
 		try {
 			Channel channel = session.openChannel("exec");
-			
+
 			((ChannelExec) channel).setCommand(command);
 
 			// Open channel and handle output stream

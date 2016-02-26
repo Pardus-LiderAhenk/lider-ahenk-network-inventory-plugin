@@ -17,4 +17,13 @@ public class Constants {
 		public static final String NMAP_PATH = "/usr";
 	}
 	
+	public static enum AccessMethod {
+		USERNAME_PASSWORD,
+		PRIVATE_KEY
+	}
+	
+	public static enum InstallMethod {
+		APT_GET,
+		PROVIDED_DEB
+	}
 }

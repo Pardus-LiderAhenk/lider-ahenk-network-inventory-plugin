@@ -1,5 +1,8 @@
 package tr.org.liderahenk.network.inventory.wizard.pages;
 
+import java.io.File;
+import java.io.FileInputStream;
+
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.wizard.IWizardPage;
@@ -314,17 +317,45 @@ public class AhenkConnectionMethodPage extends WizardPage {
 		}
 	}
 
+	/**
+	 * Converts the provided file to array of bytes. 
+	 * @author Caner Feyzullahoğlu <caner.feyzullahoglu@agem.com.tr>
+	 * 
+	 * @param filePath Absolute path to file
+	 * @return given file as byte[]
+	 */
+	private byte[] getFileAsByteArray(String pathOfFile) {
+		
+		FileInputStream fileInputStream = null;
+		
+		File file = new File(pathOfFile);
+		
+		byte[] byteFile = new byte[(int) file.length()];
+		
+		try {
+			fileInputStream = new FileInputStream(file);
+			
+			fileInputStream.read(byteFile);
+			
+			fileInputStream.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return byteFile;
+	}
+	
 	@Override
 	public IWizardPage getNextPage() {
 		
 		if (userPassBtn.getSelection()) {
-			config.setAhenkAccessMethod(AccessMethod.USERNAME_PASSWORD);
-			config.setUsernameCm(userNameTxt.getText());
-			config.setPasswordCm(passwordTxt.getText());
+			config.setAccessMethod(AccessMethod.USERNAME_PASSWORD);
+			config.setUsername(userNameTxt.getText());
+			config.setPassword(passwordTxt.getText());
 		}
 		else {
-			config.setAhenkAccessMethod(AccessMethod.PRIVATE_KEY);
-			config.setPrivateKeyAbsPath(fileDialogText.getText());
+			config.setAccessMethod(AccessMethod.PRIVATE_KEY);
+			config.setPrivateKeyFile(getFileAsByteArray(fileDialogText.getText()));
 			if (!"".equals(passphraseTxt.getText()) && passphraseTxt.getText() != null) {
 				config.setPassphrase(passphrase.getText());
 			}

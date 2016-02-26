@@ -55,7 +55,7 @@ public class NetworkInventoryEditor extends EditorPart {
 	private Label lblAhenkInstall;
 	private TableViewer tblInventory;
 
-	private List<String> ipList;
+	private List<String> selectedIpList;
 
 	@Override
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
@@ -147,7 +147,11 @@ public class NetworkInventoryEditor extends EditorPart {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 
-				WizardDialog wd = new WizardDialog(Display.getCurrent().getActiveShell(), new AhenkSetupWizard());
+				setSelectedIps();
+
+				AhenkSetupWizard wizard = new AhenkSetupWizard(selectedIpList);
+
+				WizardDialog wd = new WizardDialog(Display.getCurrent().getActiveShell(), wizard);
 				wd.setMinimumPageSize(new Point(800, 600));
 				wd.setPageSize(new Point(800, 600));
 				wd.open();
@@ -159,6 +163,22 @@ public class NetworkInventoryEditor extends EditorPart {
 		});
 
 		btnAhenkInstall.setEnabled(false);
+	}
+
+	private void setSelectedIps() {
+
+		TableItem[] items = tblInventory.getTable().getItems();
+		
+		List<String> tmpList = new ArrayList<String>();
+		
+		for (TableItem item : items) {
+			
+			if (item.getChecked()) {
+				tmpList.add(item.getText(0));
+			}
+		}
+		
+		selectedIpList = tmpList;
 	}
 
 	private void createScanArea(Composite composite) {
@@ -186,13 +206,13 @@ public class NetworkInventoryEditor extends EditorPart {
 				request.setPluginVersion("1.0.0-SNAPSHOT");
 				request.setCommandId("SCANNETWORK");
 				request.setPriority(Priority.NORMAL);
-				
+
 				// Populate request parameters
 				Map<String, Object> parameterMap = new HashMap<String, Object>();
 				parameterMap.put("ipRange", txtIpRange.getText());
 				parameterMap.put("timingTemplate", "3");
 				request.setParameterMap(parameterMap);
-				
+
 				// Post request
 				RestResponse response = RestClient.getInstance().post(request);
 				Map<String, Object> resultMap = response.getResultMap();
@@ -243,13 +263,13 @@ public class NetworkInventoryEditor extends EditorPart {
 
 	// TODO fake data, will be removed.
 	private List<String> createFakeIpToTable(Table table) {
-		
-		List<String> ipList = new ArrayList<String>(); 
-		
+
+		List<String> ipList = new ArrayList<String>();
+
 		for (int i = 0; i < 10; i++) {
 			ipList.add("192.168.56." + (i + 1));
 		}
-		
+
 		return ipList;
 	}
 

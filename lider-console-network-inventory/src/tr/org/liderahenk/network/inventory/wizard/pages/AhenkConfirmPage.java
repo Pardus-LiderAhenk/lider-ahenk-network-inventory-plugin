@@ -10,7 +10,6 @@ import org.eclipse.swt.widgets.Composite;
 import tr.org.liderahenk.liderconsole.core.utils.GUIHelper;
 import tr.org.liderahenk.network.inventory.constants.AccessMethod;
 import tr.org.liderahenk.network.inventory.constants.InstallMethod;
-import tr.org.liderahenk.network.inventory.constants.NextPageEventType;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
 import tr.org.liderahenk.network.inventory.model.AhenkSetupConfig;
 
@@ -49,11 +48,11 @@ public class AhenkConfirmPage extends WizardPage {
 		ipTextArea.setText("localhost");
 		
 		GUIHelper.createLabel(container,
-				"- " + Messages.getString(config.getAhenkAccessMethod() == AccessMethod.PRIVATE_KEY
+				"- " + Messages.getString(config.getAccessMethod() == AccessMethod.PRIVATE_KEY
 				? "ACCESSING_WITH_PRIVATE_KEY" : "ACCESSING_WITH_USERNAME_AND_PASSWORD"));
 		
 		GUIHelper.createLabel(container, "- " + Messages.getString(
-				config.getAhenkInstallMethod() == InstallMethod.APT_GET ? "USE_REPOSITORY" : "USE_GIVEN_DEB"));
+				config.getInstallMethod() == InstallMethod.APT_GET ? "USE_REPOSITORY" : "USE_GIVEN_DEB"));
 		
 		GUIHelper.createLabel(container, Messages.getString("AHENK_WILL_BE_INSTALLED") + " "
 				+ Messages.getString("WANT_TO_CONTINUE_PRESS_NEXT"));
@@ -71,9 +70,6 @@ public class AhenkConfirmPage extends WizardPage {
 			allIps += "-" + ip + "\n";
 		}
 		ipTextArea.setText(allIps);
-		
-		((ControlNextEvent) super.getNextPage()).setNextPageEventType(
-				NextPageEventType.CLICK_FROM_PREV_PAGE);
 		
 		return super.getNextPage();
 	}
