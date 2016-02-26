@@ -1,10 +1,14 @@
 package tr.org.liderahenk.network.inventory.editors;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
@@ -20,6 +24,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
@@ -50,6 +55,8 @@ public class NetworkInventoryEditor extends EditorPart {
 	private Label lblAhenkInstall;
 	private TableViewer tblInventory;
 
+	private List<String> selectedIpList;
+
 	@Override
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
 		setSite(site);
@@ -76,6 +83,7 @@ public class NetworkInventoryEditor extends EditorPart {
 		createFileShareArea(cmpAction);
 
 		createTableArea(cmpMain);
+
 	}
 
 	private void createFileShareArea(Composite composite) {
@@ -139,7 +147,11 @@ public class NetworkInventoryEditor extends EditorPart {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 
-				WizardDialog wd = new WizardDialog(Display.getCurrent().getActiveShell(), new AhenkSetupWizard());
+				setSelectedIps();
+
+				AhenkSetupWizard wizard = new AhenkSetupWizard(selectedIpList);
+
+				WizardDialog wd = new WizardDialog(Display.getCurrent().getActiveShell(), wizard);
 				wd.setMinimumPageSize(new Point(800, 600));
 				wd.setPageSize(new Point(800, 600));
 				wd.open();
@@ -150,6 +162,23 @@ public class NetworkInventoryEditor extends EditorPart {
 			}
 		});
 
+		btnAhenkInstall.setEnabled(false);
+	}
+
+	private void setSelectedIps() {
+
+		TableItem[] items = tblInventory.getTable().getItems();
+		
+		List<String> tmpList = new ArrayList<String>();
+		
+		for (TableItem item : items) {
+			
+			if (item.getChecked()) {
+				tmpList.add(item.getText(0));
+			}
+		}
+		
+		selectedIpList = tmpList;
 	}
 
 	private void createScanArea(Composite composite) {
@@ -177,13 +206,13 @@ public class NetworkInventoryEditor extends EditorPart {
 				request.setPluginVersion("1.0.0-SNAPSHOT");
 				request.setCommandId("SCANNETWORK");
 				request.setPriority(Priority.NORMAL);
-				
+
 				// Populate request parameters
 				Map<String, Object> parameterMap = new HashMap<String, Object>();
 				parameterMap.put("ipRange", txtIpRange.getText());
 				parameterMap.put("timingTemplate", "3");
 				request.setParameterMap(parameterMap);
-				
+
 				// Post request
 				RestResponse response = RestClient.getInstance().post(request);
 				Map<String, Object> resultMap = response.getResultMap();
@@ -199,7 +228,7 @@ public class NetworkInventoryEditor extends EditorPart {
 	private void createTableArea(final Composite composite) {
 
 		tblInventory = new TableViewer(composite,
-				SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION | SWT.BORDER);
+				SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION | SWT.BORDER | SWT.CHECK);
 
 		// createTableColumns();
 
@@ -210,6 +239,7 @@ public class NetworkInventoryEditor extends EditorPart {
 		table.getVerticalBar().setVisible(true);
 
 		tblInventory.setContentProvider(new ArrayContentProvider());
+		tblInventory.setInput(createFakeIpToTable(table));
 
 		GridData gridData = new GridData();
 		gridData.verticalAlignment = GridData.FILL;
@@ -217,6 +247,55 @@ public class NetworkInventoryEditor extends EditorPart {
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.grabExcessVerticalSpace = true;
 		tblInventory.getControl().setLayoutData(gridData);
+
+		// Listen checkbox selections of IP table and enable/disable install
+		// Ahenk button according to these selections
+		tblInventory.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event) {
+				if (!event.getSelection().isEmpty()) {
+					updateInstallButtonStatus(tblInventory, btnAhenkInstall);
+				}
+			}
+		});
+
+	}
+
+	// TODO fake data, will be removed.
+	private List<String> createFakeIpToTable(Table table) {
+
+		List<String> ipList = new ArrayList<String>();
+
+		for (int i = 0; i < 10; i++) {
+			ipList.add("192.168.56." + (i + 1));
+		}
+
+		return ipList;
+	}
+
+	/**
+	 * Enables/Disables install Ahenk button according to IP selections.
+	 * 
+	 * @param tblVwr
+	 * @param btn
+	 */
+	private void updateInstallButtonStatus(TableViewer tblVwr, Button btn) {
+
+		// At least one IP should be selected
+		boolean ipSelected = false;
+
+		TableItem[] items = tblVwr.getTable().getItems();
+
+		for (int i = 0; i < items.length; i++) {
+			if (items[i].getChecked()) {
+				ipSelected = true;
+				// If one of the IP's is selected, that's enough
+				// do not iterate over all items
+				i = items.length;
+			}
+		}
+
+		btn.setEnabled(ipSelected);
 	}
 
 	@Override
