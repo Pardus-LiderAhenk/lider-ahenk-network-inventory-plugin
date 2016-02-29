@@ -6,7 +6,7 @@ import java.util.List;
 import tr.org.liderahenk.network.inventory.contants.Constants.AccessMethod;
 import tr.org.liderahenk.network.inventory.contants.Constants.InstallMethod;
 
-public class AhenkSetupConfigDto implements Serializable {
+public class AhenkSetupDto implements Serializable {
 
 	private static final long serialVersionUID = -8492968679338346240L;
 

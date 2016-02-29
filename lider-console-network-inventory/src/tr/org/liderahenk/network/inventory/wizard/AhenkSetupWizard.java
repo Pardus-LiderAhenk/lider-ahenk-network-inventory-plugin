@@ -204,7 +204,7 @@ public class AhenkSetupWizard extends Wizard {
 
 	@Override
 	public boolean performFinish() {
-		
+		// -- TODO Burayı ayrı threadde yap ki Wizard kapansın direk. ---- //
 		// Create request object
 		RestRequest request = new RestRequest();
 		request.setPluginName("network-inventory");
@@ -216,9 +216,15 @@ public class AhenkSetupWizard extends Wizard {
 		parameterMap.put("config", config);
 		request.setParameterMap(parameterMap);
 		
+		// TODO bir loading dialog aç.
+		
 		// Send command
 		RestResponse response = RestClient.getInstance().post(request);
+		
+		System.out.println("deneme");
+		
 		Map<String, Object> resultMap = response.getResultMap();
+		// ------------------------------------------------------------ //
 		
 		return true;
 	}
