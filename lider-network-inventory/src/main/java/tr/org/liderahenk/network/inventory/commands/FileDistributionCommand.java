@@ -63,7 +63,7 @@ public class FileDistributionCommand extends BaseCommand {
 		// Read command parameters.
 		Map<String, Object> parameterMap = context.getRequest().getParameterMap();
 		ArrayList<String> ipAddresses = (ArrayList<String>) parameterMap.get("ipAddresses");
-		File fileToTransfer = getFileInstance((String) parameterMap.get("file"), (String) parameterMap.get("filename"));
+		File fileToTransfer = getFileInstance((byte[]) parameterMap.get("file"), (String) parameterMap.get("filename"));
 		String username = (String) parameterMap.get("username");
 		String password = (String) parameterMap.get("password");
 		Integer port = (Integer) (parameterMap.get("port") == null ? 22 : parameterMap.get("port"));
@@ -210,11 +210,11 @@ public class FileDistributionCommand extends BaseCommand {
 	/**
 	 * Create a tempopary file which can be used for SCP.
 	 * 
-	 * @param contents
+	 * @param bs
 	 * @param filename
 	 * @return
 	 */
-	private File getFileInstance(String contents, String filename) {
+	private File getFileInstance(byte[] bs, String filename) {
 		File temp = null;
 		try {
 			temp = File.createTempFile(filename, "");
@@ -222,9 +222,10 @@ public class FileDistributionCommand extends BaseCommand {
 			temp.deleteOnExit();
 
 			// Write to temp file
-			BufferedWriter out = new BufferedWriter(new FileWriter(temp));
-			out.write(contents);
-			out.close();
+
+			//			BufferedWriter out = new BufferedWriter(new FileWriter(temp));
+//			out.write(bs);
+//			out.close();
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
 		}

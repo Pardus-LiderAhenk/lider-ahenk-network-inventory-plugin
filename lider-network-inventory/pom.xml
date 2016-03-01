@@ -9,6 +9,7 @@
 	</parent>
 
 	<artifactId>lider-network-inventory</artifactId>
+	<name>Lider Ahenk Network Inventory Plugin</name>
 	<url>http://www.liderahenk.org.tr</url>
 	<packaging>bundle</packaging>
 
