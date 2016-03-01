@@ -67,7 +67,7 @@ public class FileDistributionCommand extends BaseCommand {
 		String username = (String) parameterMap.get("username");
 		String password = (String) parameterMap.get("password");
 		Integer port = (Integer) (parameterMap.get("port") == null ? 22 : parameterMap.get("port"));
-		String privateKey = (String) parameterMap.get("privateKey");
+		byte[] privateKey = (byte[]) parameterMap.get("privateKey");
 		String destDirectory = (String) parameterMap.get("destDirectory");
 
 		logger.debug("Parameter map: {}", parameterMap);
