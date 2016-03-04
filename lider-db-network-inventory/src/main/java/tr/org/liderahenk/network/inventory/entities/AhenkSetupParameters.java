@@ -25,7 +25,7 @@ import javax.persistence.TemporalType;
  *
  */
 @Entity
-@Table(name = "AHENK_SETUP_RESULT")
+@Table(name = "P_AHENK_SETUP_RESULT")
 public class AhenkSetupParameters {
 
 	@Id
@@ -58,7 +58,7 @@ public class AhenkSetupParameters {
 	@Column(name = "SETUP_DATE")
 	private Date setupDate;
 
-	@OneToMany(mappedBy = "parentId", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+	@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	private List<AhenkSetupResultDetail> details = new ArrayList<AhenkSetupResultDetail>();
 
 	public AhenkSetupParameters() {

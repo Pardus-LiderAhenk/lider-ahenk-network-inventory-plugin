@@ -1,7 +1,5 @@
 package tr.org.liderahenk.network.inventory.commands;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -25,7 +23,8 @@ import tr.org.liderahenk.lider.core.api.plugin.ICommandResult;
 import tr.org.liderahenk.lider.core.api.plugin.ICommandResultFactory;
 import tr.org.liderahenk.lider.core.api.plugin.IPluginDbService;
 import tr.org.liderahenk.network.inventory.contants.Constants;
-import tr.org.liderahenk.network.inventory.dto.AhenkSetupDto;
+import tr.org.liderahenk.network.inventory.contants.Constants.AccessMethod;
+import tr.org.liderahenk.network.inventory.contants.Constants.InstallMethod;
 import tr.org.liderahenk.network.inventory.entities.AhenkSetupParameters;
 import tr.org.liderahenk.network.inventory.entities.AhenkSetupResultDetail;
 import tr.org.liderahenk.network.inventory.runnables.RunnableAhenkInstaller;
@@ -45,22 +44,30 @@ public class AhenkInstallationCommand extends BaseCommand {
 	private IOperationLogService logService;
 	private IPluginDbService pluginDbService;
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public ICommandResult execute(ICommandContext context) {
 
-		logger.debug("Executing command.");
+		logger.info("Executing command.");
 
 		Map<String, Object> parameterMap = context.getRequest().getParameterMap();
 
-		final AhenkSetupDto config = (AhenkSetupDto) parameterMap.get("config");
-
-		// TODO farklı threadlerde ahenk yükle.
-		// final ExecutorService executor = Executors.newCachedThreadPool();
+		logger.info("Getting setup parameters.");
+		List<String> ipList = (List<String>) parameterMap.get("ipList");
+		AccessMethod accessMethod = AccessMethod.valueOf((String) parameterMap.get("accessMethod"));
+		String username = (String) parameterMap.get("username");
+		String password = (String) parameterMap.get("password");
+		byte[] privateKeyFile = (byte[]) parameterMap.get("privateKeyFile");
+		String passphrase = (String) parameterMap.get("passphrase");
+		InstallMethod installMethod = InstallMethod.valueOf((String) parameterMap.get("installMethod"));
+		byte[] debFile = (byte[]) parameterMap.get("debFile");
+		Integer port = (Integer) parameterMap.get("port");
 
 		LinkedBlockingQueue<Runnable> taskQueue = new LinkedBlockingQueue<Runnable>();
 
 		final List<Runnable> running = Collections.synchronizedList(new ArrayList());
 
+		logger.info("Creating a thread pool.");
 		ThreadPoolExecutor executor = new ThreadPoolExecutor(Constants.SSH_CONFIG.NUM_THREADS,
 				Constants.SSH_CONFIG.NUM_THREADS, 0L, TimeUnit.MILLISECONDS, taskQueue,
 				Executors.defaultThreadFactory()) {
@@ -85,19 +92,26 @@ public class AhenkInstallationCommand extends BaseCommand {
 			protected void afterExecute(Runnable r, Throwable t) {
 				super.afterExecute(r, t);
 				running.remove(r);
-				logger.debug("Running threads: {}", running);
+				logger.info("Running threads: {}", running);
 			}
 		};
 
+		logger.info("Saving installation parameters parent entity.");
 		// Insert new Ahenk installation parameters.
 		// Parent identity object contains installation parameters.
-		pluginDbService.save(getParentEntityObject(config));
+		AhenkSetupParameters setupParams = getParentEntityObject(ipList, accessMethod, username, password,
+				privateKeyFile, passphrase, installMethod, debFile, port);
 
-		for (final String ip : config.getIpList()) {
+		 pluginDbService.save(setupParams);
+
+		logger.info("Starting to create a new runnable to each Ahenk installation.");
+		for (final String ip : ipList) {
 			// Execute each installation in a new runnable.
-			RunnableAhenkInstaller installer = new RunnableAhenkInstaller(ip, config.getUsername(),
-					config.getPassword(), config.getPort(), config.getPrivateKeyFile(), config.getPassphrase(),
-					config.getDebFile(), config.getInstallMethod());
+			RunnableAhenkInstaller installer = new RunnableAhenkInstaller(ip, username,
+					password, port, privateKeyFile, passphrase,
+					debFile, installMethod);
+
+			logger.info("Executing installation runnable for: " + ip);
 
 			executor.execute(installer);
 		}
@@ -110,53 +124,20 @@ public class AhenkInstallationCommand extends BaseCommand {
 		return commandResult;
 	}
 
-	private AhenkSetupParameters getParentEntityObject(AhenkSetupDto config) {
-		
+	private AhenkSetupParameters getParentEntityObject(List<String> ipList, AccessMethod accessMethod, String username,
+			String password, byte[] privateKeyFile, String passphrase, InstallMethod installMethod, byte[] debFile,
+			Integer port) {
+
 		// Create an empty result detail entity list
 		List<AhenkSetupResultDetail> detailList = new ArrayList<AhenkSetupResultDetail>();
-		
+
+		logger.info("Creating parent entity object that contains installation parameters");
 		// Create setup parameters entity
-		AhenkSetupParameters setupResult = new AhenkSetupParameters(null, config.getInstallMethod().toString(),
-				config.getAccessMethod().toString(), config.getUsername(), config.getPassword(), config.getPort(),
-				config.getPrivateKeyFile(), config.getPassphrase(), new Date(), detailList);
+		AhenkSetupParameters setupResult = new AhenkSetupParameters(null, installMethod.toString(),
+				accessMethod.toString(), username, password, port,
+				privateKeyFile, passphrase, new Date(), detailList);
 
 		return setupResult;
-	}
-
-	/**
-	 * Creates a temporary file from an array of bytes.
-	 * 
-	 * @author Caner Feyzullahoğlu <caner.feyzullahoglu@agem.com.tr>
-	 * 
-	 * @param contents
-	 * 
-	 * @param filename
-	 * 
-	 * @return File
-	 */
-	private File byteArrayToFile(byte[] content, String filename) {
-
-		FileOutputStream fileOutputStream = null;
-
-		File temp = null;
-
-		try {
-
-			fileOutputStream = new FileOutputStream(temp);
-
-			temp = File.createTempFile(filename, "");
-			// Delete temp file when program exits.
-			temp.deleteOnExit();
-
-			// Write to temp file
-			fileOutputStream.write(content);
-			fileOutputStream.close();
-
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-		}
-
-		return temp;
 	}
 
 	@Override

@@ -92,10 +92,6 @@ public class AhenkSetupDto implements Serializable {
 		this.port = port;
 	}
 
-	public static long getSerialversionuid() {
-		return serialVersionUID;
-	}
-
 	public String getUsername() {
 		return username;
 	}

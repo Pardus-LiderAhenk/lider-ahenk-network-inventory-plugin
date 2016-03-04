@@ -49,6 +49,7 @@
 		<module>lider-console-network-inventory</module>
 		<module>ahenk-network-inventory</module>
 		<module>lider-feature-network-inventory</module>
+		<module>lider-db-network-inventory</module>
 	</modules>
 
 	<build>

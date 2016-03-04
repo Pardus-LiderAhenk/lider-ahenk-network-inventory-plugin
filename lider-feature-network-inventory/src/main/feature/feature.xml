@@ -31,6 +31,7 @@
 
     <feature name="network-inventory-bundles" description="${project.name}" version="${project.version}">
         <bundle>mvn:${groupId}/lider-network-inventory/${project.version}</bundle>
+	<bundle>mvn:${groupId}/lider-db-network-inventory/${project.version}</bundle>
     </feature>
 
     <feature name="network-inventory-deps" description="${project.name}" version="${project.version}">

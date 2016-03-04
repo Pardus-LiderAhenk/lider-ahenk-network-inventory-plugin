@@ -10,7 +10,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "AHENK_SETUP_DETAIL_RESULT")
+@Table(name = "P_AHENK_SETUP_DETAIL_RESULT")
 public class AhenkSetupResultDetail {
 
 	@Id

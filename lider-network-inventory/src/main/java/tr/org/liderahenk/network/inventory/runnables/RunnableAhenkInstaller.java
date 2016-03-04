@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import tr.org.liderahenk.lider.core.api.plugin.IPluginDbService;
 import tr.org.liderahenk.network.inventory.contants.Constants.InstallMethod;
-import tr.org.liderahenk.network.inventory.entities.AhenkSetupResultDetail;
 import tr.org.liderahenk.network.inventory.entities.AhenkSetupParameters;
+import tr.org.liderahenk.network.inventory.entities.AhenkSetupResultDetail;
 import tr.org.liderahenk.network.inventory.exception.CommandExecutionException;
 import tr.org.liderahenk.network.inventory.exception.SSHConnectionException;
 import tr.org.liderahenk.network.inventory.utils.setup.SetupUtils;
@@ -56,20 +56,29 @@ public class RunnableAhenkInstaller implements Runnable {
 	@Override
 	public void run() {
 		try {
+			logger.debug("Checking SSH authentication to: " + ip);
+			
 			// Check authorization before starting installation
 			final boolean canConnect = SetupUtils.canConnectViaSsh(ip, username, password, port, privateKey,
 					passphrase);
 
 			// If we can connect to machine install Ahenk
 			if (canConnect) {
+				logger.debug("Authentication successfull for: " + ip);
+
 				// Check installation method
 				if (installMethod == InstallMethod.APT_GET) {
-
+					logger.debug("Installing package by APT-GET to: " + ip);
+					
 					// TODO gedit değiştirilecek
 					SetupUtils.installPackage(ip, username, password, port, privateKey, "gedit", null);
-
+					
 				} else if (installMethod == InstallMethod.PROVIDED_DEB) {
+					logger.debug("Converting byte array to deb file.");
+
 					File debPackage = byteArrayToFile(debFileArray, "ahenk.deb");
+
+					logger.debug("Installing package from DEB package to: " + ip);
 
 					SetupUtils.installPackage(ip, username, password, port, privateKey, passphrase, debPackage);
 
@@ -108,9 +117,13 @@ public class RunnableAhenkInstaller implements Runnable {
 
 		AhenkSetupResultDetail setupDetailResult = null;
 
+		logger.debug("Preparing entity object.");
+		
 		// Prepare entity object
 		setupDetailResult = new AhenkSetupResultDetail(null, ip, setupResult);
 
+		logger.debug("Entity object created.");
+		
 		// Select log type
 		if ("ERROR".equals(logType)) {
 			logger.error(setupResult);
@@ -118,7 +131,11 @@ public class RunnableAhenkInstaller implements Runnable {
 			logger.info(setupResult);
 		}
 
+		logger.debug("Detail entity will be saved.");
+
 		pluginDbService.save(setupDetailResult);
+		
+		logger.debug("Detail entity saved successfully.");
 	}
 
 	/**

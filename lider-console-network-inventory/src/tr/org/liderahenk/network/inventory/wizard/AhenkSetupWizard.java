@@ -213,15 +213,24 @@ public class AhenkSetupWizard extends Wizard {
 
 		// Add config object as parameter. It has all information that Lider needs to know.
 		Map<String, Object> parameterMap = new HashMap<String, Object>();
-		parameterMap.put("config", config);
+
+		// Put parameters to map
+		parameterMap.put("ipList", config.getIpList());
+		parameterMap.put("accessMethod", config.getAccessMethod());
+		parameterMap.put("username", config.getUsername());
+		parameterMap.put("password", config.getPassword());
+		parameterMap.put("privateKeyFile", config.getPrivateKeyFile());
+		parameterMap.put("passphrase", config.getPassphrase());
+		parameterMap.put("installMethod", config.getInstallMethod());
+		parameterMap.put("debFile", config.getDebFile());
+		parameterMap.put("port", config.getPort());
+		
 		request.setParameterMap(parameterMap);
 		
 		// TODO bir loading dialog aç.
 		
 		// Send command
 		RestResponse response = RestClient.getInstance().post(request);
-		
-		System.out.println("deneme");
 		
 		Map<String, Object> resultMap = response.getResultMap();
 		// ------------------------------------------------------------ //

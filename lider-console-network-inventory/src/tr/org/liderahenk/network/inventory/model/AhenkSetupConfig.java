@@ -1,5 +1,6 @@
 package tr.org.liderahenk.network.inventory.model;
 
+import java.io.Serializable;
 import java.util.List;
 
 import tr.org.liderahenk.network.inventory.constants.AccessMethod;
@@ -9,7 +10,9 @@ import tr.org.liderahenk.network.inventory.constants.InstallMethod;
  * Contains configuration variables used throughout the whole setup process.
  *
  */
-public class AhenkSetupConfig {
+public class AhenkSetupConfig implements Serializable{
+
+	private static final long serialVersionUID = 5285933884424740906L;
 
 	/**
 	 * IP list that Ahenk will be installed
