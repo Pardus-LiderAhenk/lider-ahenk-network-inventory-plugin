@@ -53,6 +53,7 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
+						<_removeheaders>Import-Service,Export-Service</_removeheaders>	
 						<Fragment-Host>lider-persistence-mariadb;bundle-version="[1.0.0,2)"</Fragment-Host>
 						<Bundle-SymbolicName>lider-db-network-inventory</Bundle-SymbolicName>
 						<Bundle-Version>1.0.0-SNAPSHOT</Bundle-Version>

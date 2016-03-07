@@ -59,9 +59,9 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Bundle-SymbolicName>lider-network-inventory</Bundle-SymbolicName>
-						<Bundle-Version>1.0.0-SNAPSHOT</Bundle-Version>
-						<Import-Package>tr.org.liderahenk.network.inventory.entities</Import-Package>
+						<_removeheaders>Import-Service,Export-Service</_removeheaders>					
+						<Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+						<Bundle-Version>${project.version}</Bundle-Version>
 					</instructions>
 				</configuration>
 			</plugin>
