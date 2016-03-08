@@ -1,5 +1,7 @@
 package tr.org.liderahenk.network.inventory.entities;
 
+import java.io.Serializable;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -11,7 +13,9 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "P_AHENK_SETUP_DETAIL_RESULT")
-public class AhenkSetupResultDetail {
+public class AhenkSetupResultDetail implements Serializable {
+
+	private static final long serialVersionUID = 6456398585747328711L;
 
 	@Id
 	@GeneratedValue
@@ -32,9 +36,10 @@ public class AhenkSetupResultDetail {
 		super();
 	}
 	
-	public AhenkSetupResultDetail(Long id, String ip, String setupResult) {
+	public AhenkSetupResultDetail(Long id, AhenkSetupParameters parent, String ip, String setupResult) {
 		super();
 		this.id = id;
+		this.parent = parent;
 		this.ip = ip;
 		this.setupResult = setupResult;
 		// DO NOT forget to set 'parent'!

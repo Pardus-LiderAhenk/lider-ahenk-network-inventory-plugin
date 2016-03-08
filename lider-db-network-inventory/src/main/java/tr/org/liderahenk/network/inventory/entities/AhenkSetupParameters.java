@@ -1,5 +1,6 @@
 package tr.org.liderahenk.network.inventory.entities;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -26,7 +27,9 @@ import javax.persistence.TemporalType;
  */
 @Entity
 @Table(name = "P_AHENK_SETUP_RESULT")
-public class AhenkSetupParameters {
+public class AhenkSetupParameters implements Serializable {
+	
+	private static final long serialVersionUID = -4130227601711334080L;
 
 	@Id
 	@GeneratedValue
@@ -55,14 +58,13 @@ public class AhenkSetupParameters {
 	private String passphrase;
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "SETUP_DATE")
+	@Column(name = "SETUP_DATE", nullable = false)
 	private Date setupDate;
 
 	@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	private List<AhenkSetupResultDetail> details = new ArrayList<AhenkSetupResultDetail>();
 
 	public AhenkSetupParameters() {
-		super();
 	}
 
 	public AhenkSetupParameters(Long id, String installMethod, String accessMethod, String username, String password,
@@ -78,5 +80,12 @@ public class AhenkSetupParameters {
 		this.passphrase = passphrase;
 		this.setupDate = setupDate;
 		this.details = details;
+	}
+	
+	public void addResultDetail(AhenkSetupResultDetail detail) {
+		if (details == null) {
+			details = new ArrayList<AhenkSetupResultDetail>();
+		}
+		details.add(detail);
 	}
 }

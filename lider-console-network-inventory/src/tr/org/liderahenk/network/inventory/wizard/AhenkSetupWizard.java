@@ -1,5 +1,7 @@
 package tr.org.liderahenk.network.inventory.wizard;
 
+import java.io.ByteArrayInputStream;
+import java.io.ObjectInputStream;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -219,10 +221,12 @@ public class AhenkSetupWizard extends Wizard {
 		parameterMap.put("accessMethod", config.getAccessMethod());
 		parameterMap.put("username", config.getUsername());
 		parameterMap.put("password", config.getPassword());
-		parameterMap.put("privateKeyFile", config.getPrivateKeyFile());
+		// Serialize before putting to map
+		parameterMap.put("privateKeyFile", serialize(config.getPrivateKeyFile()));
 		parameterMap.put("passphrase", config.getPassphrase());
 		parameterMap.put("installMethod", config.getInstallMethod());
-		parameterMap.put("debFile", config.getDebFile());
+		// Serialize before putting to map
+		parameterMap.put("debFile", serialize(config.getDebFile()));
 		parameterMap.put("port", config.getPort());
 		
 		request.setParameterMap(parameterMap);
@@ -238,6 +242,17 @@ public class AhenkSetupWizard extends Wizard {
 		return true;
 	}
 
+	public static Object serialize(byte[] data) {
+		try {
+			ByteArrayInputStream in = new ByteArrayInputStream(data);
+			ObjectInputStream is = new ObjectInputStream(in);
+			return is.readObject();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return data;
+	}
+	
 	@Override
 	public boolean canFinish() {
 

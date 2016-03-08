@@ -1,5 +1,9 @@
 package tr.org.liderahenk.network.inventory.commands;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -48,26 +52,28 @@ public class AhenkInstallationCommand extends BaseCommand {
 	@Override
 	public ICommandResult execute(ICommandContext context) {
 
-		logger.info("Executing command.");
+		logger.warn("Executing command.");
 
 		Map<String, Object> parameterMap = context.getRequest().getParameterMap();
 
-		logger.info("Getting setup parameters.");
+		logger.warn("Getting setup parameters.");
 		List<String> ipList = (List<String>) parameterMap.get("ipList");
 		AccessMethod accessMethod = AccessMethod.valueOf((String) parameterMap.get("accessMethod"));
 		String username = (String) parameterMap.get("username");
 		String password = (String) parameterMap.get("password");
-		byte[] privateKeyFile = (byte[]) parameterMap.get("privateKeyFile");
+		// Deserialize before assigning
+		byte[] privateKeyFile = deserialize(parameterMap.get("privateKeyFile"));
 		String passphrase = (String) parameterMap.get("passphrase");
 		InstallMethod installMethod = InstallMethod.valueOf((String) parameterMap.get("installMethod"));
-		byte[] debFile = (byte[]) parameterMap.get("debFile");
+		// Deserialize before assigning
+		byte[] debFile = deserialize(parameterMap.get("debFile"));
 		Integer port = (Integer) parameterMap.get("port");
 
 		LinkedBlockingQueue<Runnable> taskQueue = new LinkedBlockingQueue<Runnable>();
 
 		final List<Runnable> running = Collections.synchronizedList(new ArrayList());
 
-		logger.info("Creating a thread pool.");
+		logger.warn("Creating a thread pool.");
 		ThreadPoolExecutor executor = new ThreadPoolExecutor(Constants.SSH_CONFIG.NUM_THREADS,
 				Constants.SSH_CONFIG.NUM_THREADS, 0L, TimeUnit.MILLISECONDS, taskQueue,
 				Executors.defaultThreadFactory()) {
@@ -92,36 +98,68 @@ public class AhenkInstallationCommand extends BaseCommand {
 			protected void afterExecute(Runnable r, Throwable t) {
 				super.afterExecute(r, t);
 				running.remove(r);
-				logger.info("Running threads: {}", running);
+				logger.warn("Running threads: {}", running);
 			}
 		};
 
-		logger.info("Saving installation parameters parent entity.");
+		logger.warn("Creating setup parameters parent entity.");
 		// Insert new Ahenk installation parameters.
 		// Parent identity object contains installation parameters.
 		AhenkSetupParameters setupParams = getParentEntityObject(ipList, accessMethod, username, password,
 				privateKeyFile, passphrase, installMethod, debFile, port);
 
-		 pluginDbService.save(setupParams);
 
-		logger.info("Starting to create a new runnable to each Ahenk installation.");
+		logger.warn("Starting to create a new runnable to each Ahenk installation.");
 		for (final String ip : ipList) {
 			// Execute each installation in a new runnable.
 			RunnableAhenkInstaller installer = new RunnableAhenkInstaller(ip, username,
 					password, port, privateKeyFile, passphrase,
-					debFile, installMethod);
+					debFile, installMethod, setupParams);
 
-			logger.info("Executing installation runnable for: " + ip);
+			logger.warn("Executing installation runnable for: " + ip);
 
 			executor.execute(installer);
 		}
+		
+		logger.warn("Shutting down executor service.");
+		executor.shutdown();
+
+		
+		// TODO wait for all runnables.
+		try {
+			logger.warn("Waiting for executor service to finish all tasks.");
+			
+			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+
+			logger.warn("Executor service finished all tasks.");
+			
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		logger.warn("Saving entities to database.");
+		pluginDbService.save(setupParams);
+
+		logger.warn("Entities successfully saved.");
 
 		ICommandResult commandResult = resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this,
 				new HashMap<String, Object>());
 
-		logger.info("Command executed successfully.");
+		logger.warn("Command executed successfully.");
 
 		return commandResult;
+	}
+	
+	public static byte[] deserialize(Object obj) {
+		try {
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			ObjectOutputStream os = new ObjectOutputStream(out);
+			os.writeObject(obj);
+			return out.toByteArray();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	private AhenkSetupParameters getParentEntityObject(List<String> ipList, AccessMethod accessMethod, String username,
@@ -131,7 +169,7 @@ public class AhenkInstallationCommand extends BaseCommand {
 		// Create an empty result detail entity list
 		List<AhenkSetupResultDetail> detailList = new ArrayList<AhenkSetupResultDetail>();
 
-		logger.info("Creating parent entity object that contains installation parameters");
+		logger.warn("Creating parent entity object that contains installation parameters");
 		// Create setup parameters entity
 		AhenkSetupParameters setupResult = new AhenkSetupParameters(null, installMethod.toString(),
 				accessMethod.toString(), username, password, port,

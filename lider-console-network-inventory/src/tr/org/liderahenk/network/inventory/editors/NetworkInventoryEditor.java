@@ -269,7 +269,7 @@ public class NetworkInventoryEditor extends EditorPart {
 		for (int i = 0; i < 10; i++) {
 			ipList.add("192.168.56." + (i + 1));
 		}
-		ipList.add("192.168.1.217");
+		ipList.add("192.168.1.206");
 		return ipList;
 	}
 

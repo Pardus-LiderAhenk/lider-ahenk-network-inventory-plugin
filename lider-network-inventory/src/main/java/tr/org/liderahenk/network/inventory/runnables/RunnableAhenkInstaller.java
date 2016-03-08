@@ -18,11 +18,7 @@ public class RunnableAhenkInstaller implements Runnable {
 
 	private Logger logger = LoggerFactory.getLogger(RunnableAhenkInstaller.class);
 
-	private IPluginDbService pluginDbService;
-
-	private AhenkSetupParameters setupResult;
-
-	private AhenkSetupResultDetail setupDetailResult;
+	private AhenkSetupParameters setupParams;
 
 	private String ip;
 
@@ -37,11 +33,11 @@ public class RunnableAhenkInstaller implements Runnable {
 	private String passphrase;
 
 	private byte[] debFileArray;
-
+	
 	private InstallMethod installMethod;
 
 	public RunnableAhenkInstaller(String ip, String username, String password, Integer port, byte[] privateKey,
-			String passphrase, byte[] debFileArray, InstallMethod installMethod) {
+			String passphrase, byte[] debFileArray, InstallMethod installMethod, AhenkSetupParameters setupParams) {
 		super();
 		this.ip = ip;
 		this.username = username;
@@ -51,12 +47,13 @@ public class RunnableAhenkInstaller implements Runnable {
 		this.passphrase = passphrase;
 		this.debFileArray = debFileArray;
 		this.installMethod = installMethod;
+		this.setupParams = setupParams;
 	}
 
 	@Override
 	public void run() {
 		try {
-			logger.debug("Checking SSH authentication to: " + ip);
+			logger.warn("Checking SSH authentication to: " + ip);
 			
 			// Check authorization before starting installation
 			final boolean canConnect = SetupUtils.canConnectViaSsh(ip, username, password, port, privateKey,
@@ -64,39 +61,39 @@ public class RunnableAhenkInstaller implements Runnable {
 
 			// If we can connect to machine install Ahenk
 			if (canConnect) {
-				logger.debug("Authentication successfull for: " + ip);
+				logger.warn("Authentication successfull for: " + ip);
 
 				// Check installation method
 				if (installMethod == InstallMethod.APT_GET) {
-					logger.debug("Installing package by APT-GET to: " + ip);
+					logger.warn("Installing package by APT-GET to: " + ip);
 					
 					// TODO gedit değiştirilecek
-					SetupUtils.installPackage(ip, username, password, port, privateKey, "gedit", null);
+					SetupUtils.installPackage(ip, username, password, port, privateKey, passphrase, "gedit", null);
 					
 				} else if (installMethod == InstallMethod.PROVIDED_DEB) {
-					logger.debug("Converting byte array to deb file.");
+					logger.warn("Converting byte array to deb file.");
 
 					File debPackage = byteArrayToFile(debFileArray, "ahenk.deb");
 
-					logger.debug("Installing package from DEB package to: " + ip);
+					logger.warn("Installing package from DEB package to: " + ip);
 
 					SetupUtils.installPackage(ip, username, password, port, privateKey, passphrase, debPackage);
 
 				} else {
-					logAndSaveDetailEntity("Installation method is not set or not selected. Installation cancelled.",
+					logAndAddDetailEntity("Installation method is not set or not selected. Installation cancelled.",
 							"ERROR");
 				}
-				logAndSaveDetailEntity("Successfully installed to: " + ip, "INFO");
+				logAndAddDetailEntity("Successfully installed to: " + ip, "INFO");
 			} else {
-				logAndSaveDetailEntity("Could not connect to: " + ip + " passing over to another IP.", "ERROR");
+				logAndAddDetailEntity("Could not connect to: " + ip + " passing over to another IP.", "ERROR");
 			}
 
 		} catch (SSHConnectionException e) {
-			logAndSaveDetailEntity("Error occured installing Ahenk on IP: " + ip + " Error message: " + e.getMessage(),
+			logAndAddDetailEntity("Error occured installing Ahenk on IP: " + ip + " Error message: " + e.getMessage(),
 					"ERROR");
 			e.printStackTrace();
 		} catch (CommandExecutionException e) {
-			logAndSaveDetailEntity("Error occured installing Ahenk on IP: " + ip + " Error message: " + e.getMessage(),
+			logAndAddDetailEntity("Error occured installing Ahenk on IP: " + ip + " Error message: " + e.getMessage(),
 					"ERROR");
 			e.printStackTrace();
 		}
@@ -113,16 +110,16 @@ public class RunnableAhenkInstaller implements Runnable {
 	 * @param logType
 	 *            enter "ERROR" for error type of log.
 	 */
-	private void logAndSaveDetailEntity(String setupResult, String logType) {
+	private void logAndAddDetailEntity(String setupResult, String logType) {
 
 		AhenkSetupResultDetail setupDetailResult = null;
 
-		logger.debug("Preparing entity object.");
+		logger.warn("Preparing entity object.");
 		
 		// Prepare entity object
-		setupDetailResult = new AhenkSetupResultDetail(null, ip, setupResult);
+		setupDetailResult = new AhenkSetupResultDetail(null, setupParams, ip, setupResult);
 
-		logger.debug("Entity object created.");
+		logger.warn("Entity object created.");
 		
 		// Select log type
 		if ("ERROR".equals(logType)) {
@@ -131,11 +128,11 @@ public class RunnableAhenkInstaller implements Runnable {
 			logger.info(setupResult);
 		}
 
-		logger.debug("Detail entity will be saved.");
+		logger.warn("Detail entity will be added to parent entity.");
 
-		pluginDbService.save(setupDetailResult);
+		setupParams.addResultDetail(setupDetailResult);
 		
-		logger.debug("Detail entity saved successfully.");
+		logger.warn("Detail entity added successfully.");
 	}
 
 	/**
