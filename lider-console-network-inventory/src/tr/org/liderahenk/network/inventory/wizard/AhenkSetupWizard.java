@@ -25,8 +25,6 @@ import tr.org.liderahenk.network.inventory.wizard.pages.AhenkInstallationMethodP
 
 public class AhenkSetupWizard extends Wizard {
 
-	
-	
 	public AhenkSetupWizard(List<String> ipList) {
 		super();
 		this.config.setIpList(ipList);
@@ -221,8 +219,8 @@ public class AhenkSetupWizard extends Wizard {
 		parameterMap.put("accessMethod", config.getAccessMethod());
 		parameterMap.put("username", config.getUsername());
 		parameterMap.put("password", config.getPassword());
-		// Serialize before putting to map
-		parameterMap.put("privateKeyFile", serialize(config.getPrivateKeyFile()));
+		// Encode with Base64 before sending
+		parameterMap.put("privateKeyFile", config.getPrivateKeyFile());
 		parameterMap.put("passphrase", config.getPassphrase());
 		parameterMap.put("installMethod", config.getInstallMethod());
 		// Serialize before putting to map
@@ -244,9 +242,11 @@ public class AhenkSetupWizard extends Wizard {
 
 	public static Object serialize(byte[] data) {
 		try {
-			ByteArrayInputStream in = new ByteArrayInputStream(data);
-			ObjectInputStream is = new ObjectInputStream(in);
-			return is.readObject();
+			if (data != null) {
+				ByteArrayInputStream in = new ByteArrayInputStream(data);
+				ObjectInputStream is = new ObjectInputStream(in);
+				return is.readObject();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

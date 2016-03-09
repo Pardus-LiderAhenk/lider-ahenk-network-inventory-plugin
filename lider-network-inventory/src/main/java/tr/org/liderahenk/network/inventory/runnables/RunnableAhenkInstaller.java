@@ -52,12 +52,14 @@ public class RunnableAhenkInstaller implements Runnable {
 
 	@Override
 	public void run() {
+		logger.warn("Runnable started.");
 		try {
 			logger.warn("Checking SSH authentication to: " + ip);
 			
 			// Check authorization before starting installation
 			final boolean canConnect = SetupUtils.canConnectViaSsh(ip, username, password, port, privateKey,
 					passphrase);
+			logger.warn("canConnect = " + (canConnect == true ? "true" : "false"));
 
 			// If we can connect to machine install Ahenk
 			if (canConnect) {
@@ -66,7 +68,7 @@ public class RunnableAhenkInstaller implements Runnable {
 				// Check installation method
 				if (installMethod == InstallMethod.APT_GET) {
 					logger.warn("Installing package by APT-GET to: " + ip);
-					
+
 					// TODO gedit değiştirilecek
 					SetupUtils.installPackage(ip, username, password, port, privateKey, passphrase, "gedit", null);
 					

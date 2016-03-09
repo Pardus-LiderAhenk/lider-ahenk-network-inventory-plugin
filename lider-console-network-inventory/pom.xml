@@ -50,6 +50,13 @@
 		</repository>
 	</repositories>
 
+	<dependencies>
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+		</dependency>
+	</dependencies>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -62,5 +69,6 @@
 			</plugin>
 		</plugins>
 	</build>
-
+	
+	
 </project>

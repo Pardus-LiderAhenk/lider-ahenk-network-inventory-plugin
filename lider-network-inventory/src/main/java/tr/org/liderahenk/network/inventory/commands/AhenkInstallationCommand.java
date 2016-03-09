@@ -60,6 +60,8 @@ public class AhenkInstallationCommand extends BaseCommand {
 		List<String> ipList = (List<String>) parameterMap.get("ipList");
 		AccessMethod accessMethod = AccessMethod.valueOf((String) parameterMap.get("accessMethod"));
 		String username = (String) parameterMap.get("username");
+		// TODO loggerı sil
+		logger.warn("Mapten gelen username: " + username);
 		String password = (String) parameterMap.get("password");
 		// Deserialize before assigning
 		byte[] privateKeyFile = deserialize(parameterMap.get("privateKeyFile"));
@@ -152,10 +154,12 @@ public class AhenkInstallationCommand extends BaseCommand {
 	
 	public static byte[] deserialize(Object obj) {
 		try {
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			ObjectOutputStream os = new ObjectOutputStream(out);
-			os.writeObject(obj);
-			return out.toByteArray();
+			if (obj != null) {
+				ByteArrayOutputStream out = new ByteArrayOutputStream();
+				ObjectOutputStream os = new ObjectOutputStream(out);
+				os.writeObject(obj);
+				return out.toByteArray();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
