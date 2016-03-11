@@ -1,12 +1,11 @@
 package tr.org.liderahenk.network.inventory.wizard;
 
-import java.io.ByteArrayInputStream;
-import java.io.ObjectInputStream;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.codec.binary.Base64;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -18,11 +17,12 @@ import org.eclipse.swt.widgets.Composite;
 import tr.org.liderahenk.liderconsole.core.rest.RestClient;
 import tr.org.liderahenk.liderconsole.core.rest.RestRequest;
 import tr.org.liderahenk.liderconsole.core.rest.RestResponse;
+import tr.org.liderahenk.network.inventory.constants.AccessMethod;
+import tr.org.liderahenk.network.inventory.constants.InstallMethod;
 import tr.org.liderahenk.network.inventory.model.AhenkSetupConfig;
 import tr.org.liderahenk.network.inventory.wizard.pages.AhenkConfirmPage;
 import tr.org.liderahenk.network.inventory.wizard.pages.AhenkConnectionMethodPage;
 import tr.org.liderahenk.network.inventory.wizard.pages.AhenkInstallationMethodPage;
-
 public class AhenkSetupWizard extends Wizard {
 
 	public AhenkSetupWizard(List<String> ipList) {
@@ -217,15 +217,24 @@ public class AhenkSetupWizard extends Wizard {
 		// Put parameters to map
 		parameterMap.put("ipList", config.getIpList());
 		parameterMap.put("accessMethod", config.getAccessMethod());
-		parameterMap.put("username", config.getUsername());
-		parameterMap.put("password", config.getPassword());
-		// Encode with Base64 before sending
-		parameterMap.put("privateKeyFile", config.getPrivateKeyFile());
-		parameterMap.put("passphrase", config.getPassphrase());
 		parameterMap.put("installMethod", config.getInstallMethod());
-		// Serialize before putting to map
-		parameterMap.put("debFile", serialize(config.getDebFile()));
+		parameterMap.put("username", config.getUsername());
 		parameterMap.put("port", config.getPort());
+		
+		if (config.getAccessMethod() == AccessMethod.USERNAME_PASSWORD) {
+			parameterMap.put("password", config.getPassword());
+		}
+		else {
+			parameterMap.put("passphrase", config.getPassphrase());
+		}
+
+		if (config.getInstallMethod() == InstallMethod.PROVIDED_DEB) {
+			// Serialize before putting to map
+			parameterMap.put("debFile", Base64.encodeBase64(config.getDebFile()));
+		}
+		else if (config.getInstallMethod() == InstallMethod.WGET) {
+			parameterMap.put("downloadUrl", config.getDownloadUrl());
+		}
 		
 		request.setParameterMap(parameterMap);
 		
@@ -240,19 +249,6 @@ public class AhenkSetupWizard extends Wizard {
 		return true;
 	}
 
-	public static Object serialize(byte[] data) {
-		try {
-			if (data != null) {
-				ByteArrayInputStream in = new ByteArrayInputStream(data);
-				ObjectInputStream is = new ObjectInputStream(in);
-				return is.readObject();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return data;
-	}
-	
 	@Override
 	public boolean canFinish() {
 

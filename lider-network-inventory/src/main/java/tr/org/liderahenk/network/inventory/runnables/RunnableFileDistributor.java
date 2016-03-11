@@ -19,12 +19,12 @@ public class RunnableFileDistributor implements Runnable {
 	private String username;
 	private String password;
 	private Integer port;
-	private byte[] privateKey;
+	private String privateKey;
 	private File fileToTransfer;
 	private String destDirectory;
 
 	public RunnableFileDistributor(FileDistResultDto fileDistResultDto, List<String> ipList, String username,
-			String password, Integer port, byte[] privateKey, File fileToTransfer, String destDirectory) {
+			String password, Integer port, String privateKey, File fileToTransfer, String destDirectory) {
 		this.ipList = ipList;
 		this.username = username;
 		this.password = password;

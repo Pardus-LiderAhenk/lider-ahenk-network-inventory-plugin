@@ -44,6 +44,18 @@ public class SetupUtils {
 	private static final String INSTALL_PACKAGE = "dpkg -i {0}";
 
 	/**
+	 * Dowload file with its default file name on the server from provided URL.
+	 * Downloaded file will be in /tmp folder.
+	 */
+	private static final String DOWNLOAD_PACKAGE = "wget {0}";
+
+	/**
+	 * Dowload file with provided file name from provided URL. Downloaded file
+	 * will be in /tmp folder.
+	 */
+	private static final String DOWNLOAD_PACKAGE_WITH_FILENAME = "wget -O /tmp/{0} {1}";
+
+	/**
 	 * Tries to connect via SSH. If password parameter is null, then it tries to
 	 * connect via SSH key
 	 * 
@@ -54,21 +66,34 @@ public class SetupUtils {
 	 *         otherwise
 	 */
 	public static boolean canConnectViaSsh(final String ip, final String username, final String password,
-			final Integer port, final byte[] privateKey, final String passphrase) {
+			final Integer port, final String privateKey, final String passphrase) {
+		logger.info("Started executing canConnectViaSsh");
+
 		SSHManager manager = null;
+
+		boolean connected = true;
 		try {
 			manager = new SSHManager(ip, username == null ? "root" : username, password, port, privateKey, passphrase);
 			manager.connect();
-			logger.info("Connection established to: {} with username: {}", new Object[] { ip, username });
-			return true;
+			logger.warn("Connection established to: {} with username: {}", new Object[] { ip, username });
 		} catch (SSHConnectionException e) {
 			logger.error(e.getMessage(), e);
+			connected = false;
 		} finally {
-			if (manager != null) {
-				manager.disconnect();
+			try {
+				if (manager != null) {
+					manager.disconnect();
+				}
+			} catch (Exception e2) {
+				logger.warn("Unimportant exception while manager class disconnects (it does not affect process).");
+				logger.warn("Unimportant Exception Message: " + e2.getMessage());
+
+				return connected;
 			}
 		}
-		return false;
+
+		logger.warn(connected ? "true" : "false");
+		return connected;
 	}
 
 	/**
@@ -87,7 +112,7 @@ public class SetupUtils {
 	 * @throws CommandExecutionException
 	 */
 	public static void installPackage(final String ip, final String username, final String password, final Integer port,
-			final byte[] privateKey, final String passphrase, final String packageName, final String version)
+			final String privateKey, final String passphrase, final String packageName, final String version)
 					throws SSHConnectionException, CommandExecutionException {
 		if (NetworkUtils.isLocal(ip)) {
 
@@ -129,10 +154,10 @@ public class SetupUtils {
 
 		} else {
 			try {
-				logger.info("Installing package remotely on: {} with username: {}",
-						new Object[] { ip, username });
+				logger.info("Installing package remotely on: {} with username: {}", new Object[] { ip, username });
 
-				SSHManager manager = new SSHManager(ip, username == null ? "root" : username, password, port, privateKey, passphrase);
+				SSHManager manager = new SSHManager(ip, username == null ? "root" : username, password, port,
+						privateKey, passphrase);
 				manager.connect();
 
 				// If version is not given
@@ -141,8 +166,7 @@ public class SetupUtils {
 					logger.info("Package {} installed successfully", new Object[] { packageName });
 				} else {
 					manager.execCommand(INSTALL_PACKAGE_FROM_REPO_CMD, new Object[] { packageName, version });
-					logger.info("Package {}:{} installed successfully",
-							new Object[] { packageName, version });
+					logger.info("Package {}:{} installed successfully", new Object[] { packageName, version });
 				}
 				manager.disconnect();
 
@@ -167,7 +191,8 @@ public class SetupUtils {
 	 * @throws CommandExecutionException
 	 */
 	public static void installPackage(final String ip, final String username, final String password, final Integer port,
-			final byte[] privateKey, final String passphrase, final File debPackage) throws SSHConnectionException, CommandExecutionException {
+			final String privateKey, final String passphrase, final File debPackage)
+					throws SSHConnectionException, CommandExecutionException {
 		if (NetworkUtils.isLocal(ip)) {
 
 			logger.debug("Installing package locally.");
@@ -196,17 +221,72 @@ public class SetupUtils {
 
 		} else {
 
-			logger.debug("Installing package remotely on: {} with username: {}",
-					new Object[] { ip, username });
+			logger.debug("Installing package remotely on: {} with username: {}", new Object[] { ip, username });
 
 			copyFile(ip, username, password, port, privateKey, passphrase, debPackage, "/tmp/");
 
-			SSHManager manager = new SSHManager(ip, username == null ? "root" : username, password, port, privateKey, passphrase);
+			SSHManager manager = new SSHManager(ip, username == null ? "root" : username, password, port, privateKey,
+					passphrase);
 			manager.connect();
 			manager.execCommand(INSTALL_PACKAGE, new Object[] { "/tmp/" + debPackage.getName() });
 			manager.disconnect();
 
 			logger.info("Package {} installed successfully", debPackage.getName());
+		}
+	}
+
+	/**
+	 * Installs a deb package which has been downloaded before by
+	 * downloadPackage method. It searches the file in /tmp folder.
+	 * 
+	 * @param ip
+	 * @param username
+	 * @param password
+	 * @param port
+	 * @param privateKey
+	 * @param debPackage
+	 * @throws SSHConnectionException
+	 * @throws CommandExecutionException
+	 */
+	public static void installDownloadedPackage(final String ip, final String username, final String password,
+			final Integer port, final String privateKey, final String passphrase, final String filename)
+					throws SSHConnectionException, CommandExecutionException {
+		if (NetworkUtils.isLocal(ip)) {
+
+			logger.debug("Installing package locally.");
+
+			try {
+
+				String command = INSTALL_PACKAGE.replace("{0}", "/tmp/" + filename);
+
+				Process process = Runtime.getRuntime().exec(command);
+
+				int exitValue = process.waitFor();
+				if (exitValue != 0) {
+					logger.error("Process ends with exit value: {} - err: {}",
+							new Object[] { process.exitValue(), StringUtils.convertStream(process.getErrorStream()) });
+					throw new CommandExecutionException("Failed to execute command: " + command);
+				}
+
+				logger.info("Package {} installed successfully", filename);
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+		} else {
+
+			logger.debug("Installing package remotely on: {} with username: {}", new Object[] { ip, username });
+
+			SSHManager manager = new SSHManager(ip, username == null ? "root" : username, password, port, privateKey,
+					passphrase);
+			manager.connect();
+			manager.execCommand(INSTALL_PACKAGE, new Object[] { "/tmp/" + filename });
+			manager.disconnect();
+
+			logger.info("Package {} installed successfully", filename);
 		}
 	}
 
@@ -223,7 +303,7 @@ public class SetupUtils {
 	 * @throws CommandExecutionException
 	 */
 	public static void copyFile(final String ip, final String username, final String password, final Integer port,
-			final byte[] privateKey, final String passphrase, final File fileToTransfer, final String destDirectory)
+			final String privateKey, final String passphrase, final File fileToTransfer, final String destDirectory)
 					throws SSHConnectionException, CommandExecutionException {
 		if (NetworkUtils.isLocal(ip)) {
 
@@ -276,13 +356,83 @@ public class SetupUtils {
 
 			logger.debug("Copying file to: {} with username: {}", new Object[] { ip, username });
 
-			SSHManager manager = new SSHManager(ip, username == null ? "root" : username, password, port, privateKey, passphrase);
+			SSHManager manager = new SSHManager(ip, username == null ? "root" : username, password, port, privateKey,
+					passphrase);
 			manager.connect();
 			manager.copyFileToRemote(fileToTransfer, destDirectory, false);
 			manager.disconnect();
 
 			logger.info("File {} copied successfully", fileToTransfer.getName());
 		}
+	}
+
+	/**
+	 * Executes a command on the given machine.
+	 * 
+	 * @param ip
+	 * @param username
+	 * @param password
+	 * @param port
+	 * @param privateKey
+	 * @param passphrase
+	 * @param filename
+	 * @param downloadUrl
+	 * @throws SSHConnectionException
+	 * @throws CommandExecutionException
+	 */
+	public static void downloadPackage(final String ip, final String username, final String password,
+			final Integer port, final String privateKey, final String passphrase, final String filename,
+			final String downloadUrl) throws SSHConnectionException, CommandExecutionException {
+		if (NetworkUtils.isLocal(ip)) {
+
+			logger.info("Executing command locally.");
+
+			String command;
+
+			try {
+
+				if (filename == null || "".equals(filename)) {
+					command = DOWNLOAD_PACKAGE.replace("{0}", downloadUrl);
+				} else {
+					command = DOWNLOAD_PACKAGE_WITH_FILENAME.replace("{0}", filename).replace("{1}", downloadUrl);
+				}
+
+				Process process = Runtime.getRuntime().exec(command);
+
+				int exitValue = process.waitFor();
+				if (exitValue != 0) {
+					logger.info("Process ends with exit value: {0} - err: {1}",
+							new Object[] { process.exitValue(), StringUtils.convertStream(process.getErrorStream()) });
+					throw new CommandExecutionException("Failed to execute command: " + command);
+				}
+
+				logger.info("Command: '{0}' executed successfully.", new Object[] { command });
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+		} else {
+			try {
+				logger.info("Executing command remotely on: {0} with username: {1}", new Object[] { ip, username });
+
+				SSHManager manager = new SSHManager(ip, username == null ? "root" : username, password, port,
+						privateKey, passphrase);
+				manager.connect();
+
+				manager.execCommand(DOWNLOAD_PACKAGE, new Object[] {});
+				logger.info("Command: '{0}' executed successfully.",
+						new Object[] { DOWNLOAD_PACKAGE.replace("{0}", filename).replace("{1}", downloadUrl) });
+
+				manager.disconnect();
+
+			} catch (SSHConnectionException e) {
+				e.printStackTrace();
+			}
+		}
+
 	}
 
 }

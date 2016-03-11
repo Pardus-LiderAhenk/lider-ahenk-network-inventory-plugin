@@ -39,11 +39,29 @@ public class SSHManager {
 	private String password;
 	private String ip;
 	private int port;
-	private byte[] privateKey;
+	private String privateKey;
 	private String passphrase;
 
-	// Unlike LiderAhenk Installer, this SSHManager uses private key byte array
+	// Unlike LiderAhenk Installer, this SSHManager constructor uses private key byte array
 	// instead of private key absolute path.
+//	/**
+//	 * 
+//	 * @param ip
+//	 * @param username
+//	 * @param password
+//	 * @param port
+//	 * @param privateKey
+//	 */
+//	public SSHManager(String ip, String username, String password, Integer port, byte[] privateKey, String passphrase) {
+//		init();
+//		this.ip = ip;
+//		this.username = username;
+//		this.password = password;
+//		this.port = (port == null ? Constants.SSH_CONFIG.CONNECTION_PORT : port);
+//		this.privateKey = privateKey;
+//		this.passphrase = passphrase;
+//	}
+	
 	/**
 	 * 
 	 * @param ip
@@ -52,7 +70,7 @@ public class SSHManager {
 	 * @param port
 	 * @param privateKey
 	 */
-	public SSHManager(String ip, String username, String password, Integer port, byte[] privateKey, String passphrase) {
+	public SSHManager(String ip, String username, String password, Integer port, String privateKey, String passphrase) {
 		init();
 		this.ip = ip;
 		this.username = username;
@@ -85,15 +103,11 @@ public class SSHManager {
 		try {
 			if (privateKey != null) {
 				if (passphrase != null || !"".equals(passphrase)) {
-					// Actually this connect method was taking only the absolute
-					// path of private key file to add an identity. But while
-					// installing Ahenk from Lider Console it is not possible
-					// and we need to send private key to Lider from Lider Console,
-					// that is why adding identity part of this class is
-					// changed. Now it takes private key as array of bytes.
-					SSHChannel.addIdentity("identity", privateKey, null, passphrase.getBytes());
+					logger.debug("SSHManager privateKey:" + privateKey);
+					logger.debug("SSHManager passphrase:" + passphrase);
+					SSHChannel.addIdentity(privateKey, passphrase.getBytes());
 				} else {
-					SSHChannel.addIdentity("identity", privateKey, null, null);
+					SSHChannel.addIdentity(privateKey);
 				}
 			}
 			session = SSHChannel.getSession(username, ip, port);
@@ -347,7 +361,7 @@ public class SSHManager {
 		return port;
 	}
 
-	public byte[] getPrivateKey() {
+	public String getPrivateKey() {
 		return privateKey;
 	}
 

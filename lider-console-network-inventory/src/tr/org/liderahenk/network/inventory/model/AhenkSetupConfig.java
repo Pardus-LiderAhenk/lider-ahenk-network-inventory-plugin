@@ -35,6 +35,8 @@ public class AhenkSetupConfig implements Serializable{
 	
 	private byte[] debFile;
 
+	private String downloadUrl;
+	
 	/**
 	 * Port for SSH connection.
 	 */
@@ -112,6 +114,14 @@ public class AhenkSetupConfig implements Serializable{
 
 	public void setPrivateKeyFile(byte[] privateKeyFile) {
 		this.privateKeyFile = privateKeyFile;
+	}
+
+	public String getDownloadUrl() {
+		return downloadUrl;
+	}
+
+	public void setDownloadUrl(String downloadUrl) {
+		this.downloadUrl = downloadUrl;
 	}
 
 }

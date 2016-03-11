@@ -46,7 +46,7 @@ public class FileDistResult {
 	private Integer port;
 
 	@Column(name = "PRIVATE_KEY")
-	private byte[] privateKey;
+	private String privateKey;
 
 	@Column(name = "DESTINATION_DIRECTORY")
 	private String destDirectory;
@@ -63,7 +63,7 @@ public class FileDistResult {
 	}
 
 	public FileDistResult(Long id, String ipAddresses, String fileName, String username, String password, Integer port,
-			byte[] privateKey, String destDirectory, Date fileDistDate, List<FileDistResultHost> hosts) {
+			String privateKey, String destDirectory, Date fileDistDate, List<FileDistResultHost> hosts) {
 		super();
 		this.id = id;
 		this.ipAddresses = ipAddresses;
@@ -125,11 +125,11 @@ public class FileDistResult {
 		this.port = port;
 	}
 
-	public byte[] getPrivateKey() {
+	public String getPrivateKey() {
 		return privateKey;
 	}
 
-	public void setPrivateKey(byte[] privateKey) {
+	public void setPrivateKey(String privateKey) {
 		this.privateKey = privateKey;
 	}
 

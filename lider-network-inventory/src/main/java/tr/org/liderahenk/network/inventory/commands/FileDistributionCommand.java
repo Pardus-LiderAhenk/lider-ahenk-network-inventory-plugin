@@ -1,7 +1,9 @@
 package tr.org.liderahenk.network.inventory.commands;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -67,11 +69,16 @@ public class FileDistributionCommand extends BaseCommand {
 		String username = (String) parameterMap.get("username");
 		String password = (String) parameterMap.get("password");
 		Integer port = (Integer) (parameterMap.get("port") == null ? 22 : parameterMap.get("port"));
-		byte[] privateKey = (byte[]) parameterMap.get("privateKey");
 		String destDirectory = (String) parameterMap.get("destDirectory");
 
 		logger.debug("Parameter map: {}", parameterMap);
 
+		logger.debug("Getting the location of private key file");
+		
+		// Get private key location in Lider machine from configuration file
+		String privateKey = getPrivateKeyLocation();
+		logger.debug("Path of private key file: " + privateKey);
+		
 		// Create new instance to send back to Lider Console
 		fileDistResultDto = new FileDistResultDto(ipAddresses, fileToTransfer.getName(), username, password, port,
 				privateKey, destDirectory, new Date(),
@@ -230,6 +237,39 @@ public class FileDistributionCommand extends BaseCommand {
 			logger.error(e.getMessage(), e);
 		}
 		return temp;
+	}
+	
+	private String getPrivateKeyLocation() {
+		BufferedReader reader = null;
+		
+		// TODO change config file
+		try {
+			
+			reader = new BufferedReader(new FileReader("/home/caner/lider.config"));
+			
+			String sCurrentLine;
+
+			StringBuilder builder = new StringBuilder();
+
+			// TODO this is for temporary testing
+			// actually it will read just one property
+			// from configuration file
+			while ((sCurrentLine = reader.readLine()) != null) {
+				builder.append(sCurrentLine);
+			}
+
+			return builder.toString();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				reader.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return "";
 	}
 
 	@Override

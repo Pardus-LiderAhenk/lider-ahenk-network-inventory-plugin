@@ -6,7 +6,6 @@ import java.io.FileOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import tr.org.liderahenk.lider.core.api.plugin.IPluginDbService;
 import tr.org.liderahenk.network.inventory.contants.Constants.InstallMethod;
 import tr.org.liderahenk.network.inventory.entities.AhenkSetupParameters;
 import tr.org.liderahenk.network.inventory.entities.AhenkSetupResultDetail;
@@ -28,16 +27,18 @@ public class RunnableAhenkInstaller implements Runnable {
 
 	private Integer port;
 
-	private byte[] privateKey;
+	private String privateKey;
 
 	private String passphrase;
 
 	private byte[] debFileArray;
-	
-	private InstallMethod installMethod;
 
-	public RunnableAhenkInstaller(String ip, String username, String password, Integer port, byte[] privateKey,
-			String passphrase, byte[] debFileArray, InstallMethod installMethod, AhenkSetupParameters setupParams) {
+	private InstallMethod installMethod;
+	
+	private String downloadUrl;
+
+	public RunnableAhenkInstaller(String ip, String username, String password, Integer port, String privateKey,
+			String passphrase, byte[] debFileArray, InstallMethod installMethod, String downloadUrl, AhenkSetupParameters setupParams) {
 		super();
 		this.ip = ip;
 		this.username = username;
@@ -47,6 +48,7 @@ public class RunnableAhenkInstaller implements Runnable {
 		this.passphrase = passphrase;
 		this.debFileArray = debFileArray;
 		this.installMethod = installMethod;
+		this.downloadUrl = downloadUrl;
 		this.setupParams = setupParams;
 	}
 
@@ -55,7 +57,7 @@ public class RunnableAhenkInstaller implements Runnable {
 		logger.warn("Runnable started.");
 		try {
 			logger.warn("Checking SSH authentication to: " + ip);
-			
+
 			// Check authorization before starting installation
 			final boolean canConnect = SetupUtils.canConnectViaSsh(ip, username, password, port, privateKey,
 					passphrase);
@@ -71,7 +73,7 @@ public class RunnableAhenkInstaller implements Runnable {
 
 					// TODO gedit değiştirilecek
 					SetupUtils.installPackage(ip, username, password, port, privateKey, passphrase, "gedit", null);
-					
+
 				} else if (installMethod == InstallMethod.PROVIDED_DEB) {
 					logger.warn("Converting byte array to deb file.");
 
@@ -80,6 +82,13 @@ public class RunnableAhenkInstaller implements Runnable {
 					logger.warn("Installing package from DEB package to: " + ip);
 
 					SetupUtils.installPackage(ip, username, password, port, privateKey, passphrase, debPackage);
+
+				} else if (installMethod == InstallMethod.WGET) {
+					logger.warn("Downloading file from URL: " + downloadUrl);
+					
+					SetupUtils.downloadPackage(ip, username, password, port, privateKey, passphrase, "ahenk.deb", downloadUrl);
+					
+					SetupUtils.installDownloadedPackage(ip, username, password, port, privateKey, passphrase, "ahenk.deb");
 
 				} else {
 					logAndAddDetailEntity("Installation method is not set or not selected. Installation cancelled.",
@@ -117,12 +126,12 @@ public class RunnableAhenkInstaller implements Runnable {
 		AhenkSetupResultDetail setupDetailResult = null;
 
 		logger.warn("Preparing entity object.");
-		
+
 		// Prepare entity object
 		setupDetailResult = new AhenkSetupResultDetail(null, setupParams, ip, setupResult);
 
 		logger.warn("Entity object created.");
-		
+
 		// Select log type
 		if ("ERROR".equals(logType)) {
 			logger.error(setupResult);
@@ -133,7 +142,7 @@ public class RunnableAhenkInstaller implements Runnable {
 		logger.warn("Detail entity will be added to parent entity.");
 
 		setupParams.addResultDetail(setupDetailResult);
-		
+
 		logger.warn("Detail entity added successfully.");
 	}
 
@@ -155,15 +164,20 @@ public class RunnableAhenkInstaller implements Runnable {
 		File temp = null;
 
 		try {
-
-			fileOutputStream = new FileOutputStream(temp);
-
+			logger.warn("Creating temp file.");
 			temp = File.createTempFile(filename, "");
 			// Delete temp file when program exits.
-			temp.deleteOnExit();
+			// TODO Test amaçlı. Yorumu kaldır sonra.
+			// temp.deleteOnExit();
 
+			logger.warn("Creating new FileOutputStream.");
+			fileOutputStream = new FileOutputStream(temp);
+
+			logger.warn("Writing content to temp file.");
 			// Write to temp file
 			fileOutputStream.write(content);
+
+			logger.warn("Writing successfully completed, closing stream.");
 			fileOutputStream.close();
 
 		} catch (Exception e) {

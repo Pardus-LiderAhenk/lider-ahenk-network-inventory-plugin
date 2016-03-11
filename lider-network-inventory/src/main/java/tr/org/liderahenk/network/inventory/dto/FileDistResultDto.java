@@ -29,7 +29,7 @@ public class FileDistResultDto implements Serializable {
 
 	private Integer port;
 
-	private byte[] privateKey;
+	private String privateKey;
 
 	private String destDirectory;
 
@@ -42,7 +42,7 @@ public class FileDistResultDto implements Serializable {
 	}
 
 	public FileDistResultDto(ArrayList<String> ipAddresses, String fileName, String username, String password,
-			Integer port, byte[] privateKey, String destDirectory, Date fileDistDate,
+			Integer port, String privateKey, String destDirectory, Date fileDistDate,
 			List<FileDistResultHostDto> hosts) {
 		super();
 		this.ipAddresses = ipAddresses;
@@ -96,11 +96,11 @@ public class FileDistResultDto implements Serializable {
 		this.port = port;
 	}
 
-	public byte[] getPrivateKey() {
+	public String getPrivateKey() {
 		return privateKey;
 	}
 
-	public void setPrivateKey(byte[] privateKey) {
+	public void setPrivateKey(String privateKey) {
 		this.privateKey = privateKey;
 	}
 

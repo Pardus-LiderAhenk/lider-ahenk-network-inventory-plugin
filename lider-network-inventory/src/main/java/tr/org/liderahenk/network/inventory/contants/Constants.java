@@ -24,6 +24,7 @@ public class Constants {
 	
 	public static enum InstallMethod {
 		APT_GET,
-		PROVIDED_DEB
+		PROVIDED_DEB,
+		WGET
 	}
 }

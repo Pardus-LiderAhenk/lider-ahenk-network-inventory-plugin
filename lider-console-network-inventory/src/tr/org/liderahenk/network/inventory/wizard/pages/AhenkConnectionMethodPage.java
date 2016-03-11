@@ -8,6 +8,10 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -40,9 +44,7 @@ public class AhenkConnectionMethodPage extends WizardPage {
 
 	// Widgets
 	private Composite mainContainer = null;
-	private Composite fileDialogContainer = null;
 	private Composite usernameContainer = null;
-	private Composite privateKeyContainer = null;
 	private Composite passphraseContainer = null;
 
 	private Button userPassBtn = null;
@@ -54,9 +56,6 @@ public class AhenkConnectionMethodPage extends WizardPage {
 	private Text passwordTxt = null;
 
 	private Button usePrivateKey = null;
-
-	private Text fileDialogText = null;
-	private Button fileDialogBtn = null;
 
 	private Label passphrase = null;
 	private Text passphraseTxt = null;
@@ -165,62 +164,8 @@ public class AhenkConnectionMethodPage extends WizardPage {
 			}
 		});
 
-		privateKeyContainer = new Composite(mainContainer, SWT.NONE);
-		GridLayout glPrivateKey = new GridLayout(1, false);
-		glPrivateKey.marginLeft = 15;
-		privateKeyContainer.setLayout(glPrivateKey);
-
-		fileDialogContainer = new Composite(privateKeyContainer, SWT.NONE);
-		GridLayout glFileDialog = new GridLayout(2, false);
-		glFileDialog.marginLeft = -6;
-		// Adjust button near to text field
-		glFileDialog.horizontalSpacing = -3;
-		fileDialogContainer.setLayout(glFileDialog);
-
-		// File dialog window
-		fileDialog = new FileDialog(mainContainer.getShell(), SWT.SAVE);
-		fileDialog.setText(Messages.getString("UPLOAD_KEY"));
-
-		// Upload key text field
-		fileDialogText = new Text(fileDialogContainer, SWT.BORDER);
-		fileDialogText.setEnabled(false);
-		GridData gdFileDialogTxt = new GridData();
-		gdFileDialogTxt.widthHint = 247;
-
-		fileDialogText.setLayoutData(gdFileDialogTxt);
-		fileDialogText.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e) {
-				updatePageCompleteStatus();
-			}
-		});
-
-		// Upload key push button
-		fileDialogBtn = new Button(fileDialogContainer, SWT.PUSH);
-		fileDialogBtn.setText(Messages.getString("UPLOAD_KEY"));
-
-		GridData gdFileDialogBtn = new GridData();
-		gdFileDialogBtn.heightHint = 25;
-		gdFileDialogBtn.widthHint = 125;
-		fileDialogBtn.setLayoutData(gdFileDialogBtn);
-		fileDialogBtn.setEnabled(false);
-
-		fileDialogBtn.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				fileDialogResult = fileDialog.open();
-				if (fileDialogResult != null && !"".equals(fileDialogResult)) {
-					fileDialogText.setText(fileDialogResult);
-				}
-			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-			}
-		});
-
 		// Container for passphrase section
-		passphraseContainer = new Composite(privateKeyContainer, SWT.NONE);
+		passphraseContainer = new Composite(mainContainer, SWT.NONE);
 
 		// Passphrase label
 		passphrase = new Label(passphraseContainer, SWT.SINGLE);
@@ -260,7 +205,6 @@ public class AhenkConnectionMethodPage extends WizardPage {
 	private boolean updatePageCompleteStatus() {
 
 		boolean userInfoEntered;
-		boolean privateKeyEntered;
 		boolean portEntered;
 
 		// If "Use username and password" is selected, username and password
@@ -276,27 +220,15 @@ public class AhenkConnectionMethodPage extends WizardPage {
 			userInfoEntered = true;
 		}
 
-		// If "use private key is selected", private key must be selected from
-		// file system
-		if (usePrivateKey.getSelection()) {
-			if (!"".equals(fileDialogText.getText()) && fileDialogText.getText() != null) {
-				privateKeyEntered = true;
-			} else {
-				privateKeyEntered = false;
-			}
-		} else {
-			privateKeyEntered = true;
-		}
-
 		if (!"".equals(portTxt.getText()) && portTxt.getText() != null) {
 			portEntered = true;
 		} else {
 			portEntered = false;
 		}
 
-		setPageComplete(userInfoEntered && privateKeyEntered && portEntered);
+		setPageComplete(userInfoEntered && portEntered);
 
-		return userInfoEntered && privateKeyEntered && portEntered;
+		return userInfoEntered && portEntered;
 	}
 
 	private void organizeFields() {
@@ -306,8 +238,6 @@ public class AhenkConnectionMethodPage extends WizardPage {
 			passwordTxt.setEnabled(true);
 
 			passphraseTxt.setEnabled(false);
-			fileDialogText.setEnabled(false);
-			fileDialogBtn.setEnabled(false);
 		}
 
 		if (usePrivateKey.getSelection()) {
@@ -315,43 +245,7 @@ public class AhenkConnectionMethodPage extends WizardPage {
 			passwordTxt.setEnabled(false);
 
 			passphraseTxt.setEnabled(true);
-			fileDialogText.setEnabled(true);
-			fileDialogText.setEditable(false);
-			fileDialogBtn.setEnabled(true);
 		}
-	}
-
-	/**
-	 * Read the file from provided path and returns it as an array of bytes.
-	 * 
-	 * @author Caner Feyzullahoğlu <caner.feyzullahoglu@agem.com.tr>
-	 * 
-	 * @param filePath
-	 *            Absolute path to file
-	 * @return given file as byte[]
-	 */
-	private byte[] readFileAsByteArray(String pathOfFile) {
-		
-		String content = null;
-
-		File file = new File(pathOfFile);
-		
-		try (FileReader reader = new FileReader(file)) {
-			
-			char[] chars = new char[(int) file.length()];
-			
-			reader.read(chars);
-			
-			content = new String(chars);
-			
-			content.getBytes();
-			
-			return content.getBytes();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return new byte[0];
 	}
 
 	@Override
@@ -364,7 +258,6 @@ public class AhenkConnectionMethodPage extends WizardPage {
 		} else {
 			config.setAccessMethod(AccessMethod.PRIVATE_KEY);
 			config.setUsername("root");
-			config.setPrivateKeyFile((byte[]) readFileAsByteArray(fileDialogText.getText()));
 			if (!"".equals(passphraseTxt.getText()) && passphraseTxt.getText() != null) {
 				config.setPassphrase(passphraseTxt.getText());
 			}

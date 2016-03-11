@@ -52,7 +52,7 @@ public class AhenkSetupParameters implements Serializable {
 	private Integer port;
 
 	@Column(name = "PRIVATE_KEY")
-	private byte[] privateKey;
+	private String privateKey;
 
 	@Column(name = "PASSPHRASE")
 	private String passphrase;
@@ -61,6 +61,9 @@ public class AhenkSetupParameters implements Serializable {
 	@Column(name = "SETUP_DATE", nullable = false)
 	private Date setupDate;
 
+	@Column(name = "DOWNLOAD_URL")
+	private String downloadUrl;
+
 	@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	private List<AhenkSetupResultDetail> details = new ArrayList<AhenkSetupResultDetail>();
 
@@ -68,7 +71,7 @@ public class AhenkSetupParameters implements Serializable {
 	}
 
 	public AhenkSetupParameters(Long id, String installMethod, String accessMethod, String username, String password,
-			Integer port, byte[] privateKey, String passphrase, Date setupDate, List<AhenkSetupResultDetail> details) {
+			Integer port, String privateKey, String passphrase, Date setupDate, String downloadUrl, List<AhenkSetupResultDetail> details) {
 		super();
 		this.id = id;
 		this.installMethod = installMethod;
@@ -79,6 +82,7 @@ public class AhenkSetupParameters implements Serializable {
 		this.privateKey = privateKey;
 		this.passphrase = passphrase;
 		this.setupDate = setupDate;
+		this.downloadUrl = downloadUrl;
 		this.details = details;
 	}
 	
@@ -88,4 +92,94 @@ public class AhenkSetupParameters implements Serializable {
 		}
 		details.add(detail);
 	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getInstallMethod() {
+		return installMethod;
+	}
+
+	public void setInstallMethod(String installMethod) {
+		this.installMethod = installMethod;
+	}
+
+	public String getAccessMethod() {
+		return accessMethod;
+	}
+
+	public void setAccessMethod(String accessMethod) {
+		this.accessMethod = accessMethod;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public Integer getPort() {
+		return port;
+	}
+
+	public void setPort(Integer port) {
+		this.port = port;
+	}
+
+	public String getPrivateKey() {
+		return privateKey;
+	}
+
+	public void setPrivateKey(String privateKey) {
+		this.privateKey = privateKey;
+	}
+
+	public String getPassphrase() {
+		return passphrase;
+	}
+
+	public void setPassphrase(String passphrase) {
+		this.passphrase = passphrase;
+	}
+
+	public Date getSetupDate() {
+		return setupDate;
+	}
+
+	public void setSetupDate(Date setupDate) {
+		this.setupDate = setupDate;
+	}
+
+	public String getDownloadUrl() {
+		return downloadUrl;
+	}
+
+	public void setDownloadUrl(String downloadUrl) {
+		this.downloadUrl = downloadUrl;
+	}
+
+	public List<AhenkSetupResultDetail> getDetails() {
+		return details;
+	}
+
+	public void setDetails(List<AhenkSetupResultDetail> details) {
+		this.details = details;
+	}
+	
+	
 }
