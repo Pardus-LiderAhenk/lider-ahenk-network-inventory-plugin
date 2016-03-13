@@ -23,11 +23,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import tr.org.liderahenk.lider.core.api.log.IOperationLogService;
-import tr.org.liderahenk.lider.core.api.plugin.CommandResultStatus;
-import tr.org.liderahenk.lider.core.api.plugin.ICommandContext;
-import tr.org.liderahenk.lider.core.api.plugin.ICommandResult;
-import tr.org.liderahenk.lider.core.api.plugin.ICommandResultFactory;
-import tr.org.liderahenk.lider.core.api.plugin.IPluginDbService;
+import tr.org.liderahenk.lider.core.api.persistence.IPluginDbService;
+import tr.org.liderahenk.lider.core.api.service.ICommandContext;
+import tr.org.liderahenk.lider.core.api.service.ICommandResult;
+import tr.org.liderahenk.lider.core.api.service.ICommandResultFactory;
+import tr.org.liderahenk.lider.core.api.service.enums.CommandResultStatus;
 import tr.org.liderahenk.network.inventory.contants.Constants;
 import tr.org.liderahenk.network.inventory.dto.ScanResultDto;
 import tr.org.liderahenk.network.inventory.dto.ScanResultHostDto;
@@ -224,7 +224,7 @@ public class NetworkScanCommand extends BaseCommand {
 	}
 
 	@Override
-	public Boolean needsTask() {
+	public Boolean executeOnAgent() {
 		return false;
 	}
 

@@ -11,10 +11,10 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import junit.framework.TestCase;
-import tr.org.liderahenk.lider.core.api.plugin.ICommandContext;
-import tr.org.liderahenk.lider.core.api.plugin.ICommandResult;
-import tr.org.liderahenk.lider.core.api.plugin.ICommandResultFactory;
-import tr.org.liderahenk.lider.core.api.rest.IRestRequest;
+import tr.org.liderahenk.lider.core.api.rest.requests.ITaskCommandRequest;
+import tr.org.liderahenk.lider.core.api.service.ICommandContext;
+import tr.org.liderahenk.lider.core.api.service.ICommandResult;
+import tr.org.liderahenk.lider.core.api.service.ICommandResultFactory;
 
 @RunWith(JUnit4.class)
 public class NetworkScanCommandTest extends TestCase {
@@ -26,7 +26,7 @@ public class NetworkScanCommandTest extends TestCase {
 		Map<String, Object> parameterMap = new HashMap<String, Object>();
 		parameterMap.put("ipRange", "192.168.1.80-120");
 		parameterMap.put("timingTemplate", "3");
-		IRestRequest request = Mockito.mock(IRestRequest.class);
+		ITaskCommandRequest request = Mockito.mock(ITaskCommandRequest.class);
 		when(request.getParameterMap()).thenReturn(parameterMap);
 
 		// Populate context object

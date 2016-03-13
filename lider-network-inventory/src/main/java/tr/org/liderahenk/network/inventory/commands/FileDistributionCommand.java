@@ -1,10 +1,8 @@
 package tr.org.liderahenk.network.inventory.commands;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,11 +24,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import tr.org.liderahenk.lider.core.api.log.IOperationLogService;
-import tr.org.liderahenk.lider.core.api.plugin.CommandResultStatus;
-import tr.org.liderahenk.lider.core.api.plugin.ICommandContext;
-import tr.org.liderahenk.lider.core.api.plugin.ICommandResult;
-import tr.org.liderahenk.lider.core.api.plugin.ICommandResultFactory;
-import tr.org.liderahenk.lider.core.api.plugin.IPluginDbService;
+import tr.org.liderahenk.lider.core.api.persistence.IPluginDbService;
+import tr.org.liderahenk.lider.core.api.service.ICommandContext;
+import tr.org.liderahenk.lider.core.api.service.ICommandResult;
+import tr.org.liderahenk.lider.core.api.service.ICommandResultFactory;
+import tr.org.liderahenk.lider.core.api.service.enums.CommandResultStatus;
 import tr.org.liderahenk.network.inventory.contants.Constants;
 import tr.org.liderahenk.network.inventory.dto.FileDistResultDto;
 import tr.org.liderahenk.network.inventory.dto.FileDistResultHostDto;
@@ -58,8 +56,6 @@ public class FileDistributionCommand extends BaseCommand {
 	@Override
 	public ICommandResult execute(ICommandContext context) {
 
-		logger.debug("Executing command.");
-
 		FileDistResultDto fileDistResultDto = null;
 
 		// Read command parameters.
@@ -74,11 +70,11 @@ public class FileDistributionCommand extends BaseCommand {
 		logger.debug("Parameter map: {}", parameterMap);
 
 		logger.debug("Getting the location of private key file");
-		
+
 		// Get private key location in Lider machine from configuration file
 		String privateKey = getPrivateKeyLocation();
 		logger.debug("Path of private key file: " + privateKey);
-		
+
 		// Create new instance to send back to Lider Console
 		fileDistResultDto = new FileDistResultDto(ipAddresses, fileToTransfer.getName(), username, password, port,
 				privateKey, destDirectory, new Date(),
@@ -144,8 +140,6 @@ public class FileDistributionCommand extends BaseCommand {
 			// Insert new distribution result record
 			pluginDbService.save(getEntityObject(fileDistResultDto));
 		}
-
-		logger.info("Command executed successfully.");
 
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		ObjectMapper mapper = new ObjectMapper();
@@ -230,23 +224,23 @@ public class FileDistributionCommand extends BaseCommand {
 
 			// Write to temp file
 
-			//			BufferedWriter out = new BufferedWriter(new FileWriter(temp));
-//			out.write(bs);
-//			out.close();
+			// BufferedWriter out = new BufferedWriter(new FileWriter(temp));
+			// out.write(bs);
+			// out.close();
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
 		}
 		return temp;
 	}
-	
+
 	private String getPrivateKeyLocation() {
 		BufferedReader reader = null;
-		
+
 		// TODO change config file
 		try {
-			
+
 			reader = new BufferedReader(new FileReader("/home/caner/lider.config"));
-			
+
 			String sCurrentLine;
 
 			StringBuilder builder = new StringBuilder();
@@ -283,7 +277,7 @@ public class FileDistributionCommand extends BaseCommand {
 	}
 
 	@Override
-	public Boolean needsTask() {
+	public Boolean executeOnAgent() {
 		return false;
 	}
 

@@ -5,12 +5,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -29,11 +23,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import tr.org.liderahenk.lider.core.api.log.IOperationLogService;
-import tr.org.liderahenk.lider.core.api.plugin.CommandResultStatus;
-import tr.org.liderahenk.lider.core.api.plugin.ICommandContext;
-import tr.org.liderahenk.lider.core.api.plugin.ICommandResult;
-import tr.org.liderahenk.lider.core.api.plugin.ICommandResultFactory;
-import tr.org.liderahenk.lider.core.api.plugin.IPluginDbService;
+import tr.org.liderahenk.lider.core.api.persistence.IPluginDbService;
+import tr.org.liderahenk.lider.core.api.service.ICommandContext;
+import tr.org.liderahenk.lider.core.api.service.ICommandResult;
+import tr.org.liderahenk.lider.core.api.service.ICommandResultFactory;
+import tr.org.liderahenk.lider.core.api.service.enums.CommandResultStatus;
 import tr.org.liderahenk.network.inventory.contants.Constants;
 import tr.org.liderahenk.network.inventory.contants.Constants.AccessMethod;
 import tr.org.liderahenk.network.inventory.contants.Constants.InstallMethod;
@@ -60,8 +54,6 @@ public class AhenkInstallationCommand extends BaseCommand {
 	@Override
 	public ICommandResult execute(ICommandContext context) {
 
-		logger.warn("Executing command.");
-
 		Map<String, Object> parameterMap = context.getRequest().getParameterMap();
 
 		logger.warn("Getting setup parameters.");
@@ -70,32 +62,31 @@ public class AhenkInstallationCommand extends BaseCommand {
 		InstallMethod installMethod = InstallMethod.valueOf((String) parameterMap.get("installMethod"));
 		String username = (String) parameterMap.get("username");
 		Integer port = (Integer) parameterMap.get("port");
-		
+
 		String password = null;
 		byte[] debFile = null;
 		String privateKey = null;
 		String passphrase = null;
 		String downloadUrl = null;
-		
+
 		if (accessMethod == AccessMethod.USERNAME_PASSWORD) {
 			password = (String) parameterMap.get("password");
-		}
-		else {
+		} else {
 			passphrase = (String) parameterMap.get("passphrase");
-			
+
 			// Get private key location in Lider machine from configuration file
 			privateKey = getPrivateKeyLocation();
 			logger.warn("Path of private key file: " + privateKey);
-			
+
 			// Passphrase can be null, check it
-//			String passphrase = parameterMap.get("passphrase") == null ? null : (String) parameterMap.get("passphrase");
+			// String passphrase = parameterMap.get("passphrase") == null ? null
+			// : (String) parameterMap.get("passphrase");
 		}
 		if (installMethod == InstallMethod.PROVIDED_DEB) {
 			// Deserialize before assigning
 			// TODO file sending does not work stable
 			debFile = Base64.decodeBase64(deserialize(parameterMap.get("debFile")));
-		}
-		else if (installMethod == InstallMethod.WGET) {
+		} else if (installMethod == InstallMethod.WGET) {
 			downloadUrl = (String) parameterMap.get("downloadUrl");
 		}
 
@@ -133,8 +124,6 @@ public class AhenkInstallationCommand extends BaseCommand {
 		};
 
 		logger.warn("Getting the location of private key file");
-		
-		
 
 		logger.warn("Creating setup parameters parent entity.");
 		// Insert new Ahenk installation parameters.
@@ -143,7 +132,7 @@ public class AhenkInstallationCommand extends BaseCommand {
 				passphrase, installMethod, debFile, port, downloadUrl);
 
 		logger.warn("passphrase: " + passphrase);
-		
+
 		logger.warn("Starting to create a new runnable to each Ahenk installation.");
 		for (final String ip : ipList) {
 			// Execute each installation in a new runnable.
@@ -178,19 +167,17 @@ public class AhenkInstallationCommand extends BaseCommand {
 		ICommandResult commandResult = resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this,
 				new HashMap<String, Object>());
 
-		logger.warn("Command executed successfully.");
-
 		return commandResult;
 	}
 
 	private String getPrivateKeyLocation() {
 		BufferedReader reader = null;
-		
+
 		// TODO change config file
 		try {
-			
+
 			reader = new BufferedReader(new FileReader("/home/caner/lider.config"));
-			
+
 			String sCurrentLine;
 
 			StringBuilder builder = new StringBuilder();
@@ -240,7 +227,8 @@ public class AhenkInstallationCommand extends BaseCommand {
 		logger.warn("Creating parent entity object that contains installation parameters");
 		// Create setup parameters entity
 		AhenkSetupParameters setupResult = new AhenkSetupParameters(null, installMethod.toString(),
-				accessMethod.toString(), username, password, port, privateKey, passphrase, new Date(), downloadUrl, detailList);
+				accessMethod.toString(), username, password, port, privateKey, passphrase, new Date(), downloadUrl,
+				detailList);
 
 		return setupResult;
 	}
@@ -256,7 +244,7 @@ public class AhenkInstallationCommand extends BaseCommand {
 	}
 
 	@Override
-	public Boolean needsTask() {
+	public Boolean executeOnAgent() {
 		return false;
 	}
 
