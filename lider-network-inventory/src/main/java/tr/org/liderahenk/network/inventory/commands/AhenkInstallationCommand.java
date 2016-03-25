@@ -77,10 +77,6 @@ public class AhenkInstallationCommand extends BaseCommand {
 			// Get private key location in Lider machine from configuration file
 			privateKey = getPrivateKeyLocation();
 			logger.warn("Path of private key file: " + privateKey);
-
-			// Passphrase can be null, check it
-			// String passphrase = parameterMap.get("passphrase") == null ? null
-			// : (String) parameterMap.get("passphrase");
 		}
 		if (installMethod == InstallMethod.PROVIDED_DEB) {
 			// Deserialize before assigning
@@ -88,7 +84,7 @@ public class AhenkInstallationCommand extends BaseCommand {
 			debFile = Base64.decodeBase64(deserialize(parameterMap.get("debFile")));
 		} else if (installMethod == InstallMethod.WGET) {
 			downloadUrl = (String) parameterMap.get("downloadUrl");
-		}
+		} // TODO else {APT-GET} 
 
 		LinkedBlockingQueue<Runnable> taskQueue = new LinkedBlockingQueue<Runnable>();
 

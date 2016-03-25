@@ -240,6 +240,7 @@ public class AhenkInstallationMethodPage extends WizardPage {
 			config.setDebFile(getFileAsByteArray(fileDialogText.getText()));
 		}
 		else {
+			config.setInstallMethod(InstallMethod.WGET);
 			config.setDownloadUrl(downloadUrlTxt.getText());
 		}
 

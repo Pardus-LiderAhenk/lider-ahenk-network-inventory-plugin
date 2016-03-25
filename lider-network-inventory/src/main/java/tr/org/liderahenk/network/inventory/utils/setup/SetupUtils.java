@@ -44,13 +44,13 @@ public class SetupUtils {
 	private static final String INSTALL_PACKAGE = "dpkg -i {0}";
 
 	/**
-	 * Dowload file with its default file name on the server from provided URL.
+	 * DowNload file with its default file name on the server from provided URL.
 	 * Downloaded file will be in /tmp folder.
 	 */
 	private static final String DOWNLOAD_PACKAGE = "wget {0}";
 
 	/**
-	 * Dowload file with provided file name from provided URL. Downloaded file
+	 * Download file with provided file name from provided URL. Downloaded file
 	 * will be in /tmp folder.
 	 */
 	private static final String DOWNLOAD_PACKAGE_WITH_FILENAME = "wget -O /tmp/{0} {1}";
@@ -367,7 +367,8 @@ public class SetupUtils {
 	}
 
 	/**
-	 * Executes a command on the given machine.
+	 * Downloads a file from given URL to given machine.
+	 * (Downloaded file wil be under /tmp folder.)
 	 * 
 	 * @param ip
 	 * @param username
