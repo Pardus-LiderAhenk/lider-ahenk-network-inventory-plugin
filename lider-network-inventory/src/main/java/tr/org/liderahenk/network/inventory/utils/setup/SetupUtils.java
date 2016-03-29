@@ -153,26 +153,21 @@ public class SetupUtils {
 			}
 
 		} else {
-			try {
-				logger.info("Installing package remotely on: {} with username: {}", new Object[] { ip, username });
+			logger.info("Installing package remotely on: {} with username: {}", new Object[] { ip, username });
 
-				SSHManager manager = new SSHManager(ip, username == null ? "root" : username, password, port,
-						privateKey, passphrase);
-				manager.connect();
+			SSHManager manager = new SSHManager(ip, username == null ? "root" : username, password, port,
+					privateKey, passphrase);
+			manager.connect();
 
-				// If version is not given
-				if (version == null || "".equals(version)) {
-					manager.execCommand(INSTALL_PACKAGE_FROM_REPO_CMD_WITHOUT_VERSION, new Object[] { packageName });
-					logger.info("Package {} installed successfully", new Object[] { packageName });
-				} else {
-					manager.execCommand(INSTALL_PACKAGE_FROM_REPO_CMD, new Object[] { packageName, version });
-					logger.info("Package {}:{} installed successfully", new Object[] { packageName, version });
-				}
-				manager.disconnect();
-
-			} catch (SSHConnectionException e) {
-				e.printStackTrace();
+			// If version is not given
+			if (version == null || "".equals(version)) {
+				manager.execCommand(INSTALL_PACKAGE_FROM_REPO_CMD_WITHOUT_VERSION, new Object[] { packageName });
+				logger.info("Package {} installed successfully", new Object[] { packageName });
+			} else {
+				manager.execCommand(INSTALL_PACKAGE_FROM_REPO_CMD, new Object[] { packageName, version });
+				logger.info("Package {}:{} installed successfully", new Object[] { packageName, version });
 			}
+			manager.disconnect();
 		}
 
 	}
@@ -416,22 +411,17 @@ public class SetupUtils {
 			}
 
 		} else {
-			try {
-				logger.info("Executing command remotely on: {0} with username: {1}", new Object[] { ip, username });
+			logger.info("Executing command remotely on: {0} with username: {1}", new Object[] { ip, username });
 
-				SSHManager manager = new SSHManager(ip, username == null ? "root" : username, password, port,
-						privateKey, passphrase);
-				manager.connect();
+			SSHManager manager = new SSHManager(ip, username == null ? "root" : username, password, port,
+					privateKey, passphrase);
+			manager.connect();
 
-				manager.execCommand(DOWNLOAD_PACKAGE, new Object[] {});
-				logger.info("Command: '{0}' executed successfully.",
-						new Object[] { DOWNLOAD_PACKAGE.replace("{0}", filename).replace("{1}", downloadUrl) });
+			manager.execCommand(DOWNLOAD_PACKAGE, new Object[] {});
+			logger.info("Command: '{0}' executed successfully.",
+					new Object[] { DOWNLOAD_PACKAGE.replace("{0}", filename).replace("{1}", downloadUrl) });
 
-				manager.disconnect();
-
-			} catch (SSHConnectionException e) {
-				e.printStackTrace();
-			}
+			manager.disconnect();
 		}
 
 	}
