@@ -1,8 +1,5 @@
 package tr.org.liderahenk.network.inventory.runnables;
 
-import java.io.File;
-import java.io.FileOutputStream;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,14 +28,12 @@ public class RunnableAhenkInstaller implements Runnable {
 
 	private String passphrase;
 
-	private byte[] debFileArray;
-
 	private InstallMethod installMethod;
 	
 	private String downloadUrl;
 
 	public RunnableAhenkInstaller(String ip, String username, String password, Integer port, String privateKey,
-			String passphrase, byte[] debFileArray, InstallMethod installMethod, String downloadUrl, AhenkSetupParameters setupParams) {
+			String passphrase, InstallMethod installMethod, String downloadUrl, AhenkSetupParameters setupParams) {
 		super();
 		this.ip = ip;
 		this.username = username;
@@ -46,7 +41,6 @@ public class RunnableAhenkInstaller implements Runnable {
 		this.port = port;
 		this.privateKey = privateKey;
 		this.passphrase = passphrase;
-		this.debFileArray = debFileArray;
 		this.installMethod = installMethod;
 		this.downloadUrl = downloadUrl;
 		this.setupParams = setupParams;
@@ -54,37 +48,28 @@ public class RunnableAhenkInstaller implements Runnable {
 
 	@Override
 	public void run() {
-		logger.warn("Runnable started.");
+		logger.info("Runnable started.");
 		try {
-			logger.warn("Checking SSH authentication to: " + ip);
+			logger.info("Checking SSH authentication to: " + ip);
 
 			// Check authorization before starting installation
 			final boolean canConnect = SetupUtils.canConnectViaSsh(ip, username, password, port, privateKey,
 					passphrase);
-			logger.warn("canConnect = " + (canConnect == true ? "true" : "false"));
+			logger.info("canConnect = " + (canConnect == true ? "true" : "false"));
 
 			// If we can connect to machine install Ahenk
 			if (canConnect) {
-				logger.warn("Authentication successfull for: " + ip);
+				logger.info("Authentication successfull for: " + ip);
 
 				// Check installation method
 				if (installMethod == InstallMethod.APT_GET) {
-					logger.warn("Installing package by APT-GET to: " + ip);
+					logger.info("Installing package by APT-GET to: " + ip);
 
 					// TODO gedit değiştirilecek
 					SetupUtils.installPackage(ip, username, password, port, privateKey, passphrase, "gedit", null);
 
-				} else if (installMethod == InstallMethod.PROVIDED_DEB) {
-					logger.warn("Converting byte array to deb file.");
-
-					File debPackage = byteArrayToFile(debFileArray, "ahenk.deb");
-
-					logger.warn("Installing package from DEB package to: " + ip);
-
-					SetupUtils.installPackage(ip, username, password, port, privateKey, passphrase, debPackage);
-
 				} else if (installMethod == InstallMethod.WGET) {
-					logger.warn("Downloading file from URL: " + downloadUrl);
+					logger.info("Downloading file from URL: " + downloadUrl);
 					
 					SetupUtils.downloadPackage(ip, username, password, port, privateKey, passphrase, "ahenk.deb", downloadUrl);
 					
@@ -125,12 +110,12 @@ public class RunnableAhenkInstaller implements Runnable {
 
 		AhenkSetupResultDetail setupDetailResult = null;
 
-		logger.warn("Preparing entity object.");
+		logger.info("Preparing entity object.");
 
 		// Prepare entity object
 		setupDetailResult = new AhenkSetupResultDetail(null, setupParams, ip, setupResult);
 
-		logger.warn("Entity object created.");
+		logger.info("Entity object created.");
 
 		// Select log type
 		if ("ERROR".equals(logType)) {
@@ -139,52 +124,10 @@ public class RunnableAhenkInstaller implements Runnable {
 			logger.info(setupResult);
 		}
 
-		logger.warn("Detail entity will be added to parent entity.");
+		logger.info("Detail entity will be added to parent entity.");
 
 		setupParams.addResultDetail(setupDetailResult);
 
-		logger.warn("Detail entity added successfully.");
+		logger.info("Detail entity added successfully.");
 	}
-
-	/**
-	 * Creates a temporary file from an array of bytes.
-	 * 
-	 * @author Caner Feyzullahoğlu <caner.feyzullahoglu@agem.com.tr>
-	 * 
-	 * @param contents
-	 * 
-	 * @param filename
-	 * 
-	 * @return File
-	 */
-	private File byteArrayToFile(byte[] content, String filename) {
-
-		FileOutputStream fileOutputStream = null;
-
-		File temp = null;
-
-		try {
-			logger.warn("Creating temp file.");
-			temp = File.createTempFile(filename, "");
-			// Delete temp file when program exits.
-			// TODO Test amaçlı. Yorumu kaldır sonra.
-			// temp.deleteOnExit();
-
-			logger.warn("Creating new FileOutputStream.");
-			fileOutputStream = new FileOutputStream(temp);
-
-			logger.warn("Writing content to temp file.");
-			// Write to temp file
-			fileOutputStream.write(content);
-
-			logger.warn("Writing successfully completed, closing stream.");
-			fileOutputStream.close();
-
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-		}
-
-		return temp;
-	}
-
 }

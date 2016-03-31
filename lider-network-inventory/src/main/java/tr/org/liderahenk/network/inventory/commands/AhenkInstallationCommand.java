@@ -18,7 +18,6 @@ import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +63,6 @@ public class AhenkInstallationCommand extends BaseCommand {
 		Integer port = (Integer) parameterMap.get("port");
 
 		String password = null;
-		byte[] debFile = null;
 		String privateKey = null;
 		String passphrase = null;
 		String downloadUrl = null;
@@ -72,19 +70,17 @@ public class AhenkInstallationCommand extends BaseCommand {
 		if (accessMethod == AccessMethod.USERNAME_PASSWORD) {
 			password = (String) parameterMap.get("password");
 		} else {
+			// If access method is private key then set passphrase
 			passphrase = (String) parameterMap.get("passphrase");
 
 			// Get private key location in Lider machine from configuration file
 			privateKey = getPrivateKeyLocation();
 			logger.warn("Path of private key file: " + privateKey);
 		}
-		if (installMethod == InstallMethod.PROVIDED_DEB) {
-			// Deserialize before assigning
-			// TODO file sending does not work stable
-			debFile = Base64.decodeBase64(deserialize(parameterMap.get("debFile")));
-		} else if (installMethod == InstallMethod.WGET) {
+		
+		if (installMethod == InstallMethod.WGET) {
 			downloadUrl = (String) parameterMap.get("downloadUrl");
-		} // TODO else {APT-GET} 
+		} 
 
 		LinkedBlockingQueue<Runnable> taskQueue = new LinkedBlockingQueue<Runnable>();
 
@@ -125,7 +121,7 @@ public class AhenkInstallationCommand extends BaseCommand {
 		// Insert new Ahenk installation parameters.
 		// Parent identity object contains installation parameters.
 		AhenkSetupParameters setupParams = getParentEntityObject(ipList, accessMethod, username, password, privateKey,
-				passphrase, installMethod, debFile, port, downloadUrl);
+				passphrase, installMethod, port, downloadUrl);
 
 		logger.warn("passphrase: " + passphrase);
 
@@ -133,7 +129,7 @@ public class AhenkInstallationCommand extends BaseCommand {
 		for (final String ip : ipList) {
 			// Execute each installation in a new runnable.
 			RunnableAhenkInstaller installer = new RunnableAhenkInstaller(ip, username, password, port, privateKey,
-					passphrase, debFile, installMethod, downloadUrl, setupParams);
+					passphrase, installMethod, downloadUrl, setupParams);
 
 			logger.warn("Executing installation runnable for: " + ip);
 
@@ -214,8 +210,7 @@ public class AhenkInstallationCommand extends BaseCommand {
 	}
 
 	private AhenkSetupParameters getParentEntityObject(List<String> ipList, AccessMethod accessMethod, String username,
-			String password, String privateKey, String passphrase, InstallMethod installMethod, byte[] debFile,
-			Integer port, String downloadUrl) {
+			String password, String privateKey, String passphrase, InstallMethod installMethod, Integer port, String downloadUrl) {
 
 		// Create an empty result detail entity list
 		List<AhenkSetupResultDetail> detailList = new ArrayList<AhenkSetupResultDetail>();

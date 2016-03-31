@@ -29,7 +29,6 @@ public class AhenkInstallationMethodPage extends WizardPage {
 
 	// Widgets
 	private Composite mainContainer = null;
-	private Composite fileDialogContainer = null;
 
 	private Button useAptGetBtn = null;
 
@@ -37,14 +36,6 @@ public class AhenkInstallationMethodPage extends WizardPage {
 
 	private Text downloadUrlTxt = null;
 	
-	private FileDialog fileDialog = null;
-
-	private Text fileDialogText = null;
-
-	private Button fileDialogBtn = null;
-
-	private String fileDialogResult = null;
-
 	// Status variable for the possible errors on this page
 	IStatus ipStatus;
 
@@ -76,8 +67,6 @@ public class AhenkInstallationMethodPage extends WizardPage {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (useAptGetBtn.getSelection()) {
-					fileDialogText.setEnabled(false);
-					fileDialogBtn.setEnabled(false);
 					downloadUrlTxt.setEnabled(false);
 					updatePageCompleteStatus();
 				}
@@ -88,56 +77,6 @@ public class AhenkInstallationMethodPage extends WizardPage {
 			}
 		});
 
-		fileDialogContainer = new Composite(mainContainer, SWT.NONE);
-		GridLayout glFileDialog = new GridLayout(2, false);
-		glFileDialog.marginLeft = 15;
-		// Adjust button near to text field
-		glFileDialog.horizontalSpacing = -3;
-		fileDialogContainer.setLayout(glFileDialog);
-
-//		// File dialog window
-//		fileDialog = new FileDialog(mainContainer.getShell(), SWT.SAVE);
-//		fileDialog.setText(Messages.getString("UPLOAD_AHENK"));
-//		fileDialog.setFilterExtensions(new String[] { "*.deb" });
-//
-//		// Upload key text field
-//		fileDialogText = new Text(fileDialogContainer, SWT.BORDER);
-//		fileDialogText.setEnabled(false);
-//		fileDialogText.setEditable(false);
-//		GridData gdFileDialogTxt = new GridData();
-//		gdFileDialogTxt.widthHint = 247;
-//		fileDialogText.setLayoutData(gdFileDialogTxt);
-//		fileDialogText.addModifyListener(new ModifyListener() {
-//			@Override
-//			public void modifyText(ModifyEvent e) {
-//				updatePageCompleteStatus();
-//			}
-//		});
-//
-//		// Upload Ahenk .deb push button
-//		fileDialogBtn = new Button(fileDialogContainer, SWT.PUSH);
-//		fileDialogBtn.setText(Messages.getString("UPLOAD_AHENK"));
-//
-//		GridData gdFileDialogBtn = new GridData();
-//		gdFileDialogBtn.heightHint = 25;
-//		gdFileDialogBtn.widthHint = 125;
-//		fileDialogBtn.setLayoutData(gdFileDialogBtn);
-//		fileDialogBtn.setEnabled(false);
-//
-//		fileDialogBtn.addSelectionListener(new SelectionListener() {
-//			@Override
-//			public void widgetSelected(SelectionEvent e) {
-//				fileDialogResult = fileDialog.open();
-//				if (fileDialogResult != null && !"".equals(fileDialogResult)) {
-//					fileDialogText.setText(fileDialogResult);
-//				}
-//			}
-//
-//			@Override
-//			public void widgetDefaultSelected(SelectionEvent e) {
-//			}
-//		});
-		
 		useWgetBtn = new Button(mainContainer, SWT.RADIO);
 		useWgetBtn.setText(Messages.getString("INSTALL_FROM_GIVEN_URL"));
 		
@@ -146,8 +85,6 @@ public class AhenkInstallationMethodPage extends WizardPage {
 			public void widgetSelected(SelectionEvent e) {
 				if (useWgetBtn.getSelection()) {
 					downloadUrlTxt.setEnabled(true);
-					fileDialogText.setEnabled(false);
-					fileDialogBtn.setEnabled(false);
 					updatePageCompleteStatus();
 				}
 			}
