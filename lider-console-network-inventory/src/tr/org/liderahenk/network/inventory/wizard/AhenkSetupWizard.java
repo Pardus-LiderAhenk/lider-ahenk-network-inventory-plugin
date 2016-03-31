@@ -15,8 +15,9 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.widgets.Composite;
 
 import tr.org.liderahenk.liderconsole.core.rest.RestClient;
-import tr.org.liderahenk.liderconsole.core.rest.RestRequest;
-import tr.org.liderahenk.liderconsole.core.rest.RestResponse;
+import tr.org.liderahenk.liderconsole.core.rest.requests.TaskRequest;
+import tr.org.liderahenk.liderconsole.core.rest.responses.RestResponse;
+import tr.org.liderahenk.liderconsole.core.rest.utils.TaskUtils;
 import tr.org.liderahenk.network.inventory.constants.AccessMethod;
 import tr.org.liderahenk.network.inventory.constants.InstallMethod;
 import tr.org.liderahenk.network.inventory.model.AhenkSetupConfig;
@@ -204,12 +205,12 @@ public class AhenkSetupWizard extends Wizard {
 
 	@Override
 	public boolean performFinish() {
-		// -- TODO Burayı ayrı threadde yap ki Wizard kapansın direk. ---- //
+		// -- TODO Here will be in different thread so wizard will be closed immediately. ---- //
 		// Create request object
-		RestRequest request = new RestRequest();
-		request.setPluginName("network-inventory");
-		request.setPluginVersion("1.0.0-SNAPSHOT");
-		request.setCommandId("INSTALLAHENK");
+		TaskRequest task = new TaskRequest();
+		task.setPluginName("network-inventory");
+		task.setPluginVersion("1.0.0-SNAPSHOT");
+		task.setCommandId("INSTALLAHENK");
 
 		// Add config object as parameter. It has all information that Lider needs to know.
 		Map<String, Object> parameterMap = new HashMap<String, Object>();
@@ -228,22 +229,24 @@ public class AhenkSetupWizard extends Wizard {
 			parameterMap.put("passphrase", config.getPassphrase());
 		}
 
-		if (config.getInstallMethod() == InstallMethod.PROVIDED_DEB) {
-			// Serialize before putting to map
-			parameterMap.put("debFile", Base64.encodeBase64(config.getDebFile()));
-		}
-		else if (config.getInstallMethod() == InstallMethod.WGET) {
+		if (config.getInstallMethod() == InstallMethod.WGET) {
 			parameterMap.put("downloadUrl", config.getDownloadUrl());
 		}
 		
-		request.setParameterMap(parameterMap);
+		task.setParameterMap(parameterMap);
 		
-		// TODO bir loading dialog aç.
+		// TODO open a loading dialog(take it from installer project)
 		
 		// Send command
-		RestResponse response = RestClient.getInstance().post(request);
+		RestResponse response;
+		try {
+			response = (RestResponse) TaskUtils.execute(task);
+			Map<String, Object> resultMap = response.getResultMap();
+		} catch (Exception e) {
+			e.printStackTrace();
+			// TODO change loading dialog as: "Error occured."
+		}
 		
-		Map<String, Object> resultMap = response.getResultMap();
 		// ------------------------------------------------------------ //
 		
 		return true;

@@ -31,11 +31,11 @@ import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.EditorPart;
 
-import tr.org.liderahenk.liderconsole.core.rest.Priority;
-import tr.org.liderahenk.liderconsole.core.rest.RestClient;
-import tr.org.liderahenk.liderconsole.core.rest.RestRequest;
-import tr.org.liderahenk.liderconsole.core.rest.RestResponse;
-import tr.org.liderahenk.liderconsole.core.ui.GenericEditorInput;
+import tr.org.liderahenk.liderconsole.core.constants.LiderConstants;
+import tr.org.liderahenk.liderconsole.core.rest.requests.TaskRequest;
+import tr.org.liderahenk.liderconsole.core.rest.responses.RestResponse;
+import tr.org.liderahenk.liderconsole.core.rest.utils.TaskUtils;
+import tr.org.liderahenk.liderconsole.core.utils.SWTResourceManager;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
 import tr.org.liderahenk.network.inventory.wizard.AhenkSetupWizard;
 
@@ -61,10 +61,6 @@ public class NetworkInventoryEditor extends EditorPart {
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
 		setSite(site);
 		setInput(input);
-		final GenericEditorInput ginput = (GenericEditorInput) input;
-		setEntryDn(ginput.getId());
-		setUserName(ginput.getUserId());
-		setPartName(input.getName());
 	}
 
 	@Override
@@ -95,8 +91,7 @@ public class NetworkInventoryEditor extends EditorPart {
 		final Text txtFilePath = new Text(cmpAhenkInstall, SWT.RIGHT | SWT.SINGLE | SWT.FILL | SWT.BORDER);
 
 		btnFileUpload = new Button(cmpAhenkInstall, SWT.NONE);
-		btnFileUpload.setImage(
-				new Image(cmpAhenkInstall.getDisplay(), this.getClass().getResourceAsStream("/icons/sample.gif")));
+		btnFileUpload.setImage(SWTResourceManager.getImage(LiderConstants.PLUGIN_IDS.LIDER_CONSOLE_CORE, "icons/16/folder-add.png"));
 		btnFileUpload.setText(Messages.getString("UPLOAD_FILE"));
 		btnFileUpload.addSelectionListener(new SelectionListener() {
 			@Override
@@ -115,8 +110,7 @@ public class NetworkInventoryEditor extends EditorPart {
 		});
 
 		btnShareFile = new Button(cmpAhenkInstall, SWT.NONE);
-		btnShareFile.setImage(
-				new Image(cmpAhenkInstall.getDisplay(), this.getClass().getResourceAsStream("/icons/sample.gif")));
+		btnShareFile.setImage(SWTResourceManager.getImage(LiderConstants.PLUGIN_IDS.LIDER_CONSOLE_CORE, "icons/16/share.png"));
 		btnShareFile.setText(Messages.getString("SHARE_FILE"));
 		btnShareFile.addSelectionListener(new SelectionListener() {
 			@Override
@@ -140,8 +134,7 @@ public class NetworkInventoryEditor extends EditorPart {
 		lblAhenkInstall.setText(Messages.getString("FOR_AHENK_INSTALLATION"));
 
 		btnAhenkInstall = new Button(cmpAhenkInstall, SWT.NONE);
-		btnAhenkInstall.setImage(
-				new Image(cmpAhenkInstall.getDisplay(), this.getClass().getResourceAsStream("/icons/sample.gif")));
+		btnAhenkInstall.setImage(SWTResourceManager.getImage(LiderConstants.PLUGIN_IDS.LIDER_CONSOLE_CORE, "icons/16/package-download-install.png"));
 		btnAhenkInstall.setText(Messages.getString("INSTALL_AHENK"));
 		btnAhenkInstall.addSelectionListener(new SelectionListener() {
 			@Override
@@ -195,27 +188,32 @@ public class NetworkInventoryEditor extends EditorPart {
 		txtIpRange.setMessage(Messages.getString("EX_IP"));
 
 		btnScan = new Button(cmpScan, SWT.NONE);
-		btnScan.setImage(new Image(cmpScan.getDisplay(), this.getClass().getResourceAsStream("/icons/sample.gif")));
+		btnScan.setImage(SWTResourceManager.getImage(LiderConstants.PLUGIN_IDS.LIDER_CONSOLE_CORE, "icons/16/search.png"));
 		btnScan.setText(Messages.getString("START_SCAN"));
 		btnScan.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				// Create request instance
-				RestRequest request = new RestRequest();
-				request.setPluginName("network-inventory");
-				request.setPluginVersion("1.0.0-SNAPSHOT");
-				request.setCommandId("SCANNETWORK");
-				request.setPriority(Priority.NORMAL);
+				TaskRequest task = new TaskRequest();
+				task.setPluginName("network-inventory");
+				task.setPluginVersion("1.0.0-SNAPSHOT");
+				task.setCommandId("SCANNETWORK");
 
 				// Populate request parameters
 				Map<String, Object> parameterMap = new HashMap<String, Object>();
 				parameterMap.put("ipRange", txtIpRange.getText());
 				parameterMap.put("timingTemplate", "3");
-				request.setParameterMap(parameterMap);
+				task.setParameterMap(parameterMap);
 
-				// Post request
-				RestResponse response = RestClient.getInstance().post(request);
-				Map<String, Object> resultMap = response.getResultMap();
+				RestResponse response;
+				try {
+					// Post request
+					response = (RestResponse) TaskUtils.execute(task);
+					Map<String, Object> resultMap = response.getResultMap();
+					// TODO show results to user by opening a new dialog that contains a table and results.
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
 			}
 
 			@Override

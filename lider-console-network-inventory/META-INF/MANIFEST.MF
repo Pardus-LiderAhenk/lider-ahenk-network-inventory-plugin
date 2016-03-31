@@ -27,5 +27,4 @@ Require-Bundle: javax.inject;bundle-version="1.0.0",
  tr.org.liderahenk.liderconsole.core,
  org.apache.commons.codec
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
-Import-Package: tr.org.liderahenk.liderconsole.core.ui
 Bundle-Vendor: AGEM Bilişim

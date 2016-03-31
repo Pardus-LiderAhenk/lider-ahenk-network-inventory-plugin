@@ -1,18 +1,5 @@
 package tr.org.liderahenk.network.inventory.wizard.pages;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.wizard.IWizardPage;
@@ -26,11 +13,10 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
-import tr.org.liderahenk.liderconsole.core.utils.GUIHelper;
+import tr.org.liderahenk.liderconsole.core.utils.SWTResourceManager;
 import tr.org.liderahenk.network.inventory.constants.AccessMethod;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
 import tr.org.liderahenk.network.inventory.model.AhenkSetupConfig;
@@ -59,10 +45,6 @@ public class AhenkConnectionMethodPage extends WizardPage {
 
 	private Label passphrase = null;
 	private Text passphraseTxt = null;
-
-	private FileDialog fileDialog = null;
-
-	private String fileDialogResult = null;
 
 	private Text portTxt;
 
@@ -190,7 +172,7 @@ public class AhenkConnectionMethodPage extends WizardPage {
 		Label port = new Label(portComp, SWT.SINGLE);
 		port.setText(Messages.getString("PLEASE_ENTER_PORT"));
 
-		portTxt = GUIHelper.createText(portComp);
+		portTxt = SWTResourceManager.createText(portComp);
 		portTxt.setText("22");
 		portTxt.addModifyListener(new ModifyListener() {
 			@Override

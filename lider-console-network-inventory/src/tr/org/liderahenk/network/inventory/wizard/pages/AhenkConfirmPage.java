@@ -7,7 +7,7 @@ import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 
-import tr.org.liderahenk.liderconsole.core.utils.GUIHelper;
+import tr.org.liderahenk.liderconsole.core.utils.SWTResourceManager;
 import tr.org.liderahenk.network.inventory.constants.AccessMethod;
 import tr.org.liderahenk.network.inventory.constants.InstallMethod;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
@@ -31,11 +31,11 @@ public class AhenkConfirmPage extends WizardPage {
 	@Override
 	public void createControl(Composite parent) {
 
-		Composite container = GUIHelper.createComposite(parent, 1);
+		Composite container = SWTResourceManager.createComposite(parent, 1);
 		setControl(container);
 		
 		// IP list label
-		GUIHelper.createLabel(container, Messages.getString("MACHINES_THAT_AHENK_WILL_BE_INSTALLED"));
+		SWTResourceManager.createLabel(container, Messages.getString("MACHINES_THAT_AHENK_WILL_BE_INSTALLED"));
 
 		// Add a text area for IP list
 		ipTextArea = new StyledText(container, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
@@ -47,14 +47,14 @@ public class AhenkConfirmPage extends WizardPage {
 		ipTextArea.setLayoutData(txtAreaGd);
 		ipTextArea.setText("localhost");
 		
-		GUIHelper.createLabel(container,
+		SWTResourceManager.createLabel(container,
 				"- " + Messages.getString(config.getAccessMethod() == AccessMethod.PRIVATE_KEY
 				? "ACCESSING_WITH_PRIVATE_KEY" : "ACCESSING_WITH_USERNAME_AND_PASSWORD"));
 		
-		GUIHelper.createLabel(container, "- " + Messages.getString(
+		SWTResourceManager.createLabel(container, "- " + Messages.getString(
 				config.getInstallMethod() == InstallMethod.APT_GET ? "USE_REPOSITORY" : "USE_GIVEN_DEB"));
 		
-		GUIHelper.createLabel(container, Messages.getString("AHENK_WILL_BE_INSTALLED") + " "
+		SWTResourceManager.createLabel(container, Messages.getString("AHENK_WILL_BE_INSTALLED") + " "
 				+ Messages.getString("WANT_TO_CONTINUE_PRESS_NEXT"));
 
 		GridData gd = new GridData();
