@@ -31,6 +31,8 @@ public class RunnableAhenkInstaller implements Runnable {
 	private InstallMethod installMethod;
 	
 	private String downloadUrl;
+	
+	private final static String MAKE_DIR_UNDER_TMP = "mkdir /tmp/{0}"; 
 
 	public RunnableAhenkInstaller(String ip, String username, String password, Integer port, String privateKey,
 			String passphrase, InstallMethod installMethod, String downloadUrl, AhenkSetupParameters setupParams) {
@@ -69,11 +71,14 @@ public class RunnableAhenkInstaller implements Runnable {
 					SetupUtils.installPackage(ip, username, password, port, privateKey, passphrase, "gedit", null);
 
 				} else if (installMethod == InstallMethod.WGET) {
+					logger.info("Creating directory under /tmp");
+					SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase, MAKE_DIR_UNDER_TMP.replace("{0}", "ahenkTmpDir"));
+					
 					logger.info("Downloading file from URL: " + downloadUrl);
+					SetupUtils.downloadPackage(ip, username, password, port, privateKey, passphrase, "ahenkTmpDir", "ahenk.deb", downloadUrl);
 					
-					SetupUtils.downloadPackage(ip, username, password, port, privateKey, passphrase, "ahenk.deb", downloadUrl);
-					
-					SetupUtils.installDownloadedPackage(ip, username, password, port, privateKey, passphrase, "ahenk.deb");
+					logger.info("Installing downloaded package to: " + ip);
+					SetupUtils.installDownloadedPackage(ip, username, password, port, privateKey, passphrase, "ahenkTmpDir", "ahenk.deb");
 
 				} else {
 					logAndAddDetailEntity("Installation method is not set or not selected. Installation cancelled.",
