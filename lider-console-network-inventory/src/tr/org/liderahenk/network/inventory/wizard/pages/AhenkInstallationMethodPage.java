@@ -13,9 +13,9 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Text;
 
+import tr.org.liderahenk.network.inventory.constants.AccessMethod;
 import tr.org.liderahenk.network.inventory.constants.InstallMethod;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
 import tr.org.liderahenk.network.inventory.model.AhenkSetupConfig;
@@ -132,14 +132,24 @@ public class AhenkInstallationMethodPage extends WizardPage {
 	@Override
 	public IWizardPage getNextPage() {
 
+		AhenkConfirmPage confPage = (AhenkConfirmPage) super.getNextPage();
+		
 		if (useAptGetBtn.getSelection()) {
 			config.setInstallMethod(InstallMethod.APT_GET);
+			confPage.getInstallLabel().setText("- " + Messages.getString("USE_REPOSITORY"));
 		} 
 		else {
 			config.setInstallMethod(InstallMethod.WGET);
 			config.setDownloadUrl(downloadUrlTxt.getText());
+			confPage.getInstallLabel().setText("- " + Messages.getString("USE_GIVEN_URL"));
 		}
 
+		if (config.getAccessMethod() == AccessMethod.USERNAME_PASSWORD) {
+			confPage.getAccessLabel().setText("- " + Messages.getString("ACCESSING_WITH_USERNAME_AND_PASSWORD"));
+		} else {
+			confPage.getAccessLabel().setText("- " + Messages.getString("ACCESSING_WITH_PRIVATE_KEY"));
+		}
+		
 		return super.getNextPage();
 	}
 	

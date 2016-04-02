@@ -6,10 +6,9 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 
 import tr.org.liderahenk.liderconsole.core.utils.SWTResourceManager;
-import tr.org.liderahenk.network.inventory.constants.AccessMethod;
-import tr.org.liderahenk.network.inventory.constants.InstallMethod;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
 import tr.org.liderahenk.network.inventory.model.AhenkSetupConfig;
 
@@ -21,6 +20,9 @@ public class AhenkConfirmPage extends WizardPage {
 	private AhenkSetupConfig config;
 
 	private StyledText ipTextArea;
+	
+	private Label accessLabel;
+	private Label installLabel;
 
 	public AhenkConfirmPage(AhenkSetupConfig config) {
 		super(AhenkConfirmPage.class.getName(), Messages.getString("AHENK_INSTALLATION"), null);
@@ -47,19 +49,19 @@ public class AhenkConfirmPage extends WizardPage {
 		ipTextArea.setLayoutData(txtAreaGd);
 		ipTextArea.setText("localhost");
 		
-		SWTResourceManager.createLabel(container,
-				"- " + Messages.getString(config.getAccessMethod() == AccessMethod.PRIVATE_KEY
-				? "ACCESSING_WITH_PRIVATE_KEY" : "ACCESSING_WITH_USERNAME_AND_PASSWORD"));
-		
-		SWTResourceManager.createLabel(container, "- " + Messages.getString(
-				config.getInstallMethod() == InstallMethod.APT_GET ? "USE_REPOSITORY" : "USE_GIVEN_DEB"));
+		GridData gd = new GridData();
+		gd.widthHint = 500;
+		gd.minimumWidth = 500;
+
+		accessLabel = SWTResourceManager.createLabel(container);
+		accessLabel.setLayoutData(gd);
+
+		installLabel = SWTResourceManager.createLabel(container);
+		installLabel.setLayoutData(gd);
 		
 		SWTResourceManager.createLabel(container, Messages.getString("AHENK_WILL_BE_INSTALLED") + " "
 				+ Messages.getString("WANT_TO_CONTINUE_PRESS_NEXT"));
 
-		GridData gd = new GridData();
-		gd.widthHint = 200;
-		gd.minimumWidth = 200;
 	}
 
 	@Override
@@ -72,6 +74,14 @@ public class AhenkConfirmPage extends WizardPage {
 		ipTextArea.setText(allIps);
 		
 		return super.getNextPage();
+	}
+
+	public Label getAccessLabel() {
+		return accessLabel;
+	}
+
+	public Label getInstallLabel() {
+		return installLabel;
 	}
 
 }
