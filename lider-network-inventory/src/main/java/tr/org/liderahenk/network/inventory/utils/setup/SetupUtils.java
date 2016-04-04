@@ -44,14 +44,14 @@ public class SetupUtils {
 	private static final String INSTALL_PACKAGE = "dpkg -i {0}";
 
 	/**
-	 * DowNload file with its default file name on the server from provided URL.
-	 * Downloaded file will be in /tmp folder.
+	 * Download file with its default file name on the server from provided URL.
+	 * Downloaded file will be in /tmp/{0} folder.
 	 */
 	private static final String DOWNLOAD_PACKAGE = "wget ‐‐directory-prefix=/tmp/{0}/ {1}";
 
 	/**
 	 * Download file with provided file name from provided URL. Downloaded file
-	 * will be in /tmp folder.
+	 * will be in /tmp/{0} folder.
 	 */
 	private static final String DOWNLOAD_PACKAGE_WITH_FILENAME = "wget --output-document=/tmp/{0}/{1} {2}";
 
