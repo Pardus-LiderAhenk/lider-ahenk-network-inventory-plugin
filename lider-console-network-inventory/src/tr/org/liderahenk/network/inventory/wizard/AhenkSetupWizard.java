@@ -12,6 +12,7 @@ import org.eclipse.jface.util.Policy;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 
 import tr.org.liderahenk.liderconsole.core.rest.requests.TaskRequest;
 import tr.org.liderahenk.liderconsole.core.rest.responses.RestResponse;
@@ -203,49 +204,61 @@ public class AhenkSetupWizard extends Wizard {
 
 	@Override
 	public boolean performFinish() {
-		// -- TODO Here will be in different thread so wizard will be closed immediately. ---- //
-		// Create request object
-		TaskRequest task = new TaskRequest();
-		task.setPluginName("network-inventory");
-		task.setPluginVersion("1.0.0-SNAPSHOT");
-		task.setCommandId("INSTALLAHENK");
+		
+		final Display display = Display.getCurrent();
+		
+		Runnable runnable = new Runnable() {
+			
+			@Override
+			public void run() {
+				// -- TODO Here will be in different thread so wizard will be closed immediately. ---- //
+				// Create request object
+				TaskRequest task = new TaskRequest();
+				task.setPluginName("network-inventory");
+				task.setPluginVersion("1.0.0-SNAPSHOT");
+				task.setCommandId("INSTALLAHENK");
 
-		// Add config object as parameter. It has all information that Lider needs to know.
-		Map<String, Object> parameterMap = new HashMap<String, Object>();
+				// Add config object as parameter. It has all information that Lider needs to know.
+				Map<String, Object> parameterMap = new HashMap<String, Object>();
 
-		// Put parameters to map
-		parameterMap.put("ipList", config.getIpList());
-		parameterMap.put("accessMethod", config.getAccessMethod());
-		parameterMap.put("installMethod", config.getInstallMethod());
-		parameterMap.put("username", config.getUsername());
-		parameterMap.put("port", config.getPort());
-		
-		if (config.getAccessMethod() == AccessMethod.USERNAME_PASSWORD) {
-			parameterMap.put("password", config.getPassword());
-		}
-		else {
-			parameterMap.put("passphrase", config.getPassphrase());
-		}
+				// Put parameters to map
+				parameterMap.put("ipList", config.getIpList());
+				parameterMap.put("accessMethod", config.getAccessMethod());
+				parameterMap.put("installMethod", config.getInstallMethod());
+				parameterMap.put("username", config.getUsername());
+				parameterMap.put("port", config.getPort());
+				
+				if (config.getAccessMethod() == AccessMethod.USERNAME_PASSWORD) {
+					parameterMap.put("password", config.getPassword());
+				}
+				else {
+					parameterMap.put("passphrase", config.getPassphrase());
+				}
 
-		if (config.getInstallMethod() == InstallMethod.WGET) {
-			parameterMap.put("downloadUrl", config.getDownloadUrl());
-		}
+				if (config.getInstallMethod() == InstallMethod.WGET) {
+					parameterMap.put("downloadUrl", config.getDownloadUrl());
+				}
+				
+				task.setParameterMap(parameterMap);
+				
+				// TODO open a loading dialog(take it from installer project)
+				
+				// Send command
+				RestResponse response;
+				try {
+					response = (RestResponse) TaskUtils.execute(task);
+					Map<String, Object> resultMap = response.getResultMap();
+				} catch (Exception e) {
+					e.printStackTrace();
+					// TODO change loading dialog as: "Error occured."
+				}
+				
+				// ------------------------------------------------------------ //
+				
+			}
+		};
 		
-		task.setParameterMap(parameterMap);
-		
-		// TODO open a loading dialog(take it from installer project)
-		
-		// Send command
-		RestResponse response;
-		try {
-			response = (RestResponse) TaskUtils.execute(task);
-			Map<String, Object> resultMap = response.getResultMap();
-		} catch (Exception e) {
-			e.printStackTrace();
-			// TODO change loading dialog as: "Error occured."
-		}
-		
-		// ------------------------------------------------------------ //
+		display.asyncExec(runnable);
 		
 		return true;
 	}

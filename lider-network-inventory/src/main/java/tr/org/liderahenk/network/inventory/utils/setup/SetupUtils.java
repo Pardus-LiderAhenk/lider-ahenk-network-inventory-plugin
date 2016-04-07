@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import tr.org.liderahenk.network.inventory.contants.Constants.PackageInstaller;
 import tr.org.liderahenk.network.inventory.exception.CommandExecutionException;
 import tr.org.liderahenk.network.inventory.exception.SSHConnectionException;
 import tr.org.liderahenk.network.inventory.utils.StringUtils;
@@ -55,6 +56,8 @@ public class SetupUtils {
 	 */
 	private static final String DOWNLOAD_PACKAGE_WITH_FILENAME = "wget --output-document=/tmp/{0}/{1} {2}";
 
+	private static final String INSTALL_PACKAGE_GDEBI = "gdebi -n {0}";
+	
 	/**
 	 * Tries to connect via SSH. If password parameter is null, then it tries to
 	 * connect via SSH key
@@ -182,12 +185,22 @@ public class SetupUtils {
 	 * @param port
 	 * @param privateKey
 	 * @param debPackage
+	 * @param packageInstaller
 	 * @throws SSHConnectionException
 	 * @throws CommandExecutionException
 	 */
 	public static void installPackage(final String ip, final String username, final String password, final Integer port,
-			final String privateKey, final String passphrase, final File debPackage)
+			final String privateKey, final String passphrase, final File debPackage, final PackageInstaller packageInstaller)
 					throws SSHConnectionException, CommandExecutionException {
+		
+		String command;
+		
+		if (packageInstaller == PackageInstaller.DPKG) {
+			command = INSTALL_PACKAGE.replace("{0}", "/tmp/" + debPackage.getName());
+		} else {
+			command = INSTALL_PACKAGE_GDEBI.replace("{0}", "/tmp/" + debPackage.getName());
+		}
+		
 		if (NetworkUtils.isLocal(ip)) {
 
 			logger.debug("Installing package locally.");
@@ -196,7 +209,6 @@ public class SetupUtils {
 
 				copyFile(ip, username, password, port, privateKey, passphrase, debPackage, "/tmp/");
 
-				String command = INSTALL_PACKAGE.replace("{0}", "/tmp/" + debPackage.getName());
 				Process process = Runtime.getRuntime().exec(command);
 
 				int exitValue = process.waitFor();
@@ -223,7 +235,7 @@ public class SetupUtils {
 			SSHManager manager = new SSHManager(ip, username == null ? "root" : username, password, port, privateKey,
 					passphrase);
 			manager.connect();
-			manager.execCommand(INSTALL_PACKAGE, new Object[] { "/tmp/" + debPackage.getName() });
+			manager.execCommand(command, new Object[] {});
 			manager.disconnect();
 
 			logger.info("Package {} installed successfully", debPackage.getName());
@@ -231,7 +243,7 @@ public class SetupUtils {
 	}
 
 	/**
-	 * * Installs a deb package which has been downloaded before by
+	 * Installs a deb package which has been downloaded before by
 	 * downloadPackage method. It searches the file in /tmp/{tmpDir} folder.
 	 * 
 	 * @param ip
@@ -242,19 +254,29 @@ public class SetupUtils {
 	 * @param passphrase
 	 * @param tmpDir
 	 * @param filename
+	 * @param packageInstaller
 	 * @throws SSHConnectionException
 	 * @throws CommandExecutionException
 	 */
 	public static void installDownloadedPackage(final String ip, final String username, final String password,
-			final Integer port, final String privateKey, final String passphrase, final String tmpDir, final String filename)
+			final Integer port, final String privateKey, final String passphrase, final String tmpDir, final String filename, final PackageInstaller packageInstaller)
 					throws SSHConnectionException, CommandExecutionException {
-		String command;
 		
-		// Prepare command
-		if (!"".equals(filename)) {
-			command = INSTALL_PACKAGE.replace("{0}", "/tmp/" + tmpDir + "/" + filename);
+		String command;
+
+		if (packageInstaller == PackageInstaller.DPKG) {
+			// Prepare command
+			if (!"".equals(filename)) {
+				command = INSTALL_PACKAGE.replace("{0}", "/tmp/" + tmpDir + "/" + filename);
+			} else {
+				command = INSTALL_PACKAGE.replace("{0}", "/tmp/" + tmpDir + "/*.deb");
+			}
 		} else {
-			command = INSTALL_PACKAGE.replace("{0}", "/tmp/" + tmpDir + "/*.deb");
+			if (!"".equals(filename)) {
+				command = INSTALL_PACKAGE_GDEBI.replace("{0}", "/tmp/" + tmpDir + "/" + filename);
+			} else {
+				command = INSTALL_PACKAGE_GDEBI.replace("{0}", "/tmp/" + tmpDir + "/*.deb");
+			}
 		}
 
 		if (NetworkUtils.isLocal(ip)) {

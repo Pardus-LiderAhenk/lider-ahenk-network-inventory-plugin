@@ -1,9 +1,13 @@
 package tr.org.liderahenk.network.inventory.runnables;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import tr.org.liderahenk.network.inventory.contants.Constants.InstallMethod;
+import tr.org.liderahenk.network.inventory.contants.Constants.PackageInstaller;
 import tr.org.liderahenk.network.inventory.entities.AhenkSetupParameters;
 import tr.org.liderahenk.network.inventory.entities.AhenkSetupResultDetail;
 import tr.org.liderahenk.network.inventory.exception.CommandExecutionException;
@@ -71,14 +75,20 @@ public class RunnableAhenkInstaller implements Runnable {
 					SetupUtils.installPackage(ip, username, password, port, privateKey, passphrase, "gedit", null);
 
 				} else if (installMethod == InstallMethod.WGET) {
+					
+					// In case of folder name clash use current time as postfix
+					Date date = new Date();
+					SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyyyy-HH:mm:ss");
+					String timestamp = dateFormat.format(date);
+					
 					logger.info("Creating directory under /tmp");
-					SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase, MAKE_DIR_UNDER_TMP.replace("{0}", "ahenkTmpDir"));
+					SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase, MAKE_DIR_UNDER_TMP.replace("{0}", "ahenkTmpDir" + timestamp));
 					
 					logger.info("Downloading file from URL: " + downloadUrl);
-					SetupUtils.downloadPackage(ip, username, password, port, privateKey, passphrase, "ahenkTmpDir", "ahenk.deb", downloadUrl);
+					SetupUtils.downloadPackage(ip, username, password, port, privateKey, passphrase, "ahenkTmpDir" + timestamp, "ahenk.deb", downloadUrl);
 					
 					logger.info("Installing downloaded package to: " + ip);
-					SetupUtils.installDownloadedPackage(ip, username, password, port, privateKey, passphrase, "ahenkTmpDir", "ahenk.deb");
+					SetupUtils.installDownloadedPackage(ip, username, password, port, privateKey, passphrase, "ahenkTmpDir" + timestamp, "ahenk.deb", PackageInstaller.DPKG);
 
 				} else {
 					logAndAddDetailEntity("Installation method is not set or not selected. Installation cancelled.",

@@ -1,20 +1,20 @@
 package tr.org.liderahenk.network.inventory.commands;
 
 import tr.org.liderahenk.lider.core.api.plugin.ICommand;
+import tr.org.liderahenk.network.inventory.plugininfo.PluginInfoImpl;
 
 public abstract class BaseCommand implements ICommand {
 
-	private static final String NAME = "network-inventory";
-	private static final String VERSION = "1.0.0-SNAPSHOT";
+	PluginInfoImpl pluginInfo = new PluginInfoImpl();
 
 	@Override
 	public String getPluginName() {
-		return NAME;
+		return pluginInfo.getPluginName();
 	}
 
 	@Override
 	public String getPluginVersion() {
-		return VERSION;
+		return pluginInfo.getPluginVersion();
 	}
 
 }

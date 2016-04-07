@@ -134,16 +134,15 @@ public class SSHManager {
 	 * @throws CommandExecutionException
 	 * 
 	 */
-	public String execCommand(final String command, final IOutputStreamProvider outputStreamProvider)
+	public void execCommand(final String command, final IOutputStreamProvider outputStreamProvider)
 			throws CommandExecutionException {
 
-		StringBuilder outputBuffer = new StringBuilder();
-
-		logger.info("Command: {}", command);
+		Channel channel = null;
+		
+		logger.info("Command: {0}", command);
 
 		try {
-			Channel channel = session.openChannel("exec");
-
+			channel = session.openChannel("exec");
 			((ChannelExec) channel).setCommand(command);
 
 			// Open channel and handle output stream
@@ -172,26 +171,35 @@ public class SSHManager {
 					int i = inputStream.read(tmp, 0, 1024);
 					if (i < 0)
 						break;
-					logger.debug(new String(tmp, 0, i));
+					String output = new String(tmp, 0, i);
+					logger.info(output);
 				}
 				if (channel.isClosed()) {
-					logger.debug("exit status: " + channel.getExitStatus());
+					logger.info("exit status: " + channel.getExitStatus());
+					if (channel.getExitStatus() != 0) {
+						throw new CommandExecutionException("Exit status: " + channel.getExitStatus());
+					}
+					
 					break;
 				}
 				try {
 					Thread.sleep(1000);
 				} catch (Exception ee) {
+					ee.printStackTrace();
 				}
 			}
 
-			channel.disconnect();
-
 		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
+			logger.info(e.getMessage());
 			throw new CommandExecutionException(e.getMessage());
+		} finally {
+			if (channel != null) {
+				try {
+					channel.disconnect();
+				} catch (Exception e) {
+				}
+			}
 		}
-
-		return outputBuffer.toString();
 	}
 
 	/**
@@ -203,8 +211,8 @@ public class SSHManager {
 	 * @return output of the executed command
 	 * @throws CommandExecutionException
 	 */
-	public String execCommand(final String command, final Object[] params) throws CommandExecutionException {
-		return execCommand(command, params, null);
+	public void execCommand(final String command, final Object[] params) throws CommandExecutionException {
+		execCommand(command, params, null);
 	}
 
 	/**
@@ -218,7 +226,7 @@ public class SSHManager {
 	 * @return output of the executed command
 	 * @throws CommandExecutionException
 	 */
-	public String execCommand(final String command, final Object[] params, IOutputStreamProvider outputStreamProvider)
+	public void execCommand(final String command, final Object[] params, IOutputStreamProvider outputStreamProvider)
 			throws CommandExecutionException {
 		String tmpCommand = command;
 		if (params != null) {
@@ -227,7 +235,7 @@ public class SSHManager {
 				tmpCommand = tmpCommand.replaceAll("\\{" + i + "\\}", param);
 			}
 		}
-		return execCommand(tmpCommand, outputStreamProvider);
+		execCommand(tmpCommand, outputStreamProvider);
 	}
 
 	/**

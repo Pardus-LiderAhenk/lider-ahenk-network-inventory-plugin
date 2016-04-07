@@ -27,4 +27,9 @@ public class Constants {
 		PROVIDED_DEB,
 		WGET
 	}
+
+	public static enum PackageInstaller {
+		DPKG,
+		GDEBI,
+	}
 }
