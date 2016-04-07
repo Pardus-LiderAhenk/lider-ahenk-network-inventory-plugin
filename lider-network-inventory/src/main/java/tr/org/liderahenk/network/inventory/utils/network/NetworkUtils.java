@@ -163,7 +163,7 @@ public class NetworkUtils {
 		}
 		String[] nums = ipRange.split("-");
 		String firstIp = nums[0];
-		String lastIp = firstIp.substring(0, firstIp.lastIndexOf(".")) + nums[1];
+		String lastIp = firstIp.substring(0, firstIp.lastIndexOf(".") + 1) + nums[1];
 		List<String> ipList = new ArrayList<String>();
 		String currentIp = firstIp;
 		while (true) {

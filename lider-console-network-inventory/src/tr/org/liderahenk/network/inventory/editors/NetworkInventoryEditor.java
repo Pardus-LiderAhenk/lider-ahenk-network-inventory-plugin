@@ -7,9 +7,11 @@ import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -23,6 +25,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IEditorInput;
@@ -195,7 +198,7 @@ public class NetworkInventoryEditor extends EditorPart {
 				// Create request instance
 				TaskRequest task = new TaskRequest();
 				task.setPluginName("network-inventory");
-				task.setPluginVersion("1.0.0-SNAPSHOT");
+				task.setPluginVersion("1.0.0");
 				task.setCommandId("SCANNETWORK");
 
 				// Populate request parameters
@@ -227,7 +230,7 @@ public class NetworkInventoryEditor extends EditorPart {
 		tblInventory = new TableViewer(composite,
 				SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION | SWT.BORDER | SWT.CHECK);
 
-		// createTableColumns();
+		createTableColumns();
 
 		final Table table = tblInventory.getTable();
 		table.setHeaderVisible(true);
@@ -258,6 +261,115 @@ public class NetworkInventoryEditor extends EditorPart {
 
 	}
 
+	private void createTableColumns() {
+		
+		TableViewerColumn ipCol = createTableViewerColumn(tblInventory, Messages.getString("IP_ADDRESS"), 100);
+		ipCol.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+//				if (element instanceof Host) {
+//					String ip = NetworkUtils.getIpV4((Host) element);
+//					return ip != null ? ip : Messages.getString("UNTITLED");
+//				}
+				return Messages.getString("UNTITLED");
+			}
+
+//			@Override
+//			public Color getForeground(Object element) {
+//				if (element instanceof Host && NetworkUtils.isHostUp((Host) element)) {
+//					return HOST_UP_COLOR;
+//				} else {
+//					return HOST_DOWN_COLOR;
+//				}
+//			}
+		});
+		
+		TableViewerColumn hostnameCol = createTableViewerColumn(tblInventory, Messages.getString("HOST_NAME"), 50);
+		hostnameCol.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+//				if (element instanceof Host) {
+//					String hostname = NetworkUtils.getHostname((Host) element);
+//					return hostname != null ? hostname : Messages.getString("UNTITLED");
+//				}
+				return Messages.getString("UNTITLED");
+			}
+		});
+
+		TableViewerColumn portsCol = createTableViewerColumn(tblInventory, Messages.getString("PORTS"), 150);
+		portsCol.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+//				if (element instanceof Host) {
+//					String openPorts = NetworkUtils.getOpenPorts((Host) element);
+//					return openPorts != null ? openPorts : Messages.getString("UNTITLED");
+//				}
+				return Messages.getString("UNTITLED");
+			}
+		});
+
+		TableViewerColumn osCol = createTableViewerColumn(tblInventory, Messages.getString("OS_INFO"), 250);
+		osCol.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+//				if (element instanceof Host) {
+//					String osGuess = NetworkUtils.getOsGuess((Host) element);
+//					return osGuess != null ? osGuess : Messages.getString("UNTITLED");
+//				}
+				return Messages.getString("UNTITLED");
+			}
+		});
+
+		TableViewerColumn distanceCol = createTableViewerColumn(tblInventory, Messages.getString("DISTANCE"), 30);
+		distanceCol.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+//				if (element instanceof Host) {
+//					String distance = NetworkUtils.getDistance((Host) element);
+//					return distance != null ? distance : Messages.getString("UNTITLED");
+//				}
+				return Messages.getString("UNTITLED");
+			}
+		});
+
+		TableViewerColumn uptimeCol = createTableViewerColumn(tblInventory, Messages.getString("UPTIME"), 50);
+		uptimeCol.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+//				if (element instanceof Host) {
+//					String uptime = NetworkUtils.getUptime((Host) element);
+//					return uptime != null ? uptime : Messages.getString("UNTITLED");
+//				}
+				return Messages.getString("UNTITLED");
+			}
+		});
+
+		TableViewerColumn macAddressCol = createTableViewerColumn(tblInventory, Messages.getString("MAC_ADDRESS"), 100);
+		macAddressCol.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+//				if (element instanceof Host) {
+//					String mac = NetworkUtils.getMac((Host) element);
+//					return mac != null ? mac : Messages.getString("UNTITLED");
+//				}
+				return Messages.getString("UNTITLED");
+			}
+		});
+
+		TableViewerColumn macVendorCol = createTableViewerColumn(tblInventory, Messages.getString("MAC_VENDOR"), 100);
+		macVendorCol.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+//				if (element instanceof Host) {
+//					String vendor = NetworkUtils.getMacVendor((Host) element);
+//					return vendor != null ? vendor : Messages.getString("UNTITLED");
+//				}
+				return Messages.getString("UNTITLED");
+			}
+		});
+		
+	}
+
 	// TODO fake data, will be removed.
 	private List<String> createFakeIpToTable(Table table) {
 
@@ -267,6 +379,7 @@ public class NetworkInventoryEditor extends EditorPart {
 			ipList.add("192.168.56." + (i + 1));
 		}
 		ipList.add("192.168.56.222");
+		ipList.add("192.168.1.208");
 		return ipList;
 	}
 
@@ -295,6 +408,26 @@ public class NetworkInventoryEditor extends EditorPart {
 		btn.setEnabled(ipSelected);
 	}
 
+	/**
+	 * Helper method to create table columns
+	 * 
+	 * @param tblVwrSetup
+	 * @param title
+	 * @param bound
+	 * @return
+	 */
+	private TableViewerColumn createTableViewerColumn(final TableViewer tblVwrSetup, String title, int bound) {
+		final TableViewerColumn viewerColumn = new TableViewerColumn(tblVwrSetup, SWT.NONE);
+		final TableColumn column = viewerColumn.getColumn();
+		column.setText(title);
+		column.setWidth(bound);
+		column.setResizable(true);
+		column.setMoveable(false);
+		column.setAlignment(SWT.LEFT);
+		return viewerColumn;
+	}
+	
+	
 	@Override
 	public void setFocus() {
 
