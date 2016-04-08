@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
@@ -16,6 +17,7 @@ import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -39,6 +41,8 @@ import tr.org.liderahenk.liderconsole.core.rest.responses.RestResponse;
 import tr.org.liderahenk.liderconsole.core.rest.utils.TaskUtils;
 import tr.org.liderahenk.liderconsole.core.utils.SWTResourceManager;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
+import tr.org.liderahenk.network.inventory.model.ScanResult;
+import tr.org.liderahenk.network.inventory.model.ScanResultHost;
 import tr.org.liderahenk.network.inventory.wizard.AhenkSetupWizard;
 
 public class NetworkInventoryEditor extends EditorPart {
@@ -59,6 +63,10 @@ public class NetworkInventoryEditor extends EditorPart {
 
 	private List<String> selectedIpList;
 
+	// Host colours
+	Color HOST_UP_COLOR = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_GREEN);
+	Color HOST_DOWN_COLOR = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
+	
 	@Override
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
 		setSite(site);
@@ -93,7 +101,8 @@ public class NetworkInventoryEditor extends EditorPart {
 		final Text txtFilePath = new Text(cmpAhenkInstall, SWT.RIGHT | SWT.SINGLE | SWT.FILL | SWT.BORDER);
 
 		btnFileUpload = new Button(cmpAhenkInstall, SWT.NONE);
-		btnFileUpload.setImage(SWTResourceManager.getImage(LiderConstants.PLUGIN_IDS.LIDER_CONSOLE_CORE, "icons/16/folder-add.png"));
+		btnFileUpload.setImage(
+				SWTResourceManager.getImage(LiderConstants.PLUGIN_IDS.LIDER_CONSOLE_CORE, "icons/16/folder-add.png"));
 		btnFileUpload.setText(Messages.getString("UPLOAD_FILE"));
 		btnFileUpload.addSelectionListener(new SelectionListener() {
 			@Override
@@ -112,11 +121,25 @@ public class NetworkInventoryEditor extends EditorPart {
 		});
 
 		btnShareFile = new Button(cmpAhenkInstall, SWT.NONE);
-		btnShareFile.setImage(SWTResourceManager.getImage(LiderConstants.PLUGIN_IDS.LIDER_CONSOLE_CORE, "icons/16/share.png"));
+		btnShareFile.setImage(
+				SWTResourceManager.getImage(LiderConstants.PLUGIN_IDS.LIDER_CONSOLE_CORE, "icons/16/share.png"));
 		btnShareFile.setText(Messages.getString("SHARE_FILE"));
 		btnShareFile.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
+				
+				setSelectedIps();
+
+				// Create request instance
+				TaskRequest task = new TaskRequest();
+				task.setPluginName("network-inventory");
+				task.setPluginVersion("1.0.0");
+				task.setCommandId("DISTRIBUTEFILE");
+
+				// TODO
+				// TODO Share file task and handle response
+				// TODO
+				
 			}
 
 			@Override
@@ -136,7 +159,8 @@ public class NetworkInventoryEditor extends EditorPart {
 		lblAhenkInstall.setText(Messages.getString("FOR_AHENK_INSTALLATION"));
 
 		btnAhenkInstall = new Button(cmpAhenkInstall, SWT.NONE);
-		btnAhenkInstall.setImage(SWTResourceManager.getImage(LiderConstants.PLUGIN_IDS.LIDER_CONSOLE_CORE, "icons/16/package-download-install.png"));
+		btnAhenkInstall.setImage(SWTResourceManager.getImage(LiderConstants.PLUGIN_IDS.LIDER_CONSOLE_CORE,
+				"icons/16/package-download-install.png"));
 		btnAhenkInstall.setText(Messages.getString("INSTALL_AHENK"));
 		btnAhenkInstall.addSelectionListener(new SelectionListener() {
 			@Override
@@ -163,16 +187,16 @@ public class NetworkInventoryEditor extends EditorPart {
 	private void setSelectedIps() {
 
 		TableItem[] items = tblInventory.getTable().getItems();
-		
+
 		List<String> tmpList = new ArrayList<String>();
-		
+
 		for (TableItem item : items) {
-			
+
 			if (item.getChecked()) {
 				tmpList.add(item.getText(0));
 			}
 		}
-		
+
 		selectedIpList = tmpList;
 	}
 
@@ -190,7 +214,8 @@ public class NetworkInventoryEditor extends EditorPart {
 		txtIpRange.setMessage(Messages.getString("EX_IP"));
 
 		btnScan = new Button(cmpScan, SWT.NONE);
-		btnScan.setImage(SWTResourceManager.getImage(LiderConstants.PLUGIN_IDS.LIDER_CONSOLE_CORE, "icons/16/search.png"));
+		btnScan.setImage(
+				SWTResourceManager.getImage(LiderConstants.PLUGIN_IDS.LIDER_CONSOLE_CORE, "icons/16/search.png"));
 		btnScan.setText(Messages.getString("START_SCAN"));
 		btnScan.addSelectionListener(new SelectionListener() {
 			@Override
@@ -211,8 +236,18 @@ public class NetworkInventoryEditor extends EditorPart {
 				try {
 					// Post request
 					response = (RestResponse) TaskUtils.execute(task);
+					
 					Map<String, Object> resultMap = response.getResultMap();
-					// TODO show results to user by opening a new dialog that contains a table and results.
+
+					ObjectMapper mapper = new ObjectMapper();
+					
+					ScanResult scanResult = mapper.readValue(resultMap.get("result").toString(), ScanResult.class);
+					
+					tblInventory.setInput(scanResult.getHosts());
+
+					// tblInventory.setInput();
+					// TODO show results to user by opening a new dialog that
+					// contains a table and results.
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
@@ -239,7 +274,7 @@ public class NetworkInventoryEditor extends EditorPart {
 		table.getVerticalBar().setVisible(true);
 
 		tblInventory.setContentProvider(new ArrayContentProvider());
-		tblInventory.setInput(createFakeIpToTable(table));
+		// tblInventory.setInput(createFakeIpToTable(table));
 
 		GridData gridData = new GridData();
 		gridData.verticalAlignment = GridData.FILL;
@@ -262,37 +297,31 @@ public class NetworkInventoryEditor extends EditorPart {
 	}
 
 	private void createTableColumns() {
-		
+
 		TableViewerColumn ipCol = createTableViewerColumn(tblInventory, Messages.getString("IP_ADDRESS"), 100);
 		ipCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-//				if (element instanceof Host) {
-//					String ip = NetworkUtils.getIpV4((Host) element);
-//					return ip != null ? ip : Messages.getString("UNTITLED");
-//				}
-				return Messages.getString("UNTITLED");
+				String ip = ((ScanResultHost) element).getIp();
+				return ip != null ? ip : Messages.getString("UNTITLED");
 			}
 
-//			@Override
-//			public Color getForeground(Object element) {
-//				if (element instanceof Host && NetworkUtils.isHostUp((Host) element)) {
-//					return HOST_UP_COLOR;
-//				} else {
-//					return HOST_DOWN_COLOR;
-//				}
-//			}
+			 @Override
+			 public Color getForeground(Object element) {
+				 if (((ScanResultHost) element).isHostUp()) {
+					 return HOST_UP_COLOR;
+				 } else {
+					 return HOST_DOWN_COLOR;
+				 }
+			 }
 		});
-		
+
 		TableViewerColumn hostnameCol = createTableViewerColumn(tblInventory, Messages.getString("HOST_NAME"), 50);
 		hostnameCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-//				if (element instanceof Host) {
-//					String hostname = NetworkUtils.getHostname((Host) element);
-//					return hostname != null ? hostname : Messages.getString("UNTITLED");
-//				}
-				return Messages.getString("UNTITLED");
+				String hostname = ((ScanResultHost) element).getHostname();
+				return hostname != null ? hostname : Messages.getString("UNTITLED");
 			}
 		});
 
@@ -300,11 +329,8 @@ public class NetworkInventoryEditor extends EditorPart {
 		portsCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-//				if (element instanceof Host) {
-//					String openPorts = NetworkUtils.getOpenPorts((Host) element);
-//					return openPorts != null ? openPorts : Messages.getString("UNTITLED");
-//				}
-				return Messages.getString("UNTITLED");
+				String openPorts = ((ScanResultHost) element).getOpenPorts();
+				return openPorts != null ? openPorts : Messages.getString("UNTITLED");
 			}
 		});
 
@@ -312,11 +338,8 @@ public class NetworkInventoryEditor extends EditorPart {
 		osCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-//				if (element instanceof Host) {
-//					String osGuess = NetworkUtils.getOsGuess((Host) element);
-//					return osGuess != null ? osGuess : Messages.getString("UNTITLED");
-//				}
-				return Messages.getString("UNTITLED");
+				String osGuess = ((ScanResultHost) element).getOsGuess();
+				return osGuess != null ? osGuess : Messages.getString("UNTITLED");
 			}
 		});
 
@@ -324,11 +347,8 @@ public class NetworkInventoryEditor extends EditorPart {
 		distanceCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-//				if (element instanceof Host) {
-//					String distance = NetworkUtils.getDistance((Host) element);
-//					return distance != null ? distance : Messages.getString("UNTITLED");
-//				}
-				return Messages.getString("UNTITLED");
+				String distance = ((ScanResultHost) element).getDistance();
+				return distance != null ? distance : Messages.getString("UNTITLED");
 			}
 		});
 
@@ -336,11 +356,8 @@ public class NetworkInventoryEditor extends EditorPart {
 		uptimeCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-//				if (element instanceof Host) {
-//					String uptime = NetworkUtils.getUptime((Host) element);
-//					return uptime != null ? uptime : Messages.getString("UNTITLED");
-//				}
-				return Messages.getString("UNTITLED");
+				String uptime = ((ScanResultHost) element).getUptime();
+				return uptime != null ? uptime : Messages.getString("UNTITLED");
 			}
 		});
 
@@ -348,11 +365,8 @@ public class NetworkInventoryEditor extends EditorPart {
 		macAddressCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-//				if (element instanceof Host) {
-//					String mac = NetworkUtils.getMac((Host) element);
-//					return mac != null ? mac : Messages.getString("UNTITLED");
-//				}
-				return Messages.getString("UNTITLED");
+				String mac = ((ScanResultHost) element).getMac();
+				return mac != null ? mac : Messages.getString("UNTITLED");
 			}
 		});
 
@@ -360,28 +374,25 @@ public class NetworkInventoryEditor extends EditorPart {
 		macVendorCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-//				if (element instanceof Host) {
-//					String vendor = NetworkUtils.getMacVendor((Host) element);
-//					return vendor != null ? vendor : Messages.getString("UNTITLED");
-//				}
-				return Messages.getString("UNTITLED");
+				String vendor = ((ScanResultHost) element).getVendor();
+				return vendor != null ? vendor : Messages.getString("UNTITLED");
 			}
 		});
-		
+
 	}
 
-	// TODO fake data, will be removed.
-	private List<String> createFakeIpToTable(Table table) {
-
-		List<String> ipList = new ArrayList<String>();
-
-		for (int i = 0; i < 10; i++) {
-			ipList.add("192.168.56." + (i + 1));
-		}
-		ipList.add("192.168.56.222");
-		ipList.add("192.168.1.208");
-		return ipList;
-	}
+//	// TODO fake data, will be removed.
+//	private List<String> createFakeIpToTable(Table table) {
+//
+//		List<String> ipList = new ArrayList<String>();
+//
+//		for (int i = 0; i < 10; i++) {
+//			ipList.add("192.168.56." + (i + 1));
+//		}
+//		ipList.add("192.168.56.222");
+//		ipList.add("192.168.1.208");
+//		return ipList;
+//	}
 
 	/**
 	 * Enables/Disables install Ahenk button according to IP selections.
@@ -426,8 +437,7 @@ public class NetworkInventoryEditor extends EditorPart {
 		column.setAlignment(SWT.LEFT);
 		return viewerColumn;
 	}
-	
-	
+
 	@Override
 	public void setFocus() {
 
