@@ -161,7 +161,14 @@ public class NetworkScanCommand extends BaseCommand {
 
 				
 				logger.info("Shutting down executor.");
-				executor.shutdown();
+
+				try {
+					executor.shutdown();
+					// Wait for all tasks to be completed.
+					executor.awaitTermination(100000, TimeUnit.MILLISECONDS);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 
 				logger.info("Saving entity.");
 				// Insert new scan result record
@@ -217,6 +224,7 @@ public class NetworkScanCommand extends BaseCommand {
 				entityList.add(entity);
 			}
 		}
+		
 		return entityList;
 	}
 
