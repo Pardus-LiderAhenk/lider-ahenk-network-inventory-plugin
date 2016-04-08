@@ -28,3 +28,5 @@ Require-Bundle: javax.inject;bundle-version="1.0.0",
  org.apache.commons.codec
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-Vendor: AGEM Bilişim
+Import-Package: org.codehaus.jackson.map,
+ org.codehaus.jackson.type;version="1.6.0"
