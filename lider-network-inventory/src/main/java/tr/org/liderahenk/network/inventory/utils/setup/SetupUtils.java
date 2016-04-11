@@ -332,13 +332,17 @@ public class SetupUtils {
 	public static void copyFile(final String ip, final String username, final String password, final Integer port,
 			final String privateKey, final String passphrase, final File fileToTransfer, final String destDirectory)
 					throws SSHConnectionException, CommandExecutionException {
+		
+		logger.info("Starting to copy file");
+		String destinationDir = destDirectory;
+		
+		if (!destinationDir.endsWith("/")) {
+			destinationDir += "/";
+		}
+		destinationDir += fileToTransfer.getName();
+
 		if (NetworkUtils.isLocal(ip)) {
 
-			String destinationDir = destDirectory;
-			if (!destinationDir.endsWith("/")) {
-				destinationDir += "/";
-			}
-			destinationDir += fileToTransfer.getName();
 
 			logger.debug("Copying file to: {}", destinationDir);
 
@@ -386,7 +390,7 @@ public class SetupUtils {
 			SSHManager manager = new SSHManager(ip, username == null ? "root" : username, password, port, privateKey,
 					passphrase);
 			manager.connect();
-			manager.copyFileToRemote(fileToTransfer, destDirectory, false);
+			manager.copyFileToRemote(fileToTransfer, destinationDir, false);
 			manager.disconnect();
 
 			logger.info("File {} copied successfully", fileToTransfer.getName());
