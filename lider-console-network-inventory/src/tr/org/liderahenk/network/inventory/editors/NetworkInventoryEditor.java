@@ -1,9 +1,14 @@
 package tr.org.liderahenk.network.inventory.editors;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.xml.bind.DatatypeConverter;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -15,6 +20,8 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
@@ -40,6 +47,8 @@ import tr.org.liderahenk.liderconsole.core.rest.requests.TaskRequest;
 import tr.org.liderahenk.liderconsole.core.rest.responses.RestResponse;
 import tr.org.liderahenk.liderconsole.core.rest.utils.TaskUtils;
 import tr.org.liderahenk.liderconsole.core.utils.SWTResourceManager;
+import tr.org.liderahenk.liderconsole.core.widgets.Notifier;
+import tr.org.liderahenk.network.inventory.dialogs.FileShareDialog;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
 import tr.org.liderahenk.network.inventory.model.ScanResult;
 import tr.org.liderahenk.network.inventory.model.ScanResultHost;
@@ -58,6 +67,7 @@ public class NetworkInventoryEditor extends EditorPart {
 	private Button btnShareFile;
 
 	private Text txtIpRange;
+	private Text txtFilePath;
 	private Label lblAhenkInstall;
 	private TableViewer tblInventory;
 
@@ -66,7 +76,7 @@ public class NetworkInventoryEditor extends EditorPart {
 	// Host colours
 	Color HOST_UP_COLOR = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_GREEN);
 	Color HOST_DOWN_COLOR = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
-	
+
 	@Override
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
 		setSite(site);
@@ -98,7 +108,13 @@ public class NetworkInventoryEditor extends EditorPart {
 		cmpAhenkInstall.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 		cmpAhenkInstall.setLayout(new GridLayout(3, false));
 
-		final Text txtFilePath = new Text(cmpAhenkInstall, SWT.RIGHT | SWT.SINGLE | SWT.FILL | SWT.BORDER);
+		txtFilePath = new Text(cmpAhenkInstall, SWT.RIGHT | SWT.SINGLE | SWT.FILL | SWT.BORDER);
+		txtFilePath.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent arg0) {
+				btnShareFile.setEnabled(checkIpSelection(tblInventory) && !txtFilePath.getText().isEmpty());
+			}
+		});
 
 		btnFileUpload = new Button(cmpAhenkInstall, SWT.NONE);
 		btnFileUpload.setImage(
@@ -127,25 +143,31 @@ public class NetworkInventoryEditor extends EditorPart {
 		btnShareFile.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				
+
+				// Read file
+				byte[] fileArray = readFileAsByteArray(txtFilePath.getText());
+				String encodedFile = DatatypeConverter.printBase64Binary(fileArray);
+
 				setSelectedIps();
 
-				// Create request instance
-				TaskRequest task = new TaskRequest();
-				task.setPluginName("network-inventory");
-				task.setPluginVersion("1.0.0");
-				task.setCommandId("DISTRIBUTEFILE");
+				FileShareDialog dialog = new FileShareDialog(Display.getCurrent().getActiveShell(), selectedIpList, encodedFile);
 
-				// TODO
-				// TODO Share file task and handle response
-				// TODO
+				dialog.open();
+
+				Map<String, Object> resultMap = dialog.getResultMap();
 				
+				// TODO
+				// TODO show sharing results to user
+				// TODO
+
 			}
 
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
+
+		btnShareFile.setEnabled(false);
 
 	}
 
@@ -220,36 +242,40 @@ public class NetworkInventoryEditor extends EditorPart {
 		btnScan.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				// Create request instance
-				TaskRequest task = new TaskRequest();
-				task.setPluginName("network-inventory");
-				task.setPluginVersion("1.0.0");
-				task.setCommandId("SCANNETWORK");
+				if (!txtIpRange.getText().isEmpty()) {
+					// Create request instance
+					TaskRequest task = new TaskRequest();
+					task.setPluginName("network-inventory");
+					task.setPluginVersion("1.0.0");
+					task.setCommandId("SCANNETWORK");
 
-				// Populate request parameters
-				Map<String, Object> parameterMap = new HashMap<String, Object>();
-				parameterMap.put("ipRange", txtIpRange.getText());
-				parameterMap.put("timingTemplate", "3");
-				task.setParameterMap(parameterMap);
+					// Populate request parameters
+					Map<String, Object> parameterMap = new HashMap<String, Object>();
+					parameterMap.put("ipRange", txtIpRange.getText());
+					parameterMap.put("timingTemplate", "3");
+					task.setParameterMap(parameterMap);
 
-				RestResponse response;
-				try {
-					// Post request
-					response = (RestResponse) TaskUtils.execute(task);
-					
-					Map<String, Object> resultMap = response.getResultMap();
+					RestResponse response;
+					try {
+						// Post request
+						response = (RestResponse) TaskUtils.execute(task);
 
-					ObjectMapper mapper = new ObjectMapper();
-					
-					ScanResult scanResult = mapper.readValue(resultMap.get("result").toString(), ScanResult.class);
-					
-					tblInventory.setInput(scanResult.getHosts());
+						Map<String, Object> resultMap = response.getResultMap();
 
-					// tblInventory.setInput();
-					// TODO show results to user by opening a new dialog that
-					// contains a table and results.
-				} catch (Exception e1) {
-					e1.printStackTrace();
+						ObjectMapper mapper = new ObjectMapper();
+
+						ScanResult scanResult = mapper.readValue(resultMap.get("result").toString(), ScanResult.class);
+
+						tblInventory.setInput(scanResult.getHosts());
+
+						// TODO show results to user by opening a new dialog
+						// that
+						// contains a table and results.
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					}
+				} else {
+					Notifier.warning(Messages.getString("NETWORK_SCAN"), Messages.getString("PLEASE_ENTER_IP_RANGE"));
 				}
 			}
 
@@ -289,7 +315,8 @@ public class NetworkInventoryEditor extends EditorPart {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
 				if (!event.getSelection().isEmpty()) {
-					updateInstallButtonStatus(tblInventory, btnAhenkInstall);
+					btnAhenkInstall.setEnabled(checkIpSelection(tblInventory));
+					btnShareFile.setEnabled(checkIpSelection(tblInventory) && !txtFilePath.getText().isEmpty());
 				}
 			}
 		});
@@ -306,14 +333,14 @@ public class NetworkInventoryEditor extends EditorPart {
 				return ip != null ? ip : Messages.getString("UNTITLED");
 			}
 
-			 @Override
-			 public Color getForeground(Object element) {
-				 if (((ScanResultHost) element).isHostUp()) {
-					 return HOST_UP_COLOR;
-				 } else {
-					 return HOST_DOWN_COLOR;
-				 }
-			 }
+			@Override
+			public Color getForeground(Object element) {
+				if (((ScanResultHost) element).isHostUp()) {
+					return HOST_UP_COLOR;
+				} else {
+					return HOST_DOWN_COLOR;
+				}
+			}
 		});
 
 		TableViewerColumn hostnameCol = createTableViewerColumn(tblInventory, Messages.getString("HOST_NAME"), 50);
@@ -381,42 +408,26 @@ public class NetworkInventoryEditor extends EditorPart {
 
 	}
 
-//	// TODO fake data, will be removed.
-//	private List<String> createFakeIpToTable(Table table) {
-//
-//		List<String> ipList = new ArrayList<String>();
-//
-//		for (int i = 0; i < 10; i++) {
-//			ipList.add("192.168.56." + (i + 1));
-//		}
-//		ipList.add("192.168.56.222");
-//		ipList.add("192.168.1.208");
-//		return ipList;
-//	}
-
 	/**
-	 * Enables/Disables install Ahenk button according to IP selections.
+	 * Checks if any table item is selected.
 	 * 
 	 * @param tblVwr
-	 * @param btn
+	 * @return true if at least one table item is selected, false otherwise.
 	 */
-	private void updateInstallButtonStatus(TableViewer tblVwr, Button btn) {
-
-		// At least one IP should be selected
-		boolean ipSelected = false;
+	private boolean checkIpSelection(TableViewer tblVwr) {
 
 		TableItem[] items = tblVwr.getTable().getItems();
 
+		// At least one IP should be selected
 		for (int i = 0; i < items.length; i++) {
 			if (items[i].getChecked()) {
-				ipSelected = true;
 				// If one of the IP's is selected, that's enough
 				// do not iterate over all items
-				i = items.length;
+				return true;
 			}
 		}
 
-		btn.setEnabled(ipSelected);
+		return false;
 	}
 
 	/**
@@ -436,6 +447,36 @@ public class NetworkInventoryEditor extends EditorPart {
 		column.setMoveable(false);
 		column.setAlignment(SWT.LEFT);
 		return viewerColumn;
+	}
+
+	/**
+	 * Reads the file from provided path and returns it as an array of bytes.
+	 * (Best use in Java 7)
+	 * 
+	 * @author Caner Feyzullahoglu <caner.feyzullahoglu@agem.com.tr>
+	 * 
+	 * @param pathOfFile
+	 *            Absolute path to file
+	 * @return given file as byte[]
+	 */
+	private byte[] readFileAsByteArray(String pathOfFile) {
+
+		Path path;
+
+		byte[] fileArray;
+
+		try {
+
+			path = Paths.get(pathOfFile);
+
+			fileArray = Files.readAllBytes(path);
+
+			return fileArray;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return new byte[0];
 	}
 
 	@Override
@@ -476,5 +517,4 @@ public class NetworkInventoryEditor extends EditorPart {
 	public void setEntryDn(String entryDn) {
 		this.entryDn = entryDn;
 	}
-
 }
