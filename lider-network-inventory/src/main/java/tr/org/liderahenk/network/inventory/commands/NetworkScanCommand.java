@@ -22,7 +22,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import tr.org.liderahenk.lider.core.api.log.IOperationLogService;
 import tr.org.liderahenk.lider.core.api.persistence.IPluginDbService;
 import tr.org.liderahenk.lider.core.api.service.ICommandContext;
 import tr.org.liderahenk.lider.core.api.service.ICommandResult;
@@ -51,7 +50,6 @@ public class NetworkScanCommand extends BaseCommand {
 	private Logger logger = LoggerFactory.getLogger(NetworkScanCommand.class);
 
 	private ICommandResultFactory resultFactory;
-	private IOperationLogService logService;
 	private IPluginDbService pluginDbService;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -140,7 +138,12 @@ public class NetworkScanCommand extends BaseCommand {
 
 				// Calculate number of the hosts a thread can process
 				int numberOfHosts = ipAddresses.size();
-				int hostsPerThread = numberOfHosts / Constants.SSH_CONFIG.NUM_THREADS;
+				int hostsPerThread;
+				if (numberOfHosts < Constants.SSH_CONFIG.NUM_THREADS) {
+					hostsPerThread = 1;
+		 		} else {
+		 			hostsPerThread = numberOfHosts / Constants.SSH_CONFIG.NUM_THREADS;
+		 		}
 
 				logger.info("Hosts: {}, Threads:{}, Host per Thread: {}",
 						new Object[] { numberOfHosts, Constants.SSH_CONFIG.NUM_THREADS, hostsPerThread });
@@ -245,10 +248,6 @@ public class NetworkScanCommand extends BaseCommand {
 
 	public void setResultFactory(ICommandResultFactory resultFactory) {
 		this.resultFactory = resultFactory;
-	}
-
-	public void setLogService(IOperationLogService logService) {
-		this.logService = logService;
 	}
 
 	public void setPluginDbService(IPluginDbService pluginDbService) {
