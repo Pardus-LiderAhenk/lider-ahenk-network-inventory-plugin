@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import tr.org.liderahenk.lider.core.api.log.IOperationLogService;
 import tr.org.liderahenk.lider.core.api.persistence.IPluginDbService;
 import tr.org.liderahenk.lider.core.api.service.ICommandContext;
 import tr.org.liderahenk.lider.core.api.service.ICommandResult;
@@ -46,7 +45,6 @@ public class AhenkInstallationCommand extends BaseCommand {
 	private Logger logger = LoggerFactory.getLogger(AhenkInstallationCommand.class);
 
 	private ICommandResultFactory resultFactory;
-	private IOperationLogService logService;
 	private IPluginDbService pluginDbService;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -139,7 +137,6 @@ public class AhenkInstallationCommand extends BaseCommand {
 		logger.warn("Shutting down executor service.");
 		executor.shutdown();
 
-		// TODO wait for all runnables.
 		try {
 			logger.warn("Waiting for executor service to finish all tasks.");
 
@@ -241,10 +238,6 @@ public class AhenkInstallationCommand extends BaseCommand {
 
 	public void setResultFactory(ICommandResultFactory resultFactory) {
 		this.resultFactory = resultFactory;
-	}
-
-	public void setLogService(IOperationLogService logService) {
-		this.logService = logService;
 	}
 
 	public void setPluginDbService(IPluginDbService pluginDbService) {
