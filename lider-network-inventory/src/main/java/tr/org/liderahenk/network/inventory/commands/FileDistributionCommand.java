@@ -2,8 +2,11 @@ package tr.org.liderahenk.network.inventory.commands;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -17,13 +20,14 @@ import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import javax.xml.bind.DatatypeConverter;
+
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import tr.org.liderahenk.lider.core.api.log.IOperationLogService;
 import tr.org.liderahenk.lider.core.api.persistence.IPluginDbService;
 import tr.org.liderahenk.lider.core.api.service.ICommandContext;
 import tr.org.liderahenk.lider.core.api.service.ICommandResult;
@@ -49,7 +53,6 @@ public class FileDistributionCommand extends BaseCommand {
 	private Logger logger = LoggerFactory.getLogger(FileDistributionCommand.class);
 
 	private ICommandResultFactory resultFactory;
-	private IOperationLogService logService;
 	private IPluginDbService pluginDbService;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -60,8 +63,17 @@ public class FileDistributionCommand extends BaseCommand {
 
 		// Read command parameters.
 		Map<String, Object> parameterMap = context.getRequest().getParameterMap();
+		
 		ArrayList<String> ipAddresses = (ArrayList<String>) parameterMap.get("ipAddresses");
-		File fileToTransfer = getFileInstance((byte[]) parameterMap.get("file"), (String) parameterMap.get("filename"));
+		
+		logger.error("Getting file as byte array from parameter map");
+		byte[] fileArray = DatatypeConverter.parseBase64Binary((String) parameterMap.get("file"));
+		
+		logger.error("MD5: " + getMD5ofFile(fileArray));
+		
+		logger.error("Getting file instances");
+		File fileToTransfer = getFileInstance(fileArray, "transfer");
+		
 		String username = (String) parameterMap.get("username");
 		String password = (String) parameterMap.get("password");
 		Integer port = (Integer) (parameterMap.get("port") == null ? 22 : parameterMap.get("port"));
@@ -69,12 +81,14 @@ public class FileDistributionCommand extends BaseCommand {
 
 		logger.debug("Parameter map: {}", parameterMap);
 
-		logger.debug("Getting the location of private key file");
+		logger.error("Getting the location of private key file");
 
 		// Get private key location in Lider machine from configuration file
 		String privateKey = getPrivateKeyLocation();
-		logger.debug("Path of private key file: " + privateKey);
+		logger.error("Path of private key file: " + privateKey);
 
+		String passphrase = (String) parameterMap.get("passphrase");
+		
 		// Create new instance to send back to Lider Console
 		fileDistResultDto = new FileDistResultDto(ipAddresses, fileToTransfer.getName(), username, password, port,
 				privateKey, destDirectory, new Date(),
@@ -119,24 +133,41 @@ public class FileDistributionCommand extends BaseCommand {
 
 			// Calculate number of the hosts a thread can process
 			int numberOfHosts = ipAddresses.size();
-			int hostsPerThread = numberOfHosts / Constants.SSH_CONFIG.NUM_THREADS;
+			int hostsPerThread;
+			if (numberOfHosts < Constants.SSH_CONFIG.NUM_THREADS) {
+				hostsPerThread = 1;
+	 		} else {
+	 			hostsPerThread = numberOfHosts / Constants.SSH_CONFIG.NUM_THREADS;
+	 		}
 
 			logger.debug("Hosts: {}, Threads:{}, Host per Thread: {}",
 					new Object[] { numberOfHosts, Constants.SSH_CONFIG.NUM_THREADS, hostsPerThread });
 
+			logger.error("hostsPerThread: " + hostsPerThread);
 			// Create & execute threads
 			for (int i = 0; i < numberOfHosts; i += hostsPerThread) {
 				int toIndex = i + hostsPerThread;
 				List<String> ipSubList = ipAddresses.subList(i,
 						toIndex < ipAddresses.size() ? toIndex : ipAddresses.size() - 1);
-
+				
+				logger.error("Creating runnable no: " + (i + 1));
 				RunnableFileDistributor distributor = new RunnableFileDistributor(fileDistResultDto, ipSubList,
-						username, password, port, privateKey, fileToTransfer, destDirectory);
+						username, password, port, privateKey, passphrase, fileToTransfer, destDirectory);
 				executor.execute(distributor);
+				logger.error("Runnable no: " + (i + 1) + " executed.");
 			}
 
-			executor.shutdown();
+			logger.error("Shutting down executor.");
 
+			try {
+				executor.shutdown();
+				// Wait for all tasks to be completed.
+				executor.awaitTermination(100000, TimeUnit.MILLISECONDS);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			logger.error("Saving entity.");
 			// Insert new distribution result record
 			pluginDbService.save(getEntityObject(fileDistResultDto));
 		}
@@ -215,7 +246,7 @@ public class FileDistributionCommand extends BaseCommand {
 	 * @param filename
 	 * @return
 	 */
-	private File getFileInstance(byte[] bs, String filename) {
+	private File getFileInstance(byte[] fileArray, String filename) {
 		File temp = null;
 		try {
 			temp = File.createTempFile(filename, "");
@@ -223,10 +254,10 @@ public class FileDistributionCommand extends BaseCommand {
 			temp.deleteOnExit();
 
 			// Write to temp file
+			FileOutputStream outputStream = new FileOutputStream(temp);
+			outputStream.write(fileArray);
+			outputStream.close();
 
-			// BufferedWriter out = new BufferedWriter(new FileWriter(temp));
-			// out.write(bs);
-			// out.close();
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
 		}
@@ -285,12 +316,28 @@ public class FileDistributionCommand extends BaseCommand {
 		this.resultFactory = resultFactory;
 	}
 
-	public void setLogService(IOperationLogService logService) {
-		this.logService = logService;
-	}
-
 	public void setPluginDbService(IPluginDbService pluginDbService) {
 		this.pluginDbService = pluginDbService;
+	}
+	
+	private String getMD5ofFile(byte[] inputBytes) {
+		
+		MessageDigest digest;
+		String result=null;
+		try {
+			digest = MessageDigest.getInstance("MD5");
+			byte[] hashBytes = digest.digest(inputBytes);
+			
+			final StringBuilder builder = new StringBuilder();
+		    for(byte b : hashBytes) {
+		        builder.append(String.format("%02x", b));
+		    }
+		    result=builder.toString();
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+
+		return result;
 	}
 
 }
