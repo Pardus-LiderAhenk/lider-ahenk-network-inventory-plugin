@@ -8,17 +8,27 @@ import org.slf4j.LoggerFactory;
 
 import tr.org.liderahenk.network.inventory.contants.Constants.InstallMethod;
 import tr.org.liderahenk.network.inventory.contants.Constants.PackageInstaller;
+import tr.org.liderahenk.network.inventory.dto.AhenkSetupDetailDto;
+import tr.org.liderahenk.network.inventory.dto.AhenkSetupDto;
 import tr.org.liderahenk.network.inventory.entities.AhenkSetupParameters;
 import tr.org.liderahenk.network.inventory.entities.AhenkSetupResultDetail;
 import tr.org.liderahenk.network.inventory.exception.CommandExecutionException;
 import tr.org.liderahenk.network.inventory.exception.SSHConnectionException;
 import tr.org.liderahenk.network.inventory.utils.setup.SetupUtils;
 
+/**
+ * A runnable that is responsible of installing Ahenk to a machine.
+ * 
+ * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner
+ *         Feyzullahoğlu</a>
+ */
 public class RunnableAhenkInstaller implements Runnable {
 
 	private Logger logger = LoggerFactory.getLogger(RunnableAhenkInstaller.class);
 
 	private AhenkSetupParameters setupParams;
+
+	private AhenkSetupDto setupDto;
 
 	private String ip;
 
@@ -33,14 +43,16 @@ public class RunnableAhenkInstaller implements Runnable {
 	private String passphrase;
 
 	private InstallMethod installMethod;
-	
-	private String downloadUrl;
-	
-	private final static String MAKE_DIR_UNDER_TMP = "mkdir /tmp/{0}"; 
 
-	public RunnableAhenkInstaller(String ip, String username, String password, Integer port, String privateKey,
-			String passphrase, InstallMethod installMethod, String downloadUrl, AhenkSetupParameters setupParams) {
+	private String downloadUrl;
+
+	private final static String MAKE_DIR_UNDER_TMP = "mkdir /tmp/{0}";
+
+	public RunnableAhenkInstaller(AhenkSetupDto setupDto, String ip, String username, String password, Integer port,
+			String privateKey, String passphrase, InstallMethod installMethod, String downloadUrl,
+			AhenkSetupParameters setupParams) {
 		super();
+		this.setupDto = setupDto;
 		this.ip = ip;
 		this.username = username;
 		this.password = password;
@@ -55,6 +67,7 @@ public class RunnableAhenkInstaller implements Runnable {
 	@Override
 	public void run() {
 		logger.info("Runnable started.");
+
 		try {
 			logger.info("Checking SSH authentication to: " + ip);
 
@@ -75,37 +88,47 @@ public class RunnableAhenkInstaller implements Runnable {
 					SetupUtils.installPackage(ip, username, password, port, privateKey, passphrase, "gedit", null);
 
 				} else if (installMethod == InstallMethod.WGET) {
-					
+
 					// In case of folder name clash use current time as postfix
 					Date date = new Date();
 					SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyyyy-HH:mm:ss");
 					String timestamp = dateFormat.format(date);
-					
+
 					logger.info("Creating directory under /tmp");
-					SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase, MAKE_DIR_UNDER_TMP.replace("{0}", "ahenkTmpDir" + timestamp));
-					
+					SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
+							MAKE_DIR_UNDER_TMP.replace("{0}", "ahenkTmpDir" + timestamp));
+
 					logger.info("Downloading file from URL: " + downloadUrl);
-					SetupUtils.downloadPackage(ip, username, password, port, privateKey, passphrase, "ahenkTmpDir" + timestamp, "ahenk.deb", downloadUrl);
-					
+					SetupUtils.downloadPackage(ip, username, password, port, privateKey, passphrase,
+							"ahenkTmpDir" + timestamp, "ahenk.deb", downloadUrl);
+
 					logger.info("Installing downloaded package to: " + ip);
-					SetupUtils.installDownloadedPackage(ip, username, password, port, privateKey, passphrase, "ahenkTmpDir" + timestamp, "ahenk.deb", PackageInstaller.DPKG);
+					SetupUtils.installDownloadedPackage(ip, username, password, port, privateKey, passphrase,
+							"ahenkTmpDir" + timestamp, "ahenk.deb", PackageInstaller.DPKG);
 
 				} else {
 					logAndAddDetailEntity("Installation method is not set or not selected. Installation cancelled.",
 							"ERROR");
+					setupDto.getSetupDetailList()
+							.add(new AhenkSetupDetailDto(ip, true, "Installation method is not set or not selected."));
 				}
 				logAndAddDetailEntity("Successfully installed to: " + ip, "INFO");
+				setupDto.getSetupDetailList().add(new AhenkSetupDetailDto(ip, true, null));
+
 			} else {
 				logAndAddDetailEntity("Could not connect to: " + ip + " passing over to another IP.", "ERROR");
+				setupDto.getSetupDetailList().add(new AhenkSetupDetailDto(ip, false, "Could not connect to: " + ip));
 			}
 
 		} catch (SSHConnectionException e) {
 			logAndAddDetailEntity("Error occured installing Ahenk on IP: " + ip + " Error message: " + e.getMessage(),
 					"ERROR");
+			setupDto.getSetupDetailList().add(new AhenkSetupDetailDto(ip, false, e.getMessage()));
 			e.printStackTrace();
 		} catch (CommandExecutionException e) {
 			logAndAddDetailEntity("Error occured installing Ahenk on IP: " + ip + " Error message: " + e.getMessage(),
 					"ERROR");
+			setupDto.getSetupDetailList().add(new AhenkSetupDetailDto(ip, false, e.getMessage()));
 			e.printStackTrace();
 		}
 	}
