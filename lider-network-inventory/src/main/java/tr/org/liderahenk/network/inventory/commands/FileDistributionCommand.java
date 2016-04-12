@@ -5,8 +5,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -146,13 +151,19 @@ public class FileDistributionCommand extends BaseCommand {
 			logger.error("hostsPerThread: " + hostsPerThread);
 			// Create & execute threads
 			for (int i = 0; i < numberOfHosts; i += hostsPerThread) {
-				int toIndex = i + hostsPerThread;
-				List<String> ipSubList = ipAddresses.subList(i,
-						toIndex < ipAddresses.size() ? toIndex : ipAddresses.size() - 1);
+				List<String> ipSubList;
+				if (numberOfHosts < Constants.SSH_CONFIG.NUM_THREADS) {
+					ipSubList = ipAddresses;
+				} else {
+		 			int toIndex = i + hostsPerThread;
+		 			ipSubList = ipAddresses.subList(i,
+		 					toIndex < ipAddresses.size() ? toIndex : ipAddresses.size() - 1);
+		 		}
 				
 				logger.error("Creating runnable no: " + (i + 1));
 				RunnableFileDistributor distributor = new RunnableFileDistributor(fileDistResultDto, ipSubList,
 						username, password, port, privateKey, passphrase, fileToTransfer, destDirectory);
+				
 				executor.execute(distributor);
 				logger.error("Runnable no: " + (i + 1) + " executed.");
 			}
@@ -240,16 +251,44 @@ public class FileDistributionCommand extends BaseCommand {
 	}
 
 	/**
-	 * Create a tempopary file which can be used for SCP.
+	 * Create a temporary file under /tmp/{timestamp} which can be used for SCP.
 	 * 
-	 * @param bs
+	 * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner Feyzullahoğlu</a>
+	 * 
+	 * @param fileArray
 	 * @param filename
-	 * @return
+	 * @return File
 	 */
 	private File getFileInstance(byte[] fileArray, String filename) {
+		
+		// Get temp directory
+		String property = "java.io.tmpdir";
+		String tempDir = System.getProperty(property);
+		
+		// Get file separator
+		String separator = FileSystems.getDefault().getSeparator();
+
+		// In case of folder name clash use current time as postfix
+		Date date = new Date();
+		SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyyyy-HH:mm:ss");
+		String timestamp = dateFormat.format(date);
+		
+		String directoryToCreate = tempDir + separator + timestamp; 
+		
+		Path path = null;
+		
 		File temp = null;
 		try {
-			temp = File.createTempFile(filename, "");
+			
+			path = Paths.get(directoryToCreate);
+			
+			if (!Files.exists(path)) {
+				// Create directory under /tmp
+				Files.createDirectories(path);
+			}
+			
+			temp = new File(directoryToCreate);
+			
 			// Delete temp file when program exits.
 			temp.deleteOnExit();
 
