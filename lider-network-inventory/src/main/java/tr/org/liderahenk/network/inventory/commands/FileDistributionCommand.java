@@ -1,9 +1,7 @@
 package tr.org.liderahenk.network.inventory.commands;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -39,6 +37,7 @@ import tr.org.liderahenk.lider.core.api.service.ICommandResult;
 import tr.org.liderahenk.lider.core.api.service.ICommandResultFactory;
 import tr.org.liderahenk.lider.core.api.service.enums.CommandResultStatus;
 import tr.org.liderahenk.network.inventory.contants.Constants;
+import tr.org.liderahenk.network.inventory.contants.Constants.AccessMethod;
 import tr.org.liderahenk.network.inventory.dto.FileDistResultDto;
 import tr.org.liderahenk.network.inventory.dto.FileDistResultHostDto;
 import tr.org.liderahenk.network.inventory.entities.FileDistResult;
@@ -85,14 +84,20 @@ public class FileDistributionCommand extends BaseCommand {
 		String password = (String) parameterMap.get("password");
 		Integer port = (Integer) (parameterMap.get("port") == null ? 22 : parameterMap.get("port"));
 		String destDirectory = (String) parameterMap.get("destDirectory");
-
+		AccessMethod accessMethod = AccessMethod.valueOf((String) parameterMap.get("accessMethod"));
+		
 		logger.debug("Parameter map: {}", parameterMap);
 
 		logger.debug("Getting the location of private key file");
 
+		String privateKey;
 		// Get private key location in Lider machine from configuration file
-		String privateKey = getPrivateKeyLocation();
-		logger.debug("Path of private key file: " + privateKey);
+		if (accessMethod == AccessMethod.PRIVATE_KEY) {
+			privateKey = getPrivateKeyLocation();
+			logger.debug("Path of private key file: " + privateKey);
+		} else {
+			privateKey = null;
+		}
 
 		String passphrase = (String) parameterMap.get("passphrase");
 		
@@ -306,36 +311,10 @@ public class FileDistributionCommand extends BaseCommand {
 	}
 
 	private String getPrivateKeyLocation() {
-		BufferedReader reader = null;
-
 		// TODO change config file
-		try {
+		String privateKeyPath = "~/.ssh/id_rsa"; 
 
-			reader = new BufferedReader(new FileReader("/home/caner/lider.config"));
-
-			String sCurrentLine;
-
-			StringBuilder builder = new StringBuilder();
-
-			// TODO this is for temporary testing
-			// actually it will read just one property
-			// from configuration file
-			while ((sCurrentLine = reader.readLine()) != null) {
-				builder.append(sCurrentLine);
-			}
-
-			return builder.toString();
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				reader.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-
-		return "";
+		return privateKeyPath;
 	}
 
 	@Override
