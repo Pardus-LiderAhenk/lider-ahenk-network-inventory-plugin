@@ -5,7 +5,8 @@ import java.io.Serializable;
 /**
  * Model class for scanned hosts.
  * 
- * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner Feyzullahoglu</a>
+ * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner
+ *         Feyzullahoglu</a>
  */
 public class ScanResultHost implements Serializable {
 
