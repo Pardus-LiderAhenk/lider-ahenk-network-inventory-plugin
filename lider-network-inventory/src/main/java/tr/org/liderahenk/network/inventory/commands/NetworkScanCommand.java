@@ -150,9 +150,14 @@ public class NetworkScanCommand extends BaseCommand {
 
 				// Create & execute threads
 				for (int i = 0; i < numberOfHosts; i += hostsPerThread) {
-					int toIndex = i + hostsPerThread;
-					List<String> ipSubList = ipAddresses.subList(i,
-							toIndex < ipAddresses.size() ? toIndex : ipAddresses.size() - 1);
+					List<String> ipSubList;
+					if (numberOfHosts < Constants.SSH_CONFIG.NUM_THREADS) {
+						ipSubList = ipAddresses.subList(i, i + 1);
+					} else {
+			 			int toIndex = i + hostsPerThread;
+			 			ipSubList = ipAddresses.subList(i,
+			 					toIndex < ipAddresses.size() ? toIndex : ipAddresses.size() - 1);
+			 		}
 					String ipSubRange = NetworkUtils.convertToIpRange(ipSubList);
 
 					logger.debug("Creating thread no: " + (i + 1));
