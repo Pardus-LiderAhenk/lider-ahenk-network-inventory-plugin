@@ -25,6 +25,13 @@ import tr.org.liderahenk.liderconsole.core.rest.utils.TaskUtils;
 import tr.org.liderahenk.liderconsole.core.utils.SWTResourceManager;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
 
+/**
+ * A dialog to be shown before starting a file sharing command to take required
+ * information from user.
+ * 
+ * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner
+ *         Feyzullahoğlu</a>
+ */
 public class FileShareDialog extends Dialog {
 
 	private Text txtDestDirectory;
@@ -37,21 +44,21 @@ public class FileShareDialog extends Dialog {
 	private Button btnPrivateKey;
 	private Text txtPassphrase;
 
-	private List<String> selectedIpList; 
-	
+	private List<String> selectedIpList;
+
 	private String encodedFile;
-	
+
 	private String filename;
-	
+
 	private Map<String, Object> resultMap;
-	
+
 	public FileShareDialog(Shell parentShell, List<String> selectedIpList, String encodedFile, String filename) {
 		super(parentShell);
 		createButtonBar(parentShell);
 		this.selectedIpList = selectedIpList;
 		this.encodedFile = encodedFile;
 		this.filename = filename;
-		
+
 	}
 
 	@Override
@@ -228,9 +235,9 @@ public class FileShareDialog extends Dialog {
 		parameterMap.put("username", !txtUsername.getText().isEmpty() ? txtUsername.getText() : "root");
 		parameterMap.put("password", txtPassword.getText());
 		parameterMap.put("passphrase", txtPassphrase.getText());
-		
+
 		Integer port = new Integer(txtPort.getText());
-		
+
 		parameterMap.put("port", port);
 
 		task.setParameterMap(parameterMap);
