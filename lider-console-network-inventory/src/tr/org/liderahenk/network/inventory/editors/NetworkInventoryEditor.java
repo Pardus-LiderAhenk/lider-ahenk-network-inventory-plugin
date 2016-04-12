@@ -1,6 +1,5 @@
 package tr.org.liderahenk.network.inventory.editors;
 
-import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -51,7 +50,9 @@ import tr.org.liderahenk.liderconsole.core.rest.utils.TaskUtils;
 import tr.org.liderahenk.liderconsole.core.utils.SWTResourceManager;
 import tr.org.liderahenk.liderconsole.core.widgets.Notifier;
 import tr.org.liderahenk.network.inventory.dialogs.FileShareDialog;
+import tr.org.liderahenk.network.inventory.dialogs.FileShareResultDialog;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
+import tr.org.liderahenk.network.inventory.model.FileDistResult;
 import tr.org.liderahenk.network.inventory.model.ScanResult;
 import tr.org.liderahenk.network.inventory.model.ScanResultHost;
 import tr.org.liderahenk.network.inventory.wizard.AhenkSetupWizard;
@@ -162,10 +163,18 @@ public class NetworkInventoryEditor extends EditorPart {
 
 				Map<String, Object> resultMap = dialog.getResultMap();
 				
-				// TODO
-				// TODO show sharing results to user
-				// TODO
+				ObjectMapper mapper = new ObjectMapper();
 
+				try {
+					FileDistResult distResult = mapper.readValue(resultMap.get("result").toString(), FileDistResult.class);
+
+					FileShareResultDialog resultDialog = new FileShareResultDialog(Display.getCurrent().getActiveShell(), distResult.getHosts());
+
+					resultDialog.open();
+					
+				} catch (Exception e1) {
+					e1.printStackTrace(); 
+				}
 			}
 
 			@Override
@@ -274,9 +283,6 @@ public class NetworkInventoryEditor extends EditorPart {
 
 						tblInventory.setInput(scanResult.getHosts());
 
-						// TODO show results to user by opening a new dialog
-						// that
-						// contains a table and results.
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
@@ -306,7 +312,6 @@ public class NetworkInventoryEditor extends EditorPart {
 		table.getVerticalBar().setVisible(true);
 
 		tblInventory.setContentProvider(new ArrayContentProvider());
-		// tblInventory.setInput(createFakeIpToTable(table));
 
 		GridData gridData = new GridData();
 		gridData.verticalAlignment = GridData.FILL;
