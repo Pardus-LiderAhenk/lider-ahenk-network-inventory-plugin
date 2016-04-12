@@ -49,14 +49,26 @@ import tr.org.liderahenk.liderconsole.core.rest.responses.RestResponse;
 import tr.org.liderahenk.liderconsole.core.rest.utils.TaskUtils;
 import tr.org.liderahenk.liderconsole.core.utils.SWTResourceManager;
 import tr.org.liderahenk.liderconsole.core.widgets.Notifier;
+import tr.org.liderahenk.network.inventory.constants.AccessMethod;
+import tr.org.liderahenk.network.inventory.constants.InstallMethod;
+import tr.org.liderahenk.network.inventory.dialogs.AhenkSetupResultDialog;
 import tr.org.liderahenk.network.inventory.dialogs.FileShareDialog;
 import tr.org.liderahenk.network.inventory.dialogs.FileShareResultDialog;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
+import tr.org.liderahenk.network.inventory.model.AhenkSetupConfig;
+import tr.org.liderahenk.network.inventory.model.AhenkSetupResult;
 import tr.org.liderahenk.network.inventory.model.FileDistResult;
 import tr.org.liderahenk.network.inventory.model.ScanResult;
 import tr.org.liderahenk.network.inventory.model.ScanResultHost;
 import tr.org.liderahenk.network.inventory.wizard.AhenkSetupWizard;
 
+/**
+ * An editor that sends some network related commands such as network scan,
+ * Ahenk installation and file sharing.
+ * 
+ * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner
+ *         Feyzullahoğlu</a>
+ */
 public class NetworkInventoryEditor extends EditorPart {
 
 	public static final String ID = "tr.org.liderahenk.network.inventory.editors.NetworkInventoryEditor";
@@ -107,11 +119,11 @@ public class NetworkInventoryEditor extends EditorPart {
 
 	private void createFileShareArea(Composite composite) {
 
-		final Composite cmpAhenkInstall = new Composite(composite, SWT.BORDER);
-		cmpAhenkInstall.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
-		cmpAhenkInstall.setLayout(new GridLayout(3, false));
+		final Composite cmpFileShare = new Composite(composite, SWT.BORDER);
+		cmpFileShare.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+		cmpFileShare.setLayout(new GridLayout(3, false));
 
-		txtFilePath = new Text(cmpAhenkInstall, SWT.RIGHT | SWT.SINGLE | SWT.FILL | SWT.BORDER);
+		txtFilePath = new Text(cmpFileShare, SWT.RIGHT | SWT.SINGLE | SWT.FILL | SWT.BORDER);
 		txtFilePath.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent arg0) {
@@ -119,7 +131,7 @@ public class NetworkInventoryEditor extends EditorPart {
 			}
 		});
 
-		btnFileUpload = new Button(cmpAhenkInstall, SWT.NONE);
+		btnFileUpload = new Button(cmpFileShare, SWT.NONE);
 		btnFileUpload.setImage(
 				SWTResourceManager.getImage(LiderConstants.PLUGIN_IDS.LIDER_CONSOLE_CORE, "icons/16/folder-add.png"));
 		btnFileUpload.setText(Messages.getString("UPLOAD_FILE"));
@@ -127,11 +139,9 @@ public class NetworkInventoryEditor extends EditorPart {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 
-				FileDialog dialog = new FileDialog(cmpAhenkInstall.getShell(), SWT.OPEN);
-				// dialog.setFilterExtensions(new String [] {"*.<file_type>"});
+				FileDialog dialog = new FileDialog(cmpFileShare.getShell(), SWT.OPEN);
 				dialog.setFilterPath("/home/volkan/");
 				txtFilePath.setText(dialog.open());
-				// String result = dialog.open();
 			}
 
 			@Override
@@ -139,7 +149,7 @@ public class NetworkInventoryEditor extends EditorPart {
 			}
 		});
 
-		btnShareFile = new Button(cmpAhenkInstall, SWT.NONE);
+		btnShareFile = new Button(cmpFileShare, SWT.NONE);
 		btnShareFile.setImage(
 				SWTResourceManager.getImage(LiderConstants.PLUGIN_IDS.LIDER_CONSOLE_CORE, "icons/16/share.png"));
 		btnShareFile.setText(Messages.getString("SHARE_FILE"));
@@ -154,26 +164,29 @@ public class NetworkInventoryEditor extends EditorPart {
 				// Find file name
 				int lastSeparatorIndex = txtFilePath.getText().lastIndexOf(FileSystems.getDefault().getSeparator());
 				String filename = txtFilePath.getText(lastSeparatorIndex + 1, txtFilePath.getText().length());
-				
+
 				setSelectedIps();
 
-				FileShareDialog dialog = new FileShareDialog(Display.getCurrent().getActiveShell(), selectedIpList, encodedFile, filename);
+				FileShareDialog dialog = new FileShareDialog(Display.getCurrent().getActiveShell(), selectedIpList,
+						encodedFile, filename);
 
 				dialog.open();
 
 				Map<String, Object> resultMap = dialog.getResultMap();
-				
+
 				ObjectMapper mapper = new ObjectMapper();
 
 				try {
-					FileDistResult distResult = mapper.readValue(resultMap.get("result").toString(), FileDistResult.class);
+					FileDistResult distResult = mapper.readValue(resultMap.get("result").toString(),
+							FileDistResult.class);
 
-					FileShareResultDialog resultDialog = new FileShareResultDialog(Display.getCurrent().getActiveShell(), distResult.getHosts());
+					FileShareResultDialog resultDialog = new FileShareResultDialog(
+							Display.getCurrent().getActiveShell(), distResult.getHosts());
 
 					resultDialog.open();
-					
+
 				} catch (Exception e1) {
-					e1.printStackTrace(); 
+					e1.printStackTrace();
 				}
 			}
 
@@ -186,7 +199,7 @@ public class NetworkInventoryEditor extends EditorPart {
 
 	}
 
-	private void createAhenkInstallArea(Composite composite) {
+	private void createAhenkInstallArea(final Composite composite) {
 
 		Composite cmpAhenkInstall = new Composite(composite, SWT.BORDER);
 		cmpAhenkInstall.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
@@ -207,10 +220,69 @@ public class NetworkInventoryEditor extends EditorPart {
 
 				AhenkSetupWizard wizard = new AhenkSetupWizard(selectedIpList);
 
-				WizardDialog wd = new WizardDialog(Display.getCurrent().getActiveShell(), wizard);
-				wd.setMinimumPageSize(new Point(800, 600));
-				wd.setPageSize(new Point(800, 600));
-				wd.open();
+				WizardDialog wizardDialog = new WizardDialog(Display.getCurrent().getActiveShell(), wizard);
+				wizardDialog.setMinimumPageSize(new Point(800, 600));
+				wizardDialog.setPageSize(new Point(800, 600));
+				wizardDialog.open();
+
+				AhenkSetupConfig config = wizard.getConfig();
+
+				// Create request object
+				TaskRequest task = new TaskRequest();
+				task.setPluginName("network-inventory");
+				task.setPluginVersion("1.0.0");
+				task.setCommandId("INSTALLAHENK");
+
+				// Add config object as parameter. It has all information that
+				// Lider needs to know.
+				Map<String, Object> parameterMap = new HashMap<String, Object>();
+
+				// Put parameters to map
+				parameterMap.put("ipList", config.getIpList());
+				parameterMap.put("accessMethod", config.getAccessMethod());
+				parameterMap.put("installMethod", config.getInstallMethod());
+				parameterMap.put("username", config.getUsername());
+				parameterMap.put("port", config.getPort());
+
+				if (config.getAccessMethod() == AccessMethod.USERNAME_PASSWORD) {
+					parameterMap.put("password", config.getPassword());
+				} else {
+					parameterMap.put("passphrase", config.getPassphrase());
+				}
+
+				if (config.getInstallMethod() == InstallMethod.WGET) {
+					parameterMap.put("downloadUrl", config.getDownloadUrl());
+				}
+
+				task.setParameterMap(parameterMap);
+
+				Map<String, Object> resultMap = new HashMap<String, Object>();
+
+				// Send command
+				RestResponse response;
+				try {
+					response = (RestResponse) TaskUtils.execute(task);
+
+					resultMap = response.getResultMap();
+
+				} catch (Exception e3) {
+					e3.printStackTrace();
+				}
+
+				ObjectMapper mapper = new ObjectMapper();
+
+				try {
+					AhenkSetupResult setupResult = mapper.readValue(resultMap.get("result").toString(),
+							AhenkSetupResult.class);
+
+					AhenkSetupResultDialog resultDialog = new AhenkSetupResultDialog(composite.getShell(),
+							setupResult.getSetupDetailList());
+
+					resultDialog.open();
+
+				} catch (Exception e2) {
+					e2.printStackTrace();
+				}
 			}
 
 			@Override
