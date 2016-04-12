@@ -71,13 +71,15 @@ public class FileDistributionCommand extends BaseCommand {
 		
 		ArrayList<String> ipAddresses = (ArrayList<String>) parameterMap.get("ipAddresses");
 		
-		logger.error("Getting file as byte array from parameter map");
+		logger.debug("Getting file as byte array from parameter map");
 		byte[] fileArray = DatatypeConverter.parseBase64Binary((String) parameterMap.get("file"));
 		
-		logger.error("MD5: " + getMD5ofFile(fileArray));
+		logger.debug("MD5: " + getMD5ofFile(fileArray));
+
+		String filename = (String) parameterMap.get("filename");
 		
-		logger.error("Getting file instances");
-		File fileToTransfer = getFileInstance(fileArray, "transfer");
+		logger.debug("Getting file instances");
+		File fileToTransfer = getFileInstance(fileArray, filename);
 		
 		String username = (String) parameterMap.get("username");
 		String password = (String) parameterMap.get("password");
@@ -86,11 +88,11 @@ public class FileDistributionCommand extends BaseCommand {
 
 		logger.debug("Parameter map: {}", parameterMap);
 
-		logger.error("Getting the location of private key file");
+		logger.debug("Getting the location of private key file");
 
 		// Get private key location in Lider machine from configuration file
 		String privateKey = getPrivateKeyLocation();
-		logger.error("Path of private key file: " + privateKey);
+		logger.debug("Path of private key file: " + privateKey);
 
 		String passphrase = (String) parameterMap.get("passphrase");
 		
@@ -148,27 +150,27 @@ public class FileDistributionCommand extends BaseCommand {
 			logger.debug("Hosts: {}, Threads:{}, Host per Thread: {}",
 					new Object[] { numberOfHosts, Constants.SSH_CONFIG.NUM_THREADS, hostsPerThread });
 
-			logger.error("hostsPerThread: " + hostsPerThread);
+			logger.debug("hostsPerThread: " + hostsPerThread);
 			// Create & execute threads
 			for (int i = 0; i < numberOfHosts; i += hostsPerThread) {
 				List<String> ipSubList;
 				if (numberOfHosts < Constants.SSH_CONFIG.NUM_THREADS) {
-					ipSubList = ipAddresses;
+					ipSubList = ipAddresses.subList(i, i + 1);
 				} else {
 		 			int toIndex = i + hostsPerThread;
 		 			ipSubList = ipAddresses.subList(i,
 		 					toIndex < ipAddresses.size() ? toIndex : ipAddresses.size() - 1);
 		 		}
 				
-				logger.error("Creating runnable no: " + (i + 1));
+				logger.debug("Creating runnable no: " + (i + 1));
 				RunnableFileDistributor distributor = new RunnableFileDistributor(fileDistResultDto, ipSubList,
 						username, password, port, privateKey, passphrase, fileToTransfer, destDirectory);
 				
 				executor.execute(distributor);
-				logger.error("Runnable no: " + (i + 1) + " executed.");
+				logger.debug("Runnable no: " + (i + 1) + " executed.");
 			}
 
-			logger.error("Shutting down executor.");
+			logger.debug("Shutting down executor.");
 
 			try {
 				executor.shutdown();
@@ -178,7 +180,7 @@ public class FileDistributionCommand extends BaseCommand {
 				e.printStackTrace();
 			}
 
-			logger.error("Saving entity.");
+			logger.debug("Saving entity.");
 			// Insert new distribution result record
 			pluginDbService.save(getEntityObject(fileDistResultDto));
 		}
@@ -265,6 +267,8 @@ public class FileDistributionCommand extends BaseCommand {
 		String property = "java.io.tmpdir";
 		String tempDir = System.getProperty(property);
 		
+		logger.warn("TEMPDIR: " + tempDir);
+		
 		// Get file separator
 		String separator = FileSystems.getDefault().getSeparator();
 
@@ -274,6 +278,8 @@ public class FileDistributionCommand extends BaseCommand {
 		String timestamp = dateFormat.format(date);
 		
 		String directoryToCreate = tempDir + separator + timestamp; 
+		
+		logger.warn("directoryToCreate: " + directoryToCreate);
 		
 		Path path = null;
 		
@@ -287,7 +293,7 @@ public class FileDistributionCommand extends BaseCommand {
 				Files.createDirectories(path);
 			}
 			
-			temp = new File(directoryToCreate);
+			temp = new File(directoryToCreate + separator + filename);
 			
 			// Delete temp file when program exits.
 			temp.deleteOnExit();
