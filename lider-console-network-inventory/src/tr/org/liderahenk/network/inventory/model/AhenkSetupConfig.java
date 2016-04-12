@@ -9,6 +9,8 @@ import tr.org.liderahenk.network.inventory.constants.InstallMethod;
 /**
  * Contains configuration variables used throughout the whole setup process.
  *
+ * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner
+ *         Feyzullahoğlu</a>
  */
 public class AhenkSetupConfig implements Serializable{
 
