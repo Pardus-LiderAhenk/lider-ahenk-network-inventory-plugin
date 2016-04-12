@@ -172,7 +172,7 @@ public class SSHManager {
 					if (i < 0)
 						break;
 					String output = new String(tmp, 0, i);
-					logger.info(output);
+					logger.debug(output);
 				}
 				if (channel.isClosed()) {
 					logger.info("exit status: " + channel.getExitStatus());
@@ -190,7 +190,7 @@ public class SSHManager {
 			}
 
 		} catch (Exception e) {
-			logger.info(e.getMessage());
+			logger.error(e.getMessage());
 			throw new CommandExecutionException(e.getMessage());
 		} finally {
 			if (channel != null) {
