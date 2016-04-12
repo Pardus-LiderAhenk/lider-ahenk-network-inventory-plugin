@@ -5,7 +5,8 @@ import java.io.Serializable;
 /**
  * Model class for results of distributing the specified file to hosts.
  * 
- * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner Feyzullahoğlu</a>
+ * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner
+ *         Feyzullahoğlu</a>
  *
  */
 public class FileDistResultHost implements Serializable {
