@@ -10,6 +10,13 @@ import tr.org.liderahenk.network.inventory.dto.FileDistResultDto;
 import tr.org.liderahenk.network.inventory.dto.FileDistResultHostDto;
 import tr.org.liderahenk.network.inventory.utils.setup.SetupUtils;
 
+/**
+ * A runnable that is responsible of distributing provided file to given
+ * machines.
+ * 
+ * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner
+ *         Feyzullahoğlu</a>
+ */
 public class RunnableFileDistributor implements Runnable {
 
 	private Logger logger = LoggerFactory.getLogger(RunnableFileDistributor.class);
@@ -25,7 +32,8 @@ public class RunnableFileDistributor implements Runnable {
 	private String destDirectory;
 
 	public RunnableFileDistributor(FileDistResultDto fileDistResultDto, List<String> ipList, String username,
-			String password, Integer port, String privateKey, String passphrase, File fileToTransfer, String destDirectory) {
+			String password, Integer port, String privateKey, String passphrase, File fileToTransfer,
+			String destDirectory) {
 		this.fileDistResultDto = fileDistResultDto;
 		this.ipList = ipList;
 		this.username = username;
@@ -39,13 +47,14 @@ public class RunnableFileDistributor implements Runnable {
 
 	@Override
 	public void run() {
-		
+
 		logger.debug("ipList.size: " + ipList.size());
 		for (String ip : ipList) {
 			FileDistResultHostDto hostDto = null;
 			try {
 				logger.debug("Copying file to: " + ip);
-				SetupUtils.copyFile(ip, username, password, port, privateKey, passphrase, fileToTransfer, destDirectory);
+				SetupUtils.copyFile(ip, username, password, port, privateKey, passphrase, fileToTransfer,
+						destDirectory);
 				hostDto = new FileDistResultHostDto(ip, true, null);
 			} catch (Exception e) {
 				logger.error(e.getMessage(), e);
