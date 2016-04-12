@@ -41,13 +41,16 @@ public class FileShareDialog extends Dialog {
 	
 	private String encodedFile;
 	
+	private String filename;
+	
 	private Map<String, Object> resultMap;
 	
-	public FileShareDialog(Shell parentShell, List<String> selectedIpList, String encodedFile) {
+	public FileShareDialog(Shell parentShell, List<String> selectedIpList, String encodedFile, String filename) {
 		super(parentShell);
 		createButtonBar(parentShell);
 		this.selectedIpList = selectedIpList;
 		this.encodedFile = encodedFile;
+		this.filename = filename;
 		
 	}
 
@@ -220,6 +223,7 @@ public class FileShareDialog extends Dialog {
 		Map<String, Object> parameterMap = new HashMap<String, Object>();
 		parameterMap.put("ipAddresses", selectedIpList);
 		parameterMap.put("file", encodedFile);
+		parameterMap.put("filename", filename);
 		parameterMap.put("destDirectory", txtDestDirectory.getText());
 		parameterMap.put("username", !txtUsername.getText().isEmpty() ? txtUsername.getText() : "root");
 		parameterMap.put("password", txtPassword.getText());
