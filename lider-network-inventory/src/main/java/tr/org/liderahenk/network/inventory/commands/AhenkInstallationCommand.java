@@ -1,10 +1,8 @@
 package tr.org.liderahenk.network.inventory.commands;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -18,6 +16,9 @@ import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +30,8 @@ import tr.org.liderahenk.lider.core.api.service.enums.CommandResultStatus;
 import tr.org.liderahenk.network.inventory.contants.Constants;
 import tr.org.liderahenk.network.inventory.contants.Constants.AccessMethod;
 import tr.org.liderahenk.network.inventory.contants.Constants.InstallMethod;
+import tr.org.liderahenk.network.inventory.dto.AhenkSetupDetailDto;
+import tr.org.liderahenk.network.inventory.dto.AhenkSetupDto;
 import tr.org.liderahenk.network.inventory.entities.AhenkSetupParameters;
 import tr.org.liderahenk.network.inventory.entities.AhenkSetupResultDetail;
 import tr.org.liderahenk.network.inventory.runnables.RunnableAhenkInstaller;
@@ -75,10 +78,10 @@ public class AhenkInstallationCommand extends BaseCommand {
 			privateKey = getPrivateKeyLocation();
 			logger.debug("Path of private key file: " + privateKey);
 		}
-		
+
 		if (installMethod == InstallMethod.WGET) {
 			downloadUrl = (String) parameterMap.get("downloadUrl");
-		} 
+		}
 
 		LinkedBlockingQueue<Runnable> taskQueue = new LinkedBlockingQueue<Runnable>();
 
@@ -123,10 +126,13 @@ public class AhenkInstallationCommand extends BaseCommand {
 
 		logger.debug("passphrase: " + passphrase);
 
+		AhenkSetupDto ahenkSetupDto = new AhenkSetupDto(ipList, accessMethod, username, password, privateKey,
+				passphrase, installMethod, port, Collections.synchronizedList(new ArrayList<AhenkSetupDetailDto>()));
+		
 		logger.debug("Starting to create a new runnable to each Ahenk installation.");
 		for (final String ip : ipList) {
 			// Execute each installation in a new runnable.
-			RunnableAhenkInstaller installer = new RunnableAhenkInstaller(ip, username, password, port, privateKey,
+			RunnableAhenkInstaller installer = new RunnableAhenkInstaller(ahenkSetupDto, ip, username, password, port, privateKey,
 					passphrase, installMethod, downloadUrl, setupParams);
 
 			logger.debug("Executing installation runnable for: " + ip);
@@ -134,13 +140,13 @@ public class AhenkInstallationCommand extends BaseCommand {
 			executor.execute(installer);
 		}
 
-		logger.debug("Shutting down executor service.");
-		executor.shutdown();
 
 		try {
-			logger.debug("Waiting for executor service to finish all tasks.");
+			logger.debug("Shutting down executor service.");
+			executor.shutdown();
 
-			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+			logger.debug("Waiting for executor service to finish all tasks.");
+			executor.awaitTermination(100000, TimeUnit.MILLISECONDS);
 
 			logger.debug("Executor service finished all tasks.");
 
@@ -153,8 +159,20 @@ public class AhenkInstallationCommand extends BaseCommand {
 
 		logger.debug("Entities successfully saved.");
 
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			resultMap.put("result", mapper.writeValueAsString(ahenkSetupDto));
+		} catch (JsonGenerationException e) {
+			logger.error(e.getMessage(), e);
+		} catch (JsonMappingException e) {
+			logger.error(e.getMessage(), e);
+		} catch (IOException e) {
+			logger.error(e.getMessage(), e);
+		}
+
 		ICommandResult commandResult = resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this,
-				new HashMap<String, Object>());
+				resultMap);
 
 		return commandResult;
 	}
@@ -192,22 +210,9 @@ public class AhenkInstallationCommand extends BaseCommand {
 		return "";
 	}
 
-	public static byte[] deserialize(Object obj) {
-		try {
-			if (obj != null) {
-				ByteArrayOutputStream out = new ByteArrayOutputStream();
-				ObjectOutputStream os = new ObjectOutputStream(out);
-				os.writeObject(obj);
-				return out.toByteArray();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
 	private AhenkSetupParameters getParentEntityObject(List<String> ipList, AccessMethod accessMethod, String username,
-			String password, String privateKey, String passphrase, InstallMethod installMethod, Integer port, String downloadUrl) {
+			String password, String privateKey, String passphrase, InstallMethod installMethod, Integer port,
+			String downloadUrl) {
 
 		// Create an empty result detail entity list
 		List<AhenkSetupResultDetail> detailList = new ArrayList<AhenkSetupResultDetail>();
