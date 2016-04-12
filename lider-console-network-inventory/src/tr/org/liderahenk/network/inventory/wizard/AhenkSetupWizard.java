@@ -1,6 +1,5 @@
 package tr.org.liderahenk.network.inventory.wizard;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -12,23 +11,27 @@ import org.eclipse.jface.util.Policy;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 
-import tr.org.liderahenk.liderconsole.core.rest.requests.TaskRequest;
-import tr.org.liderahenk.liderconsole.core.rest.responses.RestResponse;
-import tr.org.liderahenk.liderconsole.core.rest.utils.TaskUtils;
-import tr.org.liderahenk.network.inventory.constants.AccessMethod;
-import tr.org.liderahenk.network.inventory.constants.InstallMethod;
 import tr.org.liderahenk.network.inventory.model.AhenkSetupConfig;
 import tr.org.liderahenk.network.inventory.wizard.pages.AhenkConfirmPage;
 import tr.org.liderahenk.network.inventory.wizard.pages.AhenkConnectionMethodPage;
 import tr.org.liderahenk.network.inventory.wizard.pages.AhenkInstallationMethodPage;
+
+/**
+ * Wizard class of Ahenk installation that keeps some configurations and global
+ * settings about pages and etc.
+ * 
+ * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner
+ *         Feyzullahoğlu</a>
+ */
 public class AhenkSetupWizard extends Wizard {
 
 	public AhenkSetupWizard(List<String> ipList) {
 		super();
 		this.config.setIpList(ipList);
 	}
+
+	private Map<String, Object> resultMap;
 
 	/**
 	 * The instance which holds all the configuration variables throughout the
@@ -203,67 +206,6 @@ public class AhenkSetupWizard extends Wizard {
 	}
 
 	@Override
-	public boolean performFinish() {
-		
-		final Display display = Display.getCurrent();
-		
-		Runnable runnable = new Runnable() {
-			
-			@Override
-			public void run() {
-				// -- TODO Here will be in different thread so wizard will be closed immediately. ---- //
-				// Create request object
-				TaskRequest task = new TaskRequest();
-				task.setPluginName("network-inventory");
-				task.setPluginVersion("1.0.0-SNAPSHOT");
-				task.setCommandId("INSTALLAHENK");
-
-				// Add config object as parameter. It has all information that Lider needs to know.
-				Map<String, Object> parameterMap = new HashMap<String, Object>();
-
-				// Put parameters to map
-				parameterMap.put("ipList", config.getIpList());
-				parameterMap.put("accessMethod", config.getAccessMethod());
-				parameterMap.put("installMethod", config.getInstallMethod());
-				parameterMap.put("username", config.getUsername());
-				parameterMap.put("port", config.getPort());
-				
-				if (config.getAccessMethod() == AccessMethod.USERNAME_PASSWORD) {
-					parameterMap.put("password", config.getPassword());
-				}
-				else {
-					parameterMap.put("passphrase", config.getPassphrase());
-				}
-
-				if (config.getInstallMethod() == InstallMethod.WGET) {
-					parameterMap.put("downloadUrl", config.getDownloadUrl());
-				}
-				
-				task.setParameterMap(parameterMap);
-				
-				// TODO open a loading dialog(take it from installer project)
-				
-				// Send command
-				RestResponse response;
-				try {
-					response = (RestResponse) TaskUtils.execute(task);
-					Map<String, Object> resultMap = response.getResultMap();
-				} catch (Exception e) {
-					e.printStackTrace();
-					// TODO change loading dialog as: "Error occured."
-				}
-				
-				// ------------------------------------------------------------ //
-				
-			}
-		};
-		
-		display.asyncExec(runnable);
-		
-		return true;
-	}
-
-	@Override
 	public boolean canFinish() {
 
 		// If current page is the last page of wizard.
@@ -274,4 +216,16 @@ public class AhenkSetupWizard extends Wizard {
 		return false;
 	}
 
+	public Map<String, Object> getResultMap() {
+		return resultMap;
+	}
+
+	public AhenkSetupConfig getConfig() {
+		return config;
+	}
+
+	@Override
+	public boolean performFinish() {
+		return true;
+	}
 }
