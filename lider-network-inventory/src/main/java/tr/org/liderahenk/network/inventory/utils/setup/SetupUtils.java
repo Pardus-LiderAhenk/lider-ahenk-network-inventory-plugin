@@ -339,7 +339,7 @@ public class SetupUtils {
 		if (!destinationDir.endsWith("/")) {
 			destinationDir += "/";
 		}
-		destinationDir += fileToTransfer.getName();
+//		destinationDir += fileToTransfer.getName();
 
 		if (NetworkUtils.isLocal(ip)) {
 
