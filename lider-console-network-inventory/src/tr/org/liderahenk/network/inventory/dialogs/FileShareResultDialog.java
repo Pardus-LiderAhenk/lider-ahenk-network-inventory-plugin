@@ -21,6 +21,12 @@ import tr.org.liderahenk.liderconsole.core.utils.SWTResourceManager;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
 import tr.org.liderahenk.network.inventory.model.FileDistResultHost;
 
+/**
+ * A dialog that shows the result of a file sharing command.
+ * 
+ * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner
+ *         Feyzullahoğlu</a>
+ */
 public class FileShareResultDialog extends Dialog {
 
 	private TableViewer tblViewer;
