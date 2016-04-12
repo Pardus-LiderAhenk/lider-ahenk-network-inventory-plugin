@@ -8,7 +8,8 @@ import java.util.List;
 /**
  * Model class for file distribution results.
  * 
- * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner Feyzullahoğlu</a>
+ * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner
+ *         Feyzullahoğlu</a>
  *
  */
 public class FileDistResult implements Serializable {
@@ -34,23 +35,22 @@ public class FileDistResult implements Serializable {
 	private List<FileDistResultHost> hosts;
 
 	public FileDistResult() {
-			super();
-		}
+		super();
+	}
 
 	public FileDistResult(ArrayList<String> ipAddresses, String fileName, String username, String password,
-				Integer port, String privateKey, String destDirectory, Date fileDistDate,
-				List<FileDistResultHost> hosts) {
-			super();
-			this.ipAddresses = ipAddresses;
-			this.fileName = fileName;
-			this.username = username;
-			this.password = password;
-			this.port = port;
-			this.privateKey = privateKey;
-			this.destDirectory = destDirectory;
-			this.fileDistDate = fileDistDate;
-			this.hosts = hosts;
-		}
+			Integer port, String privateKey, String destDirectory, Date fileDistDate, List<FileDistResultHost> hosts) {
+		super();
+		this.ipAddresses = ipAddresses;
+		this.fileName = fileName;
+		this.username = username;
+		this.password = password;
+		this.port = port;
+		this.privateKey = privateKey;
+		this.destDirectory = destDirectory;
+		this.fileDistDate = fileDistDate;
+		this.hosts = hosts;
+	}
 
 	public ArrayList<String> getIpAddresses() {
 		return ipAddresses;
