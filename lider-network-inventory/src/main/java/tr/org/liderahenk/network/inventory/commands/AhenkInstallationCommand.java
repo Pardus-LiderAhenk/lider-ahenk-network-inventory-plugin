@@ -53,7 +53,7 @@ public class AhenkInstallationCommand extends BaseCommand {
 
 		Map<String, Object> parameterMap = context.getRequest().getParameterMap();
 
-		logger.warn("Getting setup parameters.");
+		logger.debug("Getting setup parameters.");
 		List<String> ipList = (List<String>) parameterMap.get("ipList");
 		AccessMethod accessMethod = AccessMethod.valueOf((String) parameterMap.get("accessMethod"));
 		InstallMethod installMethod = InstallMethod.valueOf((String) parameterMap.get("installMethod"));
@@ -73,7 +73,7 @@ public class AhenkInstallationCommand extends BaseCommand {
 
 			// Get private key location in Lider machine from configuration file
 			privateKey = getPrivateKeyLocation();
-			logger.warn("Path of private key file: " + privateKey);
+			logger.debug("Path of private key file: " + privateKey);
 		}
 		
 		if (installMethod == InstallMethod.WGET) {
@@ -84,7 +84,7 @@ public class AhenkInstallationCommand extends BaseCommand {
 
 		final List<Runnable> running = Collections.synchronizedList(new ArrayList());
 
-		logger.warn("Creating a thread pool.");
+		logger.debug("Creating a thread pool.");
 		ThreadPoolExecutor executor = new ThreadPoolExecutor(Constants.SSH_CONFIG.NUM_THREADS,
 				Constants.SSH_CONFIG.NUM_THREADS, 0L, TimeUnit.MILLISECONDS, taskQueue,
 				Executors.defaultThreadFactory()) {
@@ -109,49 +109,49 @@ public class AhenkInstallationCommand extends BaseCommand {
 			protected void afterExecute(Runnable r, Throwable t) {
 				super.afterExecute(r, t);
 				running.remove(r);
-				logger.warn("Running threads: {}", running);
+				logger.debug("Running threads: {}", running);
 			}
 		};
 
-		logger.warn("Getting the location of private key file");
+		logger.debug("Getting the location of private key file");
 
-		logger.warn("Creating setup parameters parent entity.");
+		logger.debug("Creating setup parameters parent entity.");
 		// Insert new Ahenk installation parameters.
 		// Parent identity object contains installation parameters.
 		AhenkSetupParameters setupParams = getParentEntityObject(ipList, accessMethod, username, password, privateKey,
 				passphrase, installMethod, port, downloadUrl);
 
-		logger.warn("passphrase: " + passphrase);
+		logger.debug("passphrase: " + passphrase);
 
-		logger.warn("Starting to create a new runnable to each Ahenk installation.");
+		logger.debug("Starting to create a new runnable to each Ahenk installation.");
 		for (final String ip : ipList) {
 			// Execute each installation in a new runnable.
 			RunnableAhenkInstaller installer = new RunnableAhenkInstaller(ip, username, password, port, privateKey,
 					passphrase, installMethod, downloadUrl, setupParams);
 
-			logger.warn("Executing installation runnable for: " + ip);
+			logger.debug("Executing installation runnable for: " + ip);
 
 			executor.execute(installer);
 		}
 
-		logger.warn("Shutting down executor service.");
+		logger.debug("Shutting down executor service.");
 		executor.shutdown();
 
 		try {
-			logger.warn("Waiting for executor service to finish all tasks.");
+			logger.debug("Waiting for executor service to finish all tasks.");
 
 			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 
-			logger.warn("Executor service finished all tasks.");
+			logger.debug("Executor service finished all tasks.");
 
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 
-		logger.warn("Saving entities to database.");
+		logger.debug("Saving entities to database.");
 		pluginDbService.save(setupParams);
 
-		logger.warn("Entities successfully saved.");
+		logger.debug("Entities successfully saved.");
 
 		ICommandResult commandResult = resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this,
 				new HashMap<String, Object>());
@@ -212,7 +212,7 @@ public class AhenkInstallationCommand extends BaseCommand {
 		// Create an empty result detail entity list
 		List<AhenkSetupResultDetail> detailList = new ArrayList<AhenkSetupResultDetail>();
 
-		logger.warn("Creating parent entity object that contains installation parameters");
+		logger.debug("Creating parent entity object that contains installation parameters");
 		// Create setup parameters entity
 		AhenkSetupParameters setupResult = new AhenkSetupParameters(null, installMethod.toString(),
 				accessMethod.toString(), username, password, port, privateKey, passphrase, new Date(), downloadUrl,
