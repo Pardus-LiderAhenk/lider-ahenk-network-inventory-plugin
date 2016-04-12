@@ -1,5 +1,7 @@
 package tr.org.liderahenk.network.inventory.editors;
 
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -148,9 +150,13 @@ public class NetworkInventoryEditor extends EditorPart {
 				byte[] fileArray = readFileAsByteArray(txtFilePath.getText());
 				String encodedFile = DatatypeConverter.printBase64Binary(fileArray);
 
+				// Find file name
+				int lastSeparatorIndex = txtFilePath.getText().lastIndexOf(FileSystems.getDefault().getSeparator());
+				String filename = txtFilePath.getText(lastSeparatorIndex + 1, txtFilePath.getText().length());
+				
 				setSelectedIps();
 
-				FileShareDialog dialog = new FileShareDialog(Display.getCurrent().getActiveShell(), selectedIpList, encodedFile);
+				FileShareDialog dialog = new FileShareDialog(Display.getCurrent().getActiveShell(), selectedIpList, encodedFile, filename);
 
 				dialog.open();
 
