@@ -74,7 +74,6 @@ public class RunnableAhenkInstaller implements Runnable {
 			// Check authorization before starting installation
 			final boolean canConnect = SetupUtils.canConnectViaSsh(ip, username, password, port, privateKey,
 					passphrase);
-			logger.info("canConnect = " + (canConnect == true ? "true" : "false"));
 
 			// If we can connect to machine install Ahenk
 			if (canConnect) {

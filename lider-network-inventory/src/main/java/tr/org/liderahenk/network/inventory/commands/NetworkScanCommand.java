@@ -69,7 +69,7 @@ public class NetworkScanCommand extends BaseCommand {
 		String sudoPassword = (String) parameterMap.get("sudoPassword");
 		String timingTemplate = (String) parameterMap.get("timingTemplate");
 
-		logger.info("Parameter map: {}", parameterMap);
+		logger.debug("Parameter map: {}", parameterMap);
 
 		// Find last network scan!
 		if (readLast != null && readLast.booleanValue()) {
@@ -87,10 +87,10 @@ public class NetworkScanCommand extends BaseCommand {
 			List<String> ipAddresses = null;
 			try {
 				if (ipRange != null && !ipRange.isEmpty()) {
-					logger.info("Converting to ip list.");
+					logger.debug("Converting to ip list.");
 					ipAddresses = NetworkUtils.convertToIpList(ipRange);
 				} else {
-					logger.info("Finding ip addresses.");
+					logger.debug("Finding ip addresses.");
 					ipAddresses = NetworkUtils.findIpAddresses();
 				}
 			} catch (UnknownHostException e1) {
@@ -130,11 +130,11 @@ public class NetworkScanCommand extends BaseCommand {
 					protected void afterExecute(Runnable r, Throwable t) {
 						super.afterExecute(r, t);
 						running.remove(r);
-						logger.info("Running threads: {}", running);
+						logger.debug("Running threads: {}", running);
 					}
 				};
 
-				logger.info("Created thread pool executor for network scan.");
+				logger.debug("Created thread pool executor for network scan.");
 
 				// Calculate number of the hosts a thread can process
 				int numberOfHosts = ipAddresses.size();
@@ -145,7 +145,7 @@ public class NetworkScanCommand extends BaseCommand {
 		 			hostsPerThread = numberOfHosts / Constants.SSH_CONFIG.NUM_THREADS;
 		 		}
 
-				logger.info("Hosts: {}, Threads:{}, Host per Thread: {}",
+				logger.debug("Hosts: {}, Threads:{}, Host per Thread: {}",
 						new Object[] { numberOfHosts, Constants.SSH_CONFIG.NUM_THREADS, hostsPerThread });
 
 				// Create & execute threads
@@ -155,15 +155,15 @@ public class NetworkScanCommand extends BaseCommand {
 							toIndex < ipAddresses.size() ? toIndex : ipAddresses.size() - 1);
 					String ipSubRange = NetworkUtils.convertToIpRange(ipSubList);
 
-					logger.info("Creating thread no: " + (i + 1));
+					logger.debug("Creating thread no: " + (i + 1));
 					RunnableNmap nmap = new RunnableNmap(scanResultDto, ipSubRange, ports, sudoUsername, sudoPassword,
 							timingTemplate);
-					logger.info("Executing thread no: " + (i + 1));
+					logger.debug("Executing thread no: " + (i + 1));
 					executor.execute(nmap);
 				}
 
 				
-				logger.info("Shutting down executor.");
+				logger.debug("Shutting down executor.");
 
 				try {
 					executor.shutdown();
@@ -173,7 +173,7 @@ public class NetworkScanCommand extends BaseCommand {
 					e.printStackTrace();
 				}
 
-				logger.info("Saving entity.");
+				logger.debug("Saving entity.");
 				// Insert new scan result record
 				pluginDbService.save(getEntityObject(scanResultDto));
 			}

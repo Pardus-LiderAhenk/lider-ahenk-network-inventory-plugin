@@ -267,8 +267,6 @@ public class FileDistributionCommand extends BaseCommand {
 		String property = "java.io.tmpdir";
 		String tempDir = System.getProperty(property);
 		
-		logger.warn("TEMPDIR: " + tempDir);
-		
 		// Get file separator
 		String separator = FileSystems.getDefault().getSeparator();
 
@@ -278,8 +276,6 @@ public class FileDistributionCommand extends BaseCommand {
 		String timestamp = dateFormat.format(date);
 		
 		String directoryToCreate = tempDir + separator + timestamp; 
-		
-		logger.warn("directoryToCreate: " + directoryToCreate);
 		
 		Path path = null;
 		

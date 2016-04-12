@@ -78,7 +78,7 @@ public class SetupUtils {
 		try {
 			manager = new SSHManager(ip, username == null ? "root" : username, password, port, privateKey, passphrase);
 			manager.connect();
-			logger.warn("Connection established to: {} with username: {}", new Object[] { ip, username });
+			logger.info("Connection established to: {} with username: {}", new Object[] { ip, username });
 		} catch (SSHConnectionException e) {
 			logger.error(e.getMessage(), e);
 			connected = false;
@@ -95,7 +95,6 @@ public class SetupUtils {
 			}
 		}
 
-		logger.warn(connected ? "true" : "false");
 		return connected;
 	}
 
