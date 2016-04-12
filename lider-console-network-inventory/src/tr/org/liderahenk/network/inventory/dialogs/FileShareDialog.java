@@ -23,6 +23,7 @@ import tr.org.liderahenk.liderconsole.core.rest.requests.TaskRequest;
 import tr.org.liderahenk.liderconsole.core.rest.responses.RestResponse;
 import tr.org.liderahenk.liderconsole.core.rest.utils.TaskUtils;
 import tr.org.liderahenk.liderconsole.core.utils.SWTResourceManager;
+import tr.org.liderahenk.network.inventory.constants.AccessMethod;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
 
 /**
@@ -235,6 +236,7 @@ public class FileShareDialog extends Dialog {
 		parameterMap.put("username", !txtUsername.getText().isEmpty() ? txtUsername.getText() : "root");
 		parameterMap.put("password", txtPassword.getText());
 		parameterMap.put("passphrase", txtPassphrase.getText());
+		parameterMap.put("accessMethod", btnUsernamePass.getSelection() ? AccessMethod.USERNAME_PASSWORD : AccessMethod.PRIVATE_KEY);
 
 		Integer port = new Integer(txtPort.getText());
 
