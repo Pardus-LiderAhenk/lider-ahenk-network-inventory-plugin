@@ -139,7 +139,7 @@ public class SSHManager {
 
 		Channel channel = null;
 		
-		logger.info("Command: {0}", command);
+		logger.info("Command: {}", command);
 
 		try {
 			channel = session.openChannel("exec");
