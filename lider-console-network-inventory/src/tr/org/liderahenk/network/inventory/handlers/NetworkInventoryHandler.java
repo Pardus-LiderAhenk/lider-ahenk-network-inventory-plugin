@@ -20,7 +20,7 @@ public class NetworkInventoryHandler extends AbstractHandler{
 		IWorkbenchPage page = window.getActivePage();
 		
        	try {
-       		page.openEditor(new DefaultEditorInput(Messages.getString("NETWORKINVENTORY")), NetworkInventoryEditor.ID);
+       		page.openEditor(new DefaultEditorInput(Messages.getString("NETWORK_INVENTORY")), NetworkInventoryEditor.ID);
 		} catch (PartInitException e) {
 			e.printStackTrace();
 		}       	
