@@ -1,7 +1,5 @@
 package tr.org.liderahenk.network.inventory.commands;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -178,36 +176,10 @@ public class AhenkInstallationCommand extends BaseCommand {
 	}
 
 	private String getPrivateKeyLocation() {
-		BufferedReader reader = null;
-
 		// TODO change config file
-		try {
+		String privateKeyPath = "~/.ssh/id_rsa"; 
 
-			reader = new BufferedReader(new FileReader("/home/caner/lider.config"));
-
-			String sCurrentLine;
-
-			StringBuilder builder = new StringBuilder();
-
-			// TODO this is for temporary testing
-			// actually it will read just one property
-			// from configuration file
-			while ((sCurrentLine = reader.readLine()) != null) {
-				builder.append(sCurrentLine);
-			}
-
-			return builder.toString();
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				reader.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-
-		return "";
+		return privateKeyPath;
 	}
 
 	private AhenkSetupParameters getParentEntityObject(List<String> ipList, AccessMethod accessMethod, String username,
