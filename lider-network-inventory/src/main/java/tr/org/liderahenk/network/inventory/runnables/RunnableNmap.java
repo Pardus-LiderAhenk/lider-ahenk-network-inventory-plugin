@@ -10,6 +10,13 @@ import tr.org.liderahenk.network.inventory.dto.ScanResultDto;
 import tr.org.liderahenk.network.inventory.dto.ScanResultHostDto;
 import tr.org.liderahenk.network.inventory.utils.network.NetworkUtils;
 
+/**
+ * A runnable that is responsible of performing a network scan over given IP
+ * range.
+ * 
+ * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner
+ *         Feyzullahoğlu</a>
+ */
 public class RunnableNmap implements Runnable {
 
 	private Logger logger = LoggerFactory.getLogger(RunnableNmap.class);
