@@ -5,11 +5,10 @@
 	<parent>
 		<groupId>tr.org.liderahenk</groupId>
 		<artifactId>network-inventory</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>1.0.0</version>
 	</parent>
 
 	<artifactId>lider-network-inventory</artifactId>
-	<name>Lider Ahenk Network Inventory Plugin</name>
 	<url>http://www.liderahenk.org.tr</url>
 	<packaging>bundle</packaging>
 
@@ -45,8 +44,8 @@
 		</dependency>
 		<dependency>
 			<groupId>tr.org.liderahenk</groupId>
-			<artifactId>lider-db-network-inventory</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<artifactId>lider-network-inventory-db</artifactId>
+			<version>1.0.0</version>
 			<type>bundle</type>
 		</dependency>
 		<dependency>

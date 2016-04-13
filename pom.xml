@@ -4,7 +4,7 @@
 
 	<groupId>tr.org.liderahenk</groupId>
 	<artifactId>network-inventory</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<packaging>pom</packaging>
 
 	<prerequisites>
@@ -46,11 +46,11 @@
 	</licenses>
 
 	<modules>
-		<module>lider-network-inventory</module>
-		<module>lider-console-network-inventory</module>
 		<module>ahenk-network-inventory</module>
-		<module>lider-feature-network-inventory</module>
-		<module>lider-db-network-inventory</module>
+		<module>lider-console-network-inventory</module>
+		<module>lider-network-inventory</module>
+		<module>lider-network-inventory-feature</module>
+		<module>lider-network-inventory-db</module>
 	</modules>
 
 	<build>

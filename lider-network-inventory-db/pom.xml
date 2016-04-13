@@ -5,11 +5,10 @@
 	<parent>
 		<groupId>tr.org.liderahenk</groupId>
 		<artifactId>network-inventory</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>1.0.0</version>
 	</parent>
 
-	<artifactId>lider-db-network-inventory</artifactId>
-	<name>Lider Ahenk DB Network Inventory Plugin</name>
+	<artifactId>lider-network-inventory-db</artifactId>
 	<url>http://www.liderahenk.org.tr</url>
 	<packaging>bundle</packaging>
 
@@ -55,8 +54,8 @@
 					<instructions>
 						<_removeheaders>Import-Service,Export-Service</_removeheaders>	
 						<Fragment-Host>lider-persistence-mariadb;bundle-version="[1.0.0,2)"</Fragment-Host>
-						<Bundle-SymbolicName>lider-db-network-inventory</Bundle-SymbolicName>
-						<Bundle-Version>1.0.0-SNAPSHOT</Bundle-Version>
+						<Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+						<Bundle-Version>${project.version}</Bundle-Version>
 					</instructions>
 				</configuration>
 			</plugin>
