@@ -45,13 +45,13 @@
    <extension 
    			point="org.eclipse.ui.menus">
          <menuContribution
-            locationURI="popup:tr.org.liderahenk.liderconsole.menus.ApplyTask?after=additions">
+            locationURI="menu:tr.org.liderahenk.liderconsole.menus.LiderMain?after=additions">
             <command
                   commandId="tr.org.liderahenk.liderconsole.commands.NetworkInventory"
                   id="tr.org.liderahenk.liderconsole.command.NetworkInventory"
                   icon="icons/16/network.png"
                   tooltip="%command.name">
-				    <visibleWhen>
+				   <!-- <visibleWhen>
 				       <and>
 				          <with
 				                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.available">
@@ -70,7 +70,7 @@
 				             </iterate>
 				          </with>
 				       </and>
-				    </visibleWhen>
+				    </visibleWhen> -->
             </command>
       </menuContribution>
   </extension>
