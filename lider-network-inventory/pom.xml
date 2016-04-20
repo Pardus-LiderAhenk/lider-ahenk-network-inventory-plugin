@@ -65,6 +65,7 @@
 						<_removeheaders>Import-Service,Export-Service</_removeheaders>					
 						<Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
 						<Bundle-Version>${project.version}</Bundle-Version>
+						<Import-Package>tr.org.liderahenk.network.inventory.entities, !tr.org.liderahenk.network.inventory.*, !org.nmap4j.*, *</Import-Package>
 					</instructions>
 				</configuration>
 			</plugin>
