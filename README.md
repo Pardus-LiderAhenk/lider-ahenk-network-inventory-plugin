@@ -1,4 +1,4 @@
-# lider-console-network-inventory
+# lider-ahenk-network-inventory
 
 Lider Ahenk network inventory plugin is used to scan network where Lider reside in and collect valuable information about connected devices. It also provides file distribution via [SCP](http://man7.org/linux/man-pages/man1/scp.1.html) and Ahenk installation.
 
