@@ -35,6 +35,8 @@
 		<jsch.version>0.1.53</jsch.version>
 		<geronimo.jpa.version>1.1</geronimo.jpa.version>
 		<commons.codec.version>1.6</commons.codec.version>
+		<maven.resources.plugin.version>2.7</maven.resources.plugin.version>
+		<build.helper.maven.plugin.version>1.10</build.helper.maven.plugin.version>
 	</properties>
 
 	<licenses>
