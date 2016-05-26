@@ -29,6 +29,7 @@
 	</feature>
 
 	<feature name="lider-network-inventory-bundles" version="${project.version}">
+		<configfile finalname="/etc/tr.org.liderahenk.network.inventory.cfg">mvn:${groupId}/lider-network-inventory/${project.version}/cfg</configfile>
 		<bundle>mvn:${groupId}/lider-network-inventory/${project.version}</bundle>
 		<bundle>mvn:${groupId}/lider-network-inventory-db/${project.version}</bundle>
 	</feature>
