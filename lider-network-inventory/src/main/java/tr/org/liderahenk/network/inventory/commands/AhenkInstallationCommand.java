@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import tr.org.liderahenk.lider.core.api.persistence.IPluginDbService;
+import tr.org.liderahenk.lider.core.api.plugin.ICommand;
 import tr.org.liderahenk.lider.core.api.service.ICommandContext;
 import tr.org.liderahenk.lider.core.api.service.ICommandResult;
 import tr.org.liderahenk.lider.core.api.service.ICommandResultFactory;
@@ -32,6 +33,7 @@ import tr.org.liderahenk.network.inventory.dto.AhenkSetupDetailDto;
 import tr.org.liderahenk.network.inventory.dto.AhenkSetupDto;
 import tr.org.liderahenk.network.inventory.entities.AhenkSetupParameters;
 import tr.org.liderahenk.network.inventory.entities.AhenkSetupResultDetail;
+import tr.org.liderahenk.network.inventory.plugininfo.PluginInfoImpl;
 import tr.org.liderahenk.network.inventory.runnables.RunnableAhenkInstaller;
 
 /**
@@ -41,12 +43,13 @@ import tr.org.liderahenk.network.inventory.runnables.RunnableAhenkInstaller;
  * @author <a href="mailto:emre.akkaya@agem.com.tr">Emre Akkaya</a>
  *
  */
-public class AhenkInstallationCommand extends BaseCommand {
+public class AhenkInstallationCommand implements ICommand {
 
 	private Logger logger = LoggerFactory.getLogger(AhenkInstallationCommand.class);
 
 	private ICommandResultFactory resultFactory;
 	private IPluginDbService pluginDbService;
+	private PluginInfoImpl pluginInfo;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
@@ -219,6 +222,20 @@ public class AhenkInstallationCommand extends BaseCommand {
 
 	public void setPluginDbService(IPluginDbService pluginDbService) {
 		this.pluginDbService = pluginDbService;
+	}
+
+	public void setPluginInfo(PluginInfoImpl pluginInfo) {
+		this.pluginInfo = pluginInfo;
+	}
+	
+	@Override
+	public String getPluginName() {
+		return pluginInfo.getPluginName();
+	}
+
+	@Override
+	public String getPluginVersion() {
+		return pluginInfo.getPluginVersion();
 	}
 
 }
