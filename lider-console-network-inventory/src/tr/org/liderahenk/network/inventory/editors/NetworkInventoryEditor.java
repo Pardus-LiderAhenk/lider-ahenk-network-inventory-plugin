@@ -33,6 +33,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -76,6 +77,7 @@ public class NetworkInventoryEditor extends EditorPart {
 	private String userName;
 	private String entryDn;
 
+	private Button[] btnScanOptions = new Button[2];
 	private Button btnScan;
 	private Button btnAhenkInstall;
 	private Button btnFileUpload;
@@ -313,7 +315,17 @@ public class NetworkInventoryEditor extends EditorPart {
 
 		Composite cmpScan = new Composite(composite, SWT.BORDER);
 		cmpScan.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
-		cmpScan.setLayout(new GridLayout(3, false));
+		cmpScan.setLayout(new GridLayout(4, false));
+		
+		Group scanOptions = new Group(cmpScan, SWT.NONE);
+		scanOptions.setLayout(new GridLayout(1, false));
+		scanOptions.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 1, 1));
+		
+		btnScanOptions[0] = new Button(scanOptions, SWT.RADIO);
+		btnScanOptions[0].setText(Messages.getString("USE_AHENK"));
+		
+		btnScanOptions[1] = new Button(scanOptions, SWT.RADIO);
+		btnScanOptions[1].setText(Messages.getString("USE_LIDER"));
 
 		Label lblIpRange = new Label(cmpScan, SWT.NONE);
 		lblIpRange.setText("IP Aralığı");
