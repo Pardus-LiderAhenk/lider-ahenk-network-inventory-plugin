@@ -76,9 +76,10 @@
       		allPopups="false"
             locationURI="popup:tr.org.liderahenk.liderconsole.menus.ApplyTask?after=additions">
  				<command
-                  commandId="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask"
-                  id="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask"
-                  tooltip="%command.task">
+           commandId="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask"
+           icon="icons/16/network.png"
+           id="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask"
+           tooltip="%command.task">
                   <!-- TODO Uncomment this after updating/fixing LiderSourceProvider -->
 				  <!-- <visibleWhen>
 					   <and>
