@@ -73,6 +73,8 @@ import tr.org.liderahenk.network.inventory.wizard.AhenkSetupWizard;
 public class NetworkInventoryEditor extends EditorPart {
 
 	public static final String ID = "tr.org.liderahenk.network.inventory.editors.NetworkInventoryEditor";
+	
+	private boolean executeOnAgent = false;
 
 	private String userName;
 	private String entryDn;
@@ -98,11 +100,19 @@ public class NetworkInventoryEditor extends EditorPart {
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
 		setSite(site);
 		setInput(input);
+		
+		NetworkInventoryEditorInput NIEditorInput = (NetworkInventoryEditorInput) input;
+		if(NIEditorInput.getCommandId().equals("tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask")) {
+			executeOnAgent = true;
+		}
+		else {
+			executeOnAgent = false;
+		}
 	}
 
 	@Override
 	public void createPartControl(Composite parent) {
-
+		
 		Composite cmpMain = new Composite(parent, SWT.NONE);
 		cmpMain.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 		cmpMain.setLayout(new GridLayout(1, false));
@@ -323,10 +333,39 @@ public class NetworkInventoryEditor extends EditorPart {
 		
 		btnScanOptions[0] = new Button(scanOptions, SWT.RADIO);
 		btnScanOptions[0].setText(Messages.getString("USE_AHENK"));
+		btnScanOptions[0].addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				executeOnAgent = true;
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+			}
+		});
 		
 		btnScanOptions[1] = new Button(scanOptions, SWT.RADIO);
 		btnScanOptions[1].setText(Messages.getString("USE_LIDER"));
+		btnScanOptions[1].addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				executeOnAgent = false;
+			}
 
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+			}
+		});
+		
+		if(executeOnAgent) {
+			btnScanOptions[0].setEnabled(true);
+			btnScanOptions[0].setSelection(true);
+		}
+		else {
+			btnScanOptions[0].setEnabled(false);
+			btnScanOptions[1].setSelection(true);
+		}
+		
 		Label lblIpRange = new Label(cmpScan, SWT.NONE);
 		lblIpRange.setText("IP Aralığı");
 
@@ -352,6 +391,7 @@ public class NetworkInventoryEditor extends EditorPart {
 					Map<String, Object> parameterMap = new HashMap<String, Object>();
 					parameterMap.put("ipRange", txtIpRange.getText());
 					parameterMap.put("timingTemplate", "3");
+					parameterMap.put("executeOnAgent", executeOnAgent);
 					task.setParameterMap(parameterMap);
 
 					RestResponse response;
