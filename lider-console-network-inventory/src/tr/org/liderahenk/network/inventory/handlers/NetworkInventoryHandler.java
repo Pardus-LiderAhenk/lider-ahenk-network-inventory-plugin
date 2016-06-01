@@ -8,8 +8,8 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.handlers.HandlerUtil;
 
-import tr.org.liderahenk.liderconsole.core.editorinput.DefaultEditorInput;
 import tr.org.liderahenk.network.inventory.editors.NetworkInventoryEditor;
+import tr.org.liderahenk.network.inventory.editors.NetworkInventoryEditorInput;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
 
 public class NetworkInventoryHandler extends AbstractHandler{
@@ -20,7 +20,9 @@ public class NetworkInventoryHandler extends AbstractHandler{
 		IWorkbenchPage page = window.getActivePage();
 		
        	try {
-       		page.openEditor(new DefaultEditorInput(Messages.getString("NETWORK_INVENTORY")), NetworkInventoryEditor.ID);
+       		page.closeEditor(page.getActiveEditor(), true);
+       		page.openEditor(new NetworkInventoryEditorInput(Messages.getString("NETWORK_INVENTORY"), event.getCommand().getId()),
+       				NetworkInventoryEditor.ID);
 		} catch (PartInitException e) {
 			e.printStackTrace();
 		}       	
