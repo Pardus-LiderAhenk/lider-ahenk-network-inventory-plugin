@@ -10,12 +10,12 @@ import tr.org.liderahenk.liderconsole.core.editorinput.DefaultEditorInput;
 public class NetworkInventoryEditorInput extends DefaultEditorInput {
 	
 	private String label;
-	private String commandId;
+	private String dn;
 
-	public NetworkInventoryEditorInput(String label, String commandId) {
+	public NetworkInventoryEditorInput(String label, String dn) {
 		super(label);
 		this.label = label;
-		this.commandId = commandId;
+		this.dn = dn;
 	}
 
 	public String getLabel() {
@@ -26,12 +26,12 @@ public class NetworkInventoryEditorInput extends DefaultEditorInput {
 		this.label = label;
 	}
 
-	public String getCommandId() {
-		return commandId;
+	public String getDn() {
+		return dn;
 	}
 
-	public void setCommandId(String commandId) {
-		this.commandId = commandId;
+	public void setDn(String dn) {
+		this.dn = dn;
 	}
-
+	
 }

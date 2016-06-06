@@ -5,9 +5,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -45,6 +48,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.EditorPart;
 
 import tr.org.liderahenk.liderconsole.core.constants.LiderConstants;
+import tr.org.liderahenk.liderconsole.core.ldap.enums.DNType;
 import tr.org.liderahenk.liderconsole.core.rest.requests.TaskRequest;
 import tr.org.liderahenk.liderconsole.core.rest.responses.RestResponse;
 import tr.org.liderahenk.liderconsole.core.rest.utils.TaskUtils;
@@ -52,6 +56,7 @@ import tr.org.liderahenk.liderconsole.core.utils.SWTResourceManager;
 import tr.org.liderahenk.liderconsole.core.widgets.Notifier;
 import tr.org.liderahenk.network.inventory.constants.AccessMethod;
 import tr.org.liderahenk.network.inventory.constants.InstallMethod;
+import tr.org.liderahenk.network.inventory.constants.NetworkInventoryConstants;
 import tr.org.liderahenk.network.inventory.dialogs.AhenkSetupResultDialog;
 import tr.org.liderahenk.network.inventory.dialogs.FileShareDialog;
 import tr.org.liderahenk.network.inventory.dialogs.FileShareResultDialog;
@@ -59,7 +64,6 @@ import tr.org.liderahenk.network.inventory.i18n.Messages;
 import tr.org.liderahenk.network.inventory.model.AhenkSetupConfig;
 import tr.org.liderahenk.network.inventory.model.AhenkSetupResult;
 import tr.org.liderahenk.network.inventory.model.FileDistResult;
-import tr.org.liderahenk.network.inventory.model.ScanResult;
 import tr.org.liderahenk.network.inventory.model.ScanResultHost;
 import tr.org.liderahenk.network.inventory.wizard.AhenkSetupWizard;
 
@@ -78,6 +82,7 @@ public class NetworkInventoryEditor extends EditorPart {
 
 	private String userName;
 	private String entryDn;
+	private Set<String> dnSet;
 
 	private Button[] btnScanOptions = new Button[2];
 	private Button btnScan;
@@ -102,8 +107,12 @@ public class NetworkInventoryEditor extends EditorPart {
 		setInput(input);
 		
 		NetworkInventoryEditorInput NIEditorInput = (NetworkInventoryEditorInput) input;
-		if(NIEditorInput.getCommandId().equals("tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask")) {
+		if(NIEditorInput.getDn() != null) {
+			entryDn = NIEditorInput.getDn();
 			executeOnAgent = true;
+			
+			this.dnSet = new HashSet<String>();
+			dnSet.add(entryDn);
 		}
 		else {
 			executeOnAgent = false;
@@ -239,12 +248,6 @@ public class NetworkInventoryEditor extends EditorPart {
 
 				AhenkSetupConfig config = wizard.getConfig();
 
-				// Create request object
-				TaskRequest task = new TaskRequest();
-				task.setPluginName("network-inventory");
-				task.setPluginVersion("1.0.0");
-				task.setCommandId("INSTALLAHENK");
-
 				// Add config object as parameter. It has all information that
 				// Lider needs to know.
 				Map<String, Object> parameterMap = new HashMap<String, Object>();
@@ -255,6 +258,7 @@ public class NetworkInventoryEditor extends EditorPart {
 				parameterMap.put("installMethod", config.getInstallMethod());
 				parameterMap.put("username", config.getUsername());
 				parameterMap.put("port", config.getPort());
+				parameterMap.put("executeOnAgent", executeOnAgent);
 
 				if (config.getAccessMethod() == AccessMethod.USERNAME_PASSWORD) {
 					parameterMap.put("password", config.getPassword());
@@ -265,8 +269,10 @@ public class NetworkInventoryEditor extends EditorPart {
 				if (config.getInstallMethod() == InstallMethod.WGET) {
 					parameterMap.put("downloadUrl", config.getDownloadUrl());
 				}
-
-				task.setParameterMap(parameterMap);
+				
+				TaskRequest task = new TaskRequest();
+				task = new TaskRequest(new ArrayList<String>(dnSet), DNType.AHENK, NetworkInventoryConstants.PLUGIN_NAME,
+						NetworkInventoryConstants.PLUGIN_VERSION, NetworkInventoryConstants.INSTALL_COMMAND, parameterMap, null, new Date());
 
 				Map<String, Object> resultMap = new HashMap<String, Object>();
 
@@ -381,18 +387,16 @@ public class NetworkInventoryEditor extends EditorPart {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (!txtIpRange.getText().isEmpty()) {
-					// Create request instance
-					TaskRequest task = new TaskRequest();
-					task.setPluginName("network-inventory");
-					task.setPluginVersion("1.0.0");
-					task.setCommandId("SCANNETWORK");
-
+					
 					// Populate request parameters
 					Map<String, Object> parameterMap = new HashMap<String, Object>();
 					parameterMap.put("ipRange", txtIpRange.getText());
 					parameterMap.put("timingTemplate", "3");
 					parameterMap.put("executeOnAgent", executeOnAgent);
-					task.setParameterMap(parameterMap);
+					
+					TaskRequest task = new TaskRequest();
+					task = new TaskRequest(new ArrayList<String>(dnSet), DNType.AHENK, NetworkInventoryConstants.PLUGIN_NAME,
+							NetworkInventoryConstants.PLUGIN_VERSION, NetworkInventoryConstants.SCAN_COMMAND, parameterMap, null, new Date());
 
 					RestResponse response;
 					try {
@@ -403,9 +407,9 @@ public class NetworkInventoryEditor extends EditorPart {
 
 						ObjectMapper mapper = new ObjectMapper();
 
-						ScanResult scanResult = mapper.readValue(resultMap.get("result").toString(), ScanResult.class);
-
-						tblInventory.setInput(scanResult.getHosts());
+//						ScanResult scanResult = mapper.readValue(resultMap.get("result").toString(), ScanResult.class);
+//
+//						tblInventory.setInput(scanResult.getHosts());
 
 					} catch (Exception e1) {
 						e1.printStackTrace();
@@ -413,6 +417,7 @@ public class NetworkInventoryEditor extends EditorPart {
 				} else {
 					Notifier.warning(Messages.getString("NETWORK_SCAN"), Messages.getString("PLEASE_ENTER_IP_RANGE"));
 				}
+				
 			}
 
 			@Override
