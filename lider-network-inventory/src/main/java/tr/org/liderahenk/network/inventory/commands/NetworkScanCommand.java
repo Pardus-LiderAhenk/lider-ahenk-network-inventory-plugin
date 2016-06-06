@@ -209,7 +209,7 @@ public class NetworkScanCommand implements ICommand {
 	
 			return resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this, resultMap);
 		}
-		logger.error("Executing command for ahenk.");
+		logger.info("Executing command for ahenk.");
 		return resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this);
 	}
 
@@ -249,7 +249,7 @@ public class NetworkScanCommand implements ICommand {
 
 	@Override
 	public ICommandResult validate(ICommandContext context) {
-		return resultFactory.create(CommandResultStatus.OK, null, this, null);
+		return resultFactory.create(CommandResultStatus.OK, null, this);
 	}
 
 	@Override
