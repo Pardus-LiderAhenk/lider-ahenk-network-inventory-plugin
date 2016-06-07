@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import tr.org.liderahenk.lider.core.api.persistence.IPluginDbService;
+import tr.org.liderahenk.lider.core.api.plugin.ICommand;
 import tr.org.liderahenk.lider.core.api.service.ICommandContext;
 import tr.org.liderahenk.lider.core.api.service.ICommandResult;
 import tr.org.liderahenk.lider.core.api.service.ICommandResultFactory;
@@ -32,6 +33,7 @@ import tr.org.liderahenk.network.inventory.dto.ScanResultDto;
 import tr.org.liderahenk.network.inventory.dto.ScanResultHostDto;
 import tr.org.liderahenk.network.inventory.entities.ScanResult;
 import tr.org.liderahenk.network.inventory.entities.ScanResultHost;
+import tr.org.liderahenk.network.inventory.plugininfo.PluginInfoImpl;
 import tr.org.liderahenk.network.inventory.runnables.RunnableNmap;
 import tr.org.liderahenk.network.inventory.utils.network.NetworkUtils;
 
@@ -45,12 +47,15 @@ import tr.org.liderahenk.network.inventory.utils.network.NetworkUtils;
  * @author <a href="mailto:emre.akkaya@agem.com.tr">Emre Akkaya</a>
  *
  */
-public class NetworkScanCommand extends BaseCommand {
+public class NetworkScanCommand implements ICommand {
 
 	private Logger logger = LoggerFactory.getLogger(NetworkScanCommand.class);
 
 	private ICommandResultFactory resultFactory;
 	private IPluginDbService pluginDbService;
+	private PluginInfoImpl pluginInfo;
+	
+	private boolean executeOnAgent;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
@@ -62,144 +67,150 @@ public class NetworkScanCommand extends BaseCommand {
 
 		// Read command parameters.
 		Map<String, Object> parameterMap = context.getRequest().getParameterMap();
-		Boolean readLast = (Boolean) parameterMap.get("readLast");
-		String ipRange = (String) parameterMap.get("ipRange");
-		String ports = (String) parameterMap.get("ports");
-		String sudoUsername = (String) parameterMap.get("sudoUsername");
-		String sudoPassword = (String) parameterMap.get("sudoPassword");
-		String timingTemplate = (String) parameterMap.get("timingTemplate");
-
-		logger.debug("Parameter map: {}", parameterMap);
-
-		// Find last network scan!
-		if (readLast != null && readLast.booleanValue()) {
-			// TODO scanResult
-		}
-		// New network scan.
-		else {
-
-			// Create new instance to send back to Lider Console
-			scanResultDto = new ScanResultDto(ipRange, timingTemplate, ports, sudoUsername, sudoPassword, new Date(),
-					Collections.synchronizedList(new ArrayList<ScanResultHostDto>()));
-
-			// If user provides an IP range, scan only it!
-			// otherwise find all IP addresses on the connected networks
-			List<String> ipAddresses = null;
-			try {
-				if (ipRange != null && !ipRange.isEmpty()) {
-					logger.debug("Converting to ip list.");
-					ipAddresses = NetworkUtils.convertToIpList(ipRange);
-				} else {
-					logger.debug("Finding ip addresses.");
-					ipAddresses = NetworkUtils.findIpAddresses();
-				}
-			} catch (UnknownHostException e1) {
-				e1.printStackTrace();
-			} catch (SocketException e1) {
-				e1.printStackTrace();
+		executeOnAgent = (Boolean) parameterMap.get("executeOnAgent");
+		
+		if(!executeOnAgent) {
+			Boolean readLast = (Boolean) parameterMap.get("readLast");
+			String ipRange = (String) parameterMap.get("ipRange");
+			String ports = (String) parameterMap.get("ports");
+			String sudoUsername = (String) parameterMap.get("sudoUsername");
+			String sudoPassword = (String) parameterMap.get("sudoPassword");
+			String timingTemplate = (String) parameterMap.get("timingTemplate");
+	
+			logger.debug("Parameter map: {}", parameterMap);
+	
+			// Find last network scan!
+			if (readLast != null && readLast.booleanValue()) {
+				// TODO scanResult
 			}
-
-			// Scan network via threads.
-			// Each thread is responsible for a limited number of hosts!
-			if (ipAddresses != null && !ipAddresses.isEmpty()) {
-
-				// Create thread pool executor!
-				LinkedBlockingQueue<Runnable> taskQueue = new LinkedBlockingQueue<Runnable>();
-				final List<Runnable> running = Collections.synchronizedList(new ArrayList());
-				ThreadPoolExecutor executor = new ThreadPoolExecutor(Constants.SSH_CONFIG.NUM_THREADS,
-						Constants.SSH_CONFIG.NUM_THREADS, 0L, TimeUnit.MILLISECONDS, taskQueue,
-						Executors.defaultThreadFactory()) {
-
-					@Override
-					protected <T> RunnableFuture<T> newTaskFor(final Runnable runnable, T value) {
-						return new FutureTask<T>(runnable, value) {
-							@Override
-							public String toString() {
-								return runnable.toString();
-							}
-						};
-					}
-
-					@Override
-					protected void beforeExecute(Thread t, Runnable r) {
-						super.beforeExecute(t, r);
-						running.add(r);
-					}
-
-					@Override
-					protected void afterExecute(Runnable r, Throwable t) {
-						super.afterExecute(r, t);
-						running.remove(r);
-						logger.debug("Running threads: {}", running);
-					}
-				};
-
-				logger.debug("Created thread pool executor for network scan.");
-
-				// Calculate number of the hosts a thread can process
-				int numberOfHosts = ipAddresses.size();
-				int hostsPerThread;
-				if (numberOfHosts < Constants.SSH_CONFIG.NUM_THREADS) {
-					hostsPerThread = 1;
-		 		} else {
-		 			hostsPerThread = numberOfHosts / Constants.SSH_CONFIG.NUM_THREADS;
-		 		}
-
-				logger.debug("Hosts: {}, Threads:{}, Host per Thread: {}",
-						new Object[] { numberOfHosts, Constants.SSH_CONFIG.NUM_THREADS, hostsPerThread });
-
-				// Create & execute threads
-				for (int i = 0; i < numberOfHosts; i += hostsPerThread) {
-					List<String> ipSubList;
-					if (numberOfHosts < Constants.SSH_CONFIG.NUM_THREADS) {
-						ipSubList = ipAddresses.subList(i, i + 1);
-					} else {
-			 			int toIndex = i + hostsPerThread;
-			 			ipSubList = ipAddresses.subList(i,
-			 					toIndex < ipAddresses.size() ? toIndex : ipAddresses.size() - 1);
-			 		}
-					String ipSubRange = NetworkUtils.convertToIpRange(ipSubList);
-
-					logger.debug("Creating thread no: " + (i + 1));
-					RunnableNmap nmap = new RunnableNmap(scanResultDto, ipSubRange, ports, sudoUsername, sudoPassword,
-							timingTemplate);
-					logger.debug("Executing thread no: " + (i + 1));
-					executor.execute(nmap);
-				}
-
-				
-				logger.debug("Shutting down executor.");
-
+			// New network scan.
+			else {
+	
+				// Create new instance to send back to Lider Console
+				scanResultDto = new ScanResultDto(ipRange, timingTemplate, ports, sudoUsername, sudoPassword, new Date(),
+						Collections.synchronizedList(new ArrayList<ScanResultHostDto>()));
+	
+				// If user provides an IP range, scan only it!
+				// otherwise find all IP addresses on the connected networks
+				List<String> ipAddresses = null;
 				try {
-					executor.shutdown();
-					// Wait for all tasks to be completed.
-					executor.awaitTermination(100000, TimeUnit.MILLISECONDS);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+					if (ipRange != null && !ipRange.isEmpty()) {
+						logger.debug("Converting to ip list.");
+						ipAddresses = NetworkUtils.convertToIpList(ipRange);
+					} else {
+						logger.debug("Finding ip addresses.");
+						ipAddresses = NetworkUtils.findIpAddresses();
+					}
+				} catch (UnknownHostException e1) {
+					e1.printStackTrace();
+				} catch (SocketException e1) {
+					e1.printStackTrace();
 				}
-
-				logger.debug("Saving entity.");
-				// Insert new scan result record
-				pluginDbService.save(getEntityObject(scanResultDto));
+	
+				// Scan network via threads.
+				// Each thread is responsible for a limited number of hosts!
+				if (ipAddresses != null && !ipAddresses.isEmpty()) {
+	
+					// Create thread pool executor!
+					LinkedBlockingQueue<Runnable> taskQueue = new LinkedBlockingQueue<Runnable>();
+					final List<Runnable> running = Collections.synchronizedList(new ArrayList());
+					ThreadPoolExecutor executor = new ThreadPoolExecutor(Constants.SSH_CONFIG.NUM_THREADS,
+							Constants.SSH_CONFIG.NUM_THREADS, 0L, TimeUnit.MILLISECONDS, taskQueue,
+							Executors.defaultThreadFactory()) {
+	
+						@Override
+						protected <T> RunnableFuture<T> newTaskFor(final Runnable runnable, T value) {
+							return new FutureTask<T>(runnable, value) {
+								@Override
+								public String toString() {
+									return runnable.toString();
+								}
+							};
+						}
+	
+						@Override
+						protected void beforeExecute(Thread t, Runnable r) {
+							super.beforeExecute(t, r);
+							running.add(r);
+						}
+	
+						@Override
+						protected void afterExecute(Runnable r, Throwable t) {
+							super.afterExecute(r, t);
+							running.remove(r);
+							logger.debug("Running threads: {}", running);
+						}
+					};
+	
+					logger.debug("Created thread pool executor for network scan.");
+	
+					// Calculate number of the hosts a thread can process
+					int numberOfHosts = ipAddresses.size();
+					int hostsPerThread;
+					if (numberOfHosts < Constants.SSH_CONFIG.NUM_THREADS) {
+						hostsPerThread = 1;
+			 		} else {
+			 			hostsPerThread = numberOfHosts / Constants.SSH_CONFIG.NUM_THREADS;
+			 		}
+	
+					logger.debug("Hosts: {}, Threads:{}, Host per Thread: {}",
+							new Object[] { numberOfHosts, Constants.SSH_CONFIG.NUM_THREADS, hostsPerThread });
+	
+					// Create & execute threads
+					for (int i = 0; i < numberOfHosts; i += hostsPerThread) {
+						List<String> ipSubList;
+						if (numberOfHosts < Constants.SSH_CONFIG.NUM_THREADS) {
+							ipSubList = ipAddresses.subList(i, i + 1);
+						} else {
+				 			int toIndex = i + hostsPerThread;
+				 			ipSubList = ipAddresses.subList(i,
+				 					toIndex < ipAddresses.size() ? toIndex : ipAddresses.size() - 1);
+				 		}
+						String ipSubRange = NetworkUtils.convertToIpRange(ipSubList);
+	
+						logger.debug("Creating thread no: " + (i + 1));
+						RunnableNmap nmap = new RunnableNmap(scanResultDto, ipSubRange, ports, sudoUsername, sudoPassword,
+								timingTemplate);
+						logger.debug("Executing thread no: " + (i + 1));
+						executor.execute(nmap);
+					}
+	
+					
+					logger.debug("Shutting down executor.");
+	
+					try {
+						executor.shutdown();
+						// Wait for all tasks to be completed.
+						executor.awaitTermination(100000, TimeUnit.MILLISECONDS);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+	
+					logger.debug("Saving entity.");
+					// Insert new scan result record
+					pluginDbService.save(getEntityObject(scanResultDto));
+				}
+	
 			}
-
+	
+			logger.info("Command executed successfully.");
+	
+			Map<String, Object> resultMap = new HashMap<String, Object>();
+			ObjectMapper mapper = new ObjectMapper();
+			try {
+				resultMap.put("result", mapper.writeValueAsString(scanResultDto));
+			} catch (JsonGenerationException e) {
+				logger.error(e.getMessage(), e);
+			} catch (JsonMappingException e) {
+				logger.error(e.getMessage(), e);
+			} catch (IOException e) {
+				logger.error(e.getMessage(), e);
+			}
+	
+			return resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this, resultMap);
 		}
-
-		logger.info("Command executed successfully.");
-
-		Map<String, Object> resultMap = new HashMap<String, Object>();
-		ObjectMapper mapper = new ObjectMapper();
-		try {
-			resultMap.put("result", mapper.writeValueAsString(scanResultDto));
-		} catch (JsonGenerationException e) {
-			logger.error(e.getMessage(), e);
-		} catch (JsonMappingException e) {
-			logger.error(e.getMessage(), e);
-		} catch (IOException e) {
-			logger.error(e.getMessage(), e);
-		}
-
-		return resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this, resultMap);
+		logger.info("Executing command for ahenk.");
+		return resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this);
 	}
 
 	/**
@@ -238,7 +249,7 @@ public class NetworkScanCommand extends BaseCommand {
 
 	@Override
 	public ICommandResult validate(ICommandContext context) {
-		return resultFactory.create(CommandResultStatus.OK, null, this, null);
+		return resultFactory.create(CommandResultStatus.OK, null, this);
 	}
 
 	@Override
@@ -248,7 +259,10 @@ public class NetworkScanCommand extends BaseCommand {
 
 	@Override
 	public Boolean executeOnAgent() {
-		return false;
+		if(!executeOnAgent) {
+			return false;
+		}
+		return true;
 	}
 
 	public void setResultFactory(ICommandResultFactory resultFactory) {
@@ -257,6 +271,20 @@ public class NetworkScanCommand extends BaseCommand {
 
 	public void setPluginDbService(IPluginDbService pluginDbService) {
 		this.pluginDbService = pluginDbService;
+	}
+	
+	public void setPluginInfo(PluginInfoImpl pluginInfo) {
+		this.pluginInfo = pluginInfo;
+	}
+
+	@Override
+	public String getPluginName() {
+		return pluginInfo.getPluginName();
+	}
+
+	@Override
+	public String getPluginVersion() {
+		return pluginInfo.getPluginVersion();
 	}
 
 }

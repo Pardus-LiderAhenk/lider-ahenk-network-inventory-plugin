@@ -5,14 +5,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.bind.DatatypeConverter;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -33,6 +42,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -41,16 +51,22 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.EditorPart;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventHandler;
 
 import tr.org.liderahenk.liderconsole.core.constants.LiderConstants;
+import tr.org.liderahenk.liderconsole.core.ldap.enums.DNType;
 import tr.org.liderahenk.liderconsole.core.rest.requests.TaskRequest;
 import tr.org.liderahenk.liderconsole.core.rest.responses.RestResponse;
 import tr.org.liderahenk.liderconsole.core.rest.utils.TaskUtils;
 import tr.org.liderahenk.liderconsole.core.utils.SWTResourceManager;
 import tr.org.liderahenk.liderconsole.core.widgets.Notifier;
+import tr.org.liderahenk.liderconsole.core.xmpp.notifications.TaskStatusNotification;
 import tr.org.liderahenk.network.inventory.constants.AccessMethod;
 import tr.org.liderahenk.network.inventory.constants.InstallMethod;
+import tr.org.liderahenk.network.inventory.constants.NetworkInventoryConstants;
 import tr.org.liderahenk.network.inventory.dialogs.AhenkSetupResultDialog;
 import tr.org.liderahenk.network.inventory.dialogs.FileShareDialog;
 import tr.org.liderahenk.network.inventory.dialogs.FileShareResultDialog;
@@ -58,7 +74,6 @@ import tr.org.liderahenk.network.inventory.i18n.Messages;
 import tr.org.liderahenk.network.inventory.model.AhenkSetupConfig;
 import tr.org.liderahenk.network.inventory.model.AhenkSetupResult;
 import tr.org.liderahenk.network.inventory.model.FileDistResult;
-import tr.org.liderahenk.network.inventory.model.ScanResult;
 import tr.org.liderahenk.network.inventory.model.ScanResultHost;
 import tr.org.liderahenk.network.inventory.wizard.AhenkSetupWizard;
 
@@ -72,10 +87,14 @@ import tr.org.liderahenk.network.inventory.wizard.AhenkSetupWizard;
 public class NetworkInventoryEditor extends EditorPart {
 
 	public static final String ID = "tr.org.liderahenk.network.inventory.editors.NetworkInventoryEditor";
+	
+	private boolean executeOnAgent = false;
 
 	private String userName;
 	private String entryDn;
+	private Set<String> dnSet;
 
+	private Button[] btnScanOptions = new Button[2];
 	private Button btnScan;
 	private Button btnAhenkInstall;
 	private Button btnFileUpload;
@@ -87,6 +106,17 @@ public class NetworkInventoryEditor extends EditorPart {
 	private TableViewer tblInventory;
 
 	private List<String> selectedIpList;
+	
+	private String ipAddress;
+	private String macAddress;
+	private String hostnames;
+	private String ports;
+	private String os;
+	private String distance;
+	private String vendor;
+	private String time;
+	
+	private IEventBroker eventBroker = (IEventBroker) PlatformUI.getWorkbench().getService(IEventBroker.class);
 
 	// Host colours
 	Color HOST_UP_COLOR = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_GREEN);
@@ -96,11 +126,72 @@ public class NetworkInventoryEditor extends EditorPart {
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
 		setSite(site);
 		setInput(input);
+		
+		NetworkInventoryEditorInput NIEditorInput = (NetworkInventoryEditorInput) input;
+		if(NIEditorInput.getDn() != null) {
+			entryDn = NIEditorInput.getDn();
+			executeOnAgent = true;
+			
+			this.dnSet = new HashSet<String>();
+			dnSet.add(entryDn);
+		}
+		else {
+			executeOnAgent = false;
+		}
+		eventBroker.subscribe(NetworkInventoryConstants.PLUGIN_NAME.toUpperCase(Locale.ENGLISH), eventHandler);
 	}
+	
+	private EventHandler eventHandler = new EventHandler() {
+		@Override
+		public void handleEvent(final Event event) {
+			Job job = new Job("TASK") {
+				@Override
+				protected IStatus run(IProgressMonitor monitor) {
+					monitor.beginTask("INVENTORY", 100);
+					try {
+						TaskStatusNotification taskStatus = (TaskStatusNotification) event
+								.getProperty("org.eclipse.e4.data");
+						byte[] data = taskStatus.getResult().getResponseData();
+						Map<String, Object> responseData = new ObjectMapper().readValue(data, 0, data.length,
+								new TypeReference<HashMap<String, Object>>() {
+						});
+						
+						for (int i = 0; i < responseData.size(); i++) {
+							@SuppressWarnings("unchecked")
+							Map<String, Object> host = (Map<String, Object>) responseData.get(Integer.toString(i+1));
+							
+							ipAddress = (String) host.get("ipAddress");
+							macAddress = (String) host.get("macAddress");
+							vendor = (String) host.get("macProvider");
+							time = (String) host.get("time");
+							distance = (String) host.get("distance");
+							hostnames = (String) host.get("hostnames");
+							ports = (String) host.get("ports");
+							os = (String) host.get("os");
+							
+							Display.getDefault().asyncExec(new InventoryRunnable(ipAddress, macAddress, vendor, time, distance,
+									hostnames, ports, os));
+						}
+					} catch (Exception e) {
+						Notifier.error("", Messages.getString("UNEXPECTED_ERROR"));
+					}
+
+					monitor.worked(100);
+					monitor.done();
+
+					return Status.OK_STATUS;
+				}
+			};
+
+			job.setUser(true);
+			job.schedule();
+			
+		}
+	};
 
 	@Override
 	public void createPartControl(Composite parent) {
-
+		
 		Composite cmpMain = new Composite(parent, SWT.NONE);
 		cmpMain.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 		cmpMain.setLayout(new GridLayout(1, false));
@@ -227,12 +318,6 @@ public class NetworkInventoryEditor extends EditorPart {
 
 				AhenkSetupConfig config = wizard.getConfig();
 
-				// Create request object
-				TaskRequest task = new TaskRequest();
-				task.setPluginName("network-inventory");
-				task.setPluginVersion("1.0.0");
-				task.setCommandId("INSTALLAHENK");
-
 				// Add config object as parameter. It has all information that
 				// Lider needs to know.
 				Map<String, Object> parameterMap = new HashMap<String, Object>();
@@ -243,6 +328,7 @@ public class NetworkInventoryEditor extends EditorPart {
 				parameterMap.put("installMethod", config.getInstallMethod());
 				parameterMap.put("username", config.getUsername());
 				parameterMap.put("port", config.getPort());
+				parameterMap.put("executeOnAgent", executeOnAgent);
 
 				if (config.getAccessMethod() == AccessMethod.USERNAME_PASSWORD) {
 					parameterMap.put("password", config.getPassword());
@@ -253,8 +339,10 @@ public class NetworkInventoryEditor extends EditorPart {
 				if (config.getInstallMethod() == InstallMethod.WGET) {
 					parameterMap.put("downloadUrl", config.getDownloadUrl());
 				}
-
-				task.setParameterMap(parameterMap);
+				
+				TaskRequest task = new TaskRequest();
+				task = new TaskRequest(new ArrayList<String>(dnSet), DNType.AHENK, NetworkInventoryConstants.PLUGIN_NAME,
+						NetworkInventoryConstants.PLUGIN_VERSION, NetworkInventoryConstants.INSTALL_COMMAND, parameterMap, null, new Date());
 
 				Map<String, Object> resultMap = new HashMap<String, Object>();
 
@@ -313,8 +401,47 @@ public class NetworkInventoryEditor extends EditorPart {
 
 		Composite cmpScan = new Composite(composite, SWT.BORDER);
 		cmpScan.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
-		cmpScan.setLayout(new GridLayout(3, false));
+		cmpScan.setLayout(new GridLayout(4, false));
+		
+		Group scanOptions = new Group(cmpScan, SWT.NONE);
+		scanOptions.setLayout(new GridLayout(1, false));
+		scanOptions.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 1, 1));
+		
+		btnScanOptions[0] = new Button(scanOptions, SWT.RADIO);
+		btnScanOptions[0].setText(Messages.getString("USE_AHENK"));
+		btnScanOptions[0].addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				executeOnAgent = true;
+			}
 
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+			}
+		});
+		
+		btnScanOptions[1] = new Button(scanOptions, SWT.RADIO);
+		btnScanOptions[1].setText(Messages.getString("USE_LIDER"));
+		btnScanOptions[1].addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				executeOnAgent = false;
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+			}
+		});
+		
+		if(executeOnAgent) {
+			btnScanOptions[0].setEnabled(true);
+			btnScanOptions[0].setSelection(true);
+		}
+		else {
+			btnScanOptions[0].setEnabled(false);
+			btnScanOptions[1].setSelection(true);
+		}
+		
 		Label lblIpRange = new Label(cmpScan, SWT.NONE);
 		lblIpRange.setText("IP Aralığı");
 
@@ -330,17 +457,16 @@ public class NetworkInventoryEditor extends EditorPart {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (!txtIpRange.getText().isEmpty()) {
-					// Create request instance
-					TaskRequest task = new TaskRequest();
-					task.setPluginName("network-inventory");
-					task.setPluginVersion("1.0.0");
-					task.setCommandId("SCANNETWORK");
-
+					
 					// Populate request parameters
 					Map<String, Object> parameterMap = new HashMap<String, Object>();
 					parameterMap.put("ipRange", txtIpRange.getText());
 					parameterMap.put("timingTemplate", "3");
-					task.setParameterMap(parameterMap);
+					parameterMap.put("executeOnAgent", executeOnAgent);
+					
+					TaskRequest task = new TaskRequest();
+					task = new TaskRequest(new ArrayList<String>(dnSet), DNType.AHENK, NetworkInventoryConstants.PLUGIN_NAME,
+							NetworkInventoryConstants.PLUGIN_VERSION, NetworkInventoryConstants.SCAN_COMMAND, parameterMap, null, new Date());
 
 					RestResponse response;
 					try {
@@ -351,9 +477,9 @@ public class NetworkInventoryEditor extends EditorPart {
 
 						ObjectMapper mapper = new ObjectMapper();
 
-						ScanResult scanResult = mapper.readValue(resultMap.get("result").toString(), ScanResult.class);
-
-						tblInventory.setInput(scanResult.getHosts());
+//						ScanResult scanResult = mapper.readValue(resultMap.get("result").toString(), ScanResult.class);
+//
+//						tblInventory.setInput(scanResult.getHosts());
 
 					} catch (Exception e1) {
 						e1.printStackTrace();
@@ -361,6 +487,7 @@ public class NetworkInventoryEditor extends EditorPart {
 				} else {
 					Notifier.warning(Messages.getString("NETWORK_SCAN"), Messages.getString("PLEASE_ENTER_IP_RANGE"));
 				}
+				
 			}
 
 			@Override
@@ -600,4 +727,45 @@ public class NetworkInventoryEditor extends EditorPart {
 	public void setEntryDn(String entryDn) {
 		this.entryDn = entryDn;
 	}
+	
+	class InventoryRunnable implements Runnable {
+
+		private String ipAddress;
+		private String macAddress;
+		private String hostnames;
+		private String ports;
+		private String os;
+		private String distance;
+		private String vendor;
+		private String time;
+		
+		public InventoryRunnable(String ipAddress, String macAddress, String vendor, String time, String distance,
+				String hostnames, String ports, String os) {
+			
+			this.ipAddress = ipAddress;
+			this.macAddress = macAddress;
+			this.hostnames = hostnames;
+			this.ports = ports;
+			this.os = os;
+			this.distance = distance;
+			this.vendor = vendor;
+			this.time = time;
+		}
+
+		@Override
+		public void run() {
+			
+			TableItem item = new TableItem(tblInventory.getTable(), SWT.NONE);
+		    item.setText(0, ipAddress);
+		    item.setText(1, hostnames);
+		    item.setText(2, ports);
+		    item.setText(3, os);
+		    item.setText(4, distance);
+		    item.setText(5, time);
+		    item.setText(6, macAddress);
+		    item.setText(7, vendor);
+		}
+
+	}
+
 }

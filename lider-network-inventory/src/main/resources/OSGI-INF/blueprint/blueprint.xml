@@ -7,9 +7,33 @@
                  http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://svn.apache.org/repos/asf/aries/trunk/blueprint/blueprint-cm/src/main/resources/org/apache/aries/blueprint/compendium/cm/blueprint-cm-1.1.0.xsd
          ">
 
+	<cm:property-placeholder persistent-id="tr.org.liderahenk.network.inventory"
+		update-strategy="reload">
+	</cm:property-placeholder>
+
+	<!-- IPluginInfo implementation is used to register plugin -->
+	<service ref="pluginInfoImpl"
+		interface="tr.org.liderahenk.lider.core.api.plugin.IPluginInfo" />
+	<bean id="pluginInfoImpl"
+		class="tr.org.liderahenk.network.inventory.plugininfo.PluginInfoImpl"
+		init-method="refresh">
+		<property name="pluginName" value="${plugin.name}" />
+		<property name="pluginVersion" value="${plugin.version}" />
+		<property name="description" value="${plugin.description}" />
+		<property name="machineOriented" value="${plugin.machine.oriented}" />
+		<property name="userOriented" value="${plugin.user.oriented}" />
+		<property name="policyPlugin" value="${plugin.policy.plugin}" />
+		<property name="xbased" value="${plugin.x.based}" />
+		<property name="distroHost" value="${plugin.distro.host}" />
+		<property name="distroUsername" value="${plugin.distro.username}" />
+		<property name="distroPassword" value="${plugin.distro.password}" />
+		<property name="distroPath" value="${plugin.distro.path}" />
+	</bean>	
+
 	<service ref="FileDistributionCommand" interface="tr.org.liderahenk.lider.core.api.plugin.ICommand" />
 	<bean id="FileDistributionCommand"
 		class="tr.org.liderahenk.network.inventory.commands.FileDistributionCommand">
+		<property name="pluginInfo" ref="pluginInfoImpl" />
 		<property name="pluginDbService" ref="pluginDbService" />
 		<property name="resultFactory" ref="resultFactory" />
 	</bean>
@@ -17,12 +41,14 @@
 	<service ref="AhenkInstallationCommand" interface="tr.org.liderahenk.lider.core.api.plugin.ICommand" />
 	<bean id="AhenkInstallationCommand"
 		class="tr.org.liderahenk.network.inventory.commands.AhenkInstallationCommand">
+		<property name="pluginInfo" ref="pluginInfoImpl" />
 		<property name="pluginDbService" ref="pluginDbService" />
 		<property name="resultFactory" ref="resultFactory" />
 	</bean>
 	<service ref="NetworkScanCommand" interface="tr.org.liderahenk.lider.core.api.plugin.ICommand" />
 	<bean id="NetworkScanCommand"
 		class="tr.org.liderahenk.network.inventory.commands.NetworkScanCommand">
+		<property name="pluginInfo" ref="pluginInfoImpl" />
 		<property name="pluginDbService" ref="pluginDbService" />
 		<property name="resultFactory" ref="resultFactory" />
 	</bean>
@@ -31,5 +57,7 @@
 		interface="tr.org.liderahenk.lider.core.api.persistence.IPluginDbService" />
 	<reference id="resultFactory"
 		interface="tr.org.liderahenk.lider.core.api.service.ICommandResultFactory" />
+
+	
 
 </blueprint>

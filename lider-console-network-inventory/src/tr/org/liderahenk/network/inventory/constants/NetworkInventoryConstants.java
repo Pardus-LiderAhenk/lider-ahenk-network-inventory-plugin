@@ -1,0 +1,13 @@
+package tr.org.liderahenk.network.inventory.constants;
+
+public class NetworkInventoryConstants {
+	
+	public static final String PLUGIN_NAME = "network-inventory";
+	
+	public static final String PLUGIN_VERSION = "1.0.0";
+	
+	public static final String SCAN_COMMAND = "SCANNETWORK";
+	
+	public static final String INSTALL_COMMAND = "INSTALLAHENK";
+
+}

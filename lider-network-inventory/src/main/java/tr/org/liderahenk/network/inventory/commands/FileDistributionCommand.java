@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import tr.org.liderahenk.lider.core.api.persistence.IPluginDbService;
+import tr.org.liderahenk.lider.core.api.plugin.ICommand;
 import tr.org.liderahenk.lider.core.api.service.ICommandContext;
 import tr.org.liderahenk.lider.core.api.service.ICommandResult;
 import tr.org.liderahenk.lider.core.api.service.ICommandResultFactory;
@@ -42,6 +43,7 @@ import tr.org.liderahenk.network.inventory.dto.FileDistResultDto;
 import tr.org.liderahenk.network.inventory.dto.FileDistResultHostDto;
 import tr.org.liderahenk.network.inventory.entities.FileDistResult;
 import tr.org.liderahenk.network.inventory.entities.FileDistResultHost;
+import tr.org.liderahenk.network.inventory.plugininfo.PluginInfoImpl;
 import tr.org.liderahenk.network.inventory.runnables.RunnableFileDistributor;
 
 /**
@@ -52,12 +54,13 @@ import tr.org.liderahenk.network.inventory.runnables.RunnableFileDistributor;
  * @author <a href="mailto:emre.akkaya@agem.com.tr">Emre Akkaya</a>
  *
  */
-public class FileDistributionCommand extends BaseCommand {
+public class FileDistributionCommand implements ICommand {
 
 	private Logger logger = LoggerFactory.getLogger(FileDistributionCommand.class);
 
 	private ICommandResultFactory resultFactory;
 	private IPluginDbService pluginDbService;
+	private PluginInfoImpl pluginInfo;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
@@ -340,6 +343,10 @@ public class FileDistributionCommand extends BaseCommand {
 		this.pluginDbService = pluginDbService;
 	}
 	
+	public void setPluginInfo(PluginInfoImpl pluginInfo) {
+		this.pluginInfo = pluginInfo;
+	}
+	
 	private String getMD5ofFile(byte[] inputBytes) {
 		
 		MessageDigest digest;
@@ -360,4 +367,14 @@ public class FileDistributionCommand extends BaseCommand {
 		return result;
 	}
 
+	@Override
+	public String getPluginName() {
+		return pluginInfo.getPluginName();
+	}
+
+	@Override
+	public String getPluginVersion() {
+		return pluginInfo.getPluginVersion();
+	}
+	
 }
