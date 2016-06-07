@@ -9,13 +9,19 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 import javax.xml.bind.DatatypeConverter;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -45,7 +51,10 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.EditorPart;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventHandler;
 
 import tr.org.liderahenk.liderconsole.core.constants.LiderConstants;
 import tr.org.liderahenk.liderconsole.core.ldap.enums.DNType;
@@ -54,6 +63,7 @@ import tr.org.liderahenk.liderconsole.core.rest.responses.RestResponse;
 import tr.org.liderahenk.liderconsole.core.rest.utils.TaskUtils;
 import tr.org.liderahenk.liderconsole.core.utils.SWTResourceManager;
 import tr.org.liderahenk.liderconsole.core.widgets.Notifier;
+import tr.org.liderahenk.liderconsole.core.xmpp.notifications.TaskStatusNotification;
 import tr.org.liderahenk.network.inventory.constants.AccessMethod;
 import tr.org.liderahenk.network.inventory.constants.InstallMethod;
 import tr.org.liderahenk.network.inventory.constants.NetworkInventoryConstants;
@@ -96,6 +106,17 @@ public class NetworkInventoryEditor extends EditorPart {
 	private TableViewer tblInventory;
 
 	private List<String> selectedIpList;
+	
+	private String ipAddress;
+	private String macAddress;
+	private String hostnames;
+	private String ports;
+	private String os;
+	private String distance;
+	private String vendor;
+	private String time;
+	
+	private IEventBroker eventBroker = (IEventBroker) PlatformUI.getWorkbench().getService(IEventBroker.class);
 
 	// Host colours
 	Color HOST_UP_COLOR = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_GREEN);
@@ -117,7 +138,56 @@ public class NetworkInventoryEditor extends EditorPart {
 		else {
 			executeOnAgent = false;
 		}
+		eventBroker.subscribe(NetworkInventoryConstants.PLUGIN_NAME.toUpperCase(Locale.ENGLISH), eventHandler);
 	}
+	
+	private EventHandler eventHandler = new EventHandler() {
+		@Override
+		public void handleEvent(final Event event) {
+			Job job = new Job("TASK") {
+				@Override
+				protected IStatus run(IProgressMonitor monitor) {
+					monitor.beginTask("INVENTORY", 100);
+					try {
+						TaskStatusNotification taskStatus = (TaskStatusNotification) event
+								.getProperty("org.eclipse.e4.data");
+						byte[] data = taskStatus.getResult().getResponseData();
+						Map<String, Object> responseData = new ObjectMapper().readValue(data, 0, data.length,
+								new TypeReference<HashMap<String, Object>>() {
+						});
+						
+						for (int i = 0; i < responseData.size(); i++) {
+							@SuppressWarnings("unchecked")
+							Map<String, Object> host = (Map<String, Object>) responseData.get(Integer.toString(i+1));
+							
+							ipAddress = (String) host.get("ipAddress");
+							macAddress = (String) host.get("macAddress");
+							vendor = (String) host.get("macProvider");
+							time = (String) host.get("time");
+							distance = (String) host.get("distance");
+							hostnames = (String) host.get("hostnames");
+							ports = (String) host.get("ports");
+							os = (String) host.get("os");
+							
+							Display.getDefault().asyncExec(new InventoryRunnable(ipAddress, macAddress, vendor, time, distance,
+									hostnames, ports, os));
+						}
+					} catch (Exception e) {
+						Notifier.error("", Messages.getString("UNEXPECTED_ERROR"));
+					}
+
+					monitor.worked(100);
+					monitor.done();
+
+					return Status.OK_STATUS;
+				}
+			};
+
+			job.setUser(true);
+			job.schedule();
+			
+		}
+	};
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -657,4 +727,45 @@ public class NetworkInventoryEditor extends EditorPart {
 	public void setEntryDn(String entryDn) {
 		this.entryDn = entryDn;
 	}
+	
+	class InventoryRunnable implements Runnable {
+
+		private String ipAddress;
+		private String macAddress;
+		private String hostnames;
+		private String ports;
+		private String os;
+		private String distance;
+		private String vendor;
+		private String time;
+		
+		public InventoryRunnable(String ipAddress, String macAddress, String vendor, String time, String distance,
+				String hostnames, String ports, String os) {
+			
+			this.ipAddress = ipAddress;
+			this.macAddress = macAddress;
+			this.hostnames = hostnames;
+			this.ports = ports;
+			this.os = os;
+			this.distance = distance;
+			this.vendor = vendor;
+			this.time = time;
+		}
+
+		@Override
+		public void run() {
+			
+			TableItem item = new TableItem(tblInventory.getTable(), SWT.NONE);
+		    item.setText(0, ipAddress);
+		    item.setText(1, hostnames);
+		    item.setText(2, ports);
+		    item.setText(3, os);
+		    item.setText(4, distance);
+		    item.setText(5, time);
+		    item.setText(6, macAddress);
+		    item.setText(7, vendor);
+		}
+
+	}
+
 }
