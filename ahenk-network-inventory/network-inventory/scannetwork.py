@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # Author:Mine DOGAN <mine.dogan@agem.com.tr>
 
+import json
 import xml.etree.ElementTree as ET
 
 from base.model.enum.ContentType import ContentType
@@ -45,7 +46,8 @@ class ScanNetwork(AbstractPlugin):
 
     def get_result(self, root):
         self.logger.debug('[NETWORK INVENTORY] Parsing nmap xml output')
-        result_list = []
+        result_list = {}
+        index = 1
 
         for host in root.findall('host'):
             result = {}
@@ -62,7 +64,8 @@ class ScanNetwork(AbstractPlugin):
             result['ipAddress'], result['macAddress'], result['macProvider'] = self.get_Addresses(host)
             result['time'] = self.get_time()
 
-            result_list.append(result)
+            result_list[index] = result
+            index += 1
 
         return result_list
 
@@ -80,29 +83,41 @@ class ScanNetwork(AbstractPlugin):
         return ipAddress, macAddress, macProvider
 
     def get_hostname_list(self, hostnames):
-        hostname_list = []
+        hostname_list = ''
         if hostnames != None:
             for hostname in hostnames.findall('hostname'):
                 name = hostname.get('name')
-                hostname_list.append(name)
+                if hostname_list != '':
+                    hostname_list = hostname_list + ', ' + name
+                else:
+                    hostname_list = name
+
         return hostname_list
 
     def get_port_list(self, ports):
-        port_list = []
+        port_list = ''
         if ports != None:
             for port in ports.findall('port'):
                 service = port.find('service')
                 service_name = service.get('name')
                 id = port.get('portid') + '/' + port.get('protocol') + ' ' + service_name
-                port_list.append(id)
+                if port_list != '':
+                    port_list = port_list + ', ' + id
+                else:
+                    port_list = id
+
         return port_list
 
     def get_os_list(self, os):
-        os_list = []
+        os_list = ''
         if os != None:
             for osmatch in os.findall('osmatch'):
                 name = osmatch.get('name')
-                os_list.append(name)
+                if os_list != '':
+                    os_list = os_list + ', ' + name
+                else:
+                    os_list = name
+
         return os_list
 
     def get_distance(self, distance):
