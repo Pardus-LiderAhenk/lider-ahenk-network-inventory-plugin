@@ -81,8 +81,8 @@ import tr.org.liderahenk.network.inventory.wizard.AhenkSetupWizard;
  * An editor that sends some network related commands such as network scan,
  * Ahenk installation and file sharing.
  * 
- * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner
- *         Feyzullahoğlu</a>
+ * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner Feyzullahoğlu</a>
+ * @author <a href="mailto:mine.dogan@agem.com.tr">Mine Dogan</a>
  */
 public class NetworkInventoryEditor extends EditorPart {
 
@@ -156,21 +156,23 @@ public class NetworkInventoryEditor extends EditorPart {
 								new TypeReference<HashMap<String, Object>>() {
 						});
 						
-						for (int i = 0; i < responseData.size(); i++) {
-							@SuppressWarnings("unchecked")
-							Map<String, Object> host = (Map<String, Object>) responseData.get(Integer.toString(i+1));
-							
-							ipAddress = (String) host.get("ipAddress");
-							macAddress = (String) host.get("macAddress");
-							vendor = (String) host.get("macProvider");
-							time = (String) host.get("time");
-							distance = (String) host.get("distance");
-							hostnames = (String) host.get("hostnames");
-							ports = (String) host.get("ports");
-							os = (String) host.get("os");
-							
-							Display.getDefault().asyncExec(new InventoryRunnable(ipAddress, macAddress, vendor, time, distance,
-									hostnames, ports, os));
+						if (responseData != null) {
+							for (int i = 0; i < responseData.size(); i++) {
+								@SuppressWarnings("unchecked")
+								Map<String, Object> host = (Map<String, Object>) responseData.get(Integer.toString(i+1));
+								
+								ipAddress = (String) host.get("ipAddress");
+								macAddress = (String) host.get("macAddress");
+								vendor = (String) host.get("macProvider");
+								time = (String) host.get("time");
+								distance = (String) host.get("distance");
+								hostnames = (String) host.get("hostnames");
+								ports = (String) host.get("ports");
+								os = (String) host.get("os");
+								
+								Display.getDefault().asyncExec(new InventoryRunnable(ipAddress, macAddress, vendor, time, distance,
+										hostnames, ports, os));
+							}
 						}
 					} catch (Exception e) {
 						Notifier.error("", Messages.getString("UNEXPECTED_ERROR"));
@@ -524,10 +526,8 @@ public class NetworkInventoryEditor extends EditorPart {
 		tblInventory.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
-				if (!event.getSelection().isEmpty()) {
-					btnAhenkInstall.setEnabled(checkIpSelection(tblInventory));
-					btnShareFile.setEnabled(checkIpSelection(tblInventory) && !txtFilePath.getText().isEmpty());
-				}
+				btnAhenkInstall.setEnabled(checkIpSelection(tblInventory));
+				btnShareFile.setEnabled(checkIpSelection(tblInventory) && !txtFilePath.getText().isEmpty());
 			}
 		});
 
