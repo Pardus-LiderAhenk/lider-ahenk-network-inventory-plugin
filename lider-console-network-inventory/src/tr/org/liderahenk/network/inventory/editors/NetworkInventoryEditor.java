@@ -330,6 +330,7 @@ public class NetworkInventoryEditor extends EditorPart {
 				parameterMap.put("installMethod", config.getInstallMethod());
 				parameterMap.put("username", config.getUsername());
 				parameterMap.put("port", config.getPort());
+				parameterMap.put("privateKeyPath", config.getPrivateKeyPath());
 				parameterMap.put("executeOnAgent", executeOnAgent);
 
 				if (config.getAccessMethod() == AccessMethod.USERNAME_PASSWORD) {
@@ -362,13 +363,13 @@ public class NetworkInventoryEditor extends EditorPart {
 				ObjectMapper mapper = new ObjectMapper();
 
 				try {
-					AhenkSetupResult setupResult = mapper.readValue(resultMap.get("result").toString(),
-							AhenkSetupResult.class);
-
-					AhenkSetupResultDialog resultDialog = new AhenkSetupResultDialog(composite.getShell(),
-							setupResult.getSetupDetailList());
-
-					resultDialog.open();
+//					AhenkSetupResult setupResult = mapper.readValue(resultMap.get("result").toString(),
+//							AhenkSetupResult.class);
+//
+//					AhenkSetupResultDialog resultDialog = new AhenkSetupResultDialog(composite.getShell(),
+//							setupResult.getSetupDetailList());
+//
+//					resultDialog.open();
 
 				} catch (Exception e2) {
 					e2.printStackTrace();
