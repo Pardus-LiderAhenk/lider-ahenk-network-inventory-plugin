@@ -13,6 +13,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
@@ -45,6 +46,14 @@ public class AhenkConnectionMethodPage extends WizardPage {
 
 	private Label passphrase = null;
 	private Text passphraseTxt = null;
+	
+	private Label usernameForKeyOption = null;
+	private Text usernameTxtForKeyOption = null;
+	
+	private Label privateKey = null;
+	private Text privateKeyTxt = null;
+	
+	private Button selectPrivateKeyBtn = null;
 
 	private Text portTxt;
 
@@ -148,20 +157,63 @@ public class AhenkConnectionMethodPage extends WizardPage {
 
 		// Container for passphrase section
 		passphraseContainer = new Composite(mainContainer, SWT.NONE);
+		GridLayout glPrivateKey = new GridLayout(3, false);
+		glPrivateKey.marginLeft = -6;
+		passphraseContainer.setLayout(glPrivateKey);
+		
+		// PathToPrivateKey label
+		privateKey = new Label(passphraseContainer, SWT.SINGLE);
+		privateKey.setText(Messages.getString("PRIVATE_KEY"));
 
+		// PathToPrivateKey text field
+		privateKeyTxt = new Text(passphraseContainer, SWT.BORDER);
+		GridData gdPrivateKey = new GridData();
+		gdPrivateKey.widthHint = 97;
+		privateKeyTxt.setLayoutData(gdPrivateKey);
+		privateKeyTxt.setEnabled(false);
+		
+		// Select private key
+		selectPrivateKeyBtn = new Button(passphraseContainer, SWT.PUSH);
+		selectPrivateKeyBtn.setText(Messages.getString("SELECT_KEY"));
+		selectPrivateKeyBtn.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				FileDialog dialog = new FileDialog(passphraseContainer.getShell(), SWT.OPEN);
+				String fn = dialog.open();
+				if (fn != null) {
+					String filterPath = dialog.getFilterPath();
+					String fileName = dialog.getFileName();
+					privateKeyTxt.setText(filterPath + "/" + fileName);
+				}
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+			}
+		});
+		selectPrivateKeyBtn.setEnabled(false);
+		
 		// Passphrase label
 		passphrase = new Label(passphraseContainer, SWT.SINGLE);
 		passphrase.setText(Messages.getString("PASSPHRASE(OPTIONAL)"));
-		GridLayout glPassphrase = new GridLayout(2, false);
-		glPassphrase.marginLeft = -6;
-		passphraseContainer.setLayout(glPassphrase);
 
 		// Passphrase text field
 		passphraseTxt = new Text(passphraseContainer, SWT.BORDER | SWT.PASSWORD);
-		GridData gdPassphrase = new GridData();
+		GridData gdPassphrase = new GridData(SWT.BEGINNING, SWT.BEGINNING, true, true, 2, 1);
 		gdPassphrase.widthHint = 97;
 		passphraseTxt.setLayoutData(gdPassphrase);
 		passphraseTxt.setEnabled(false);
+		
+		// Username label
+		usernameForKeyOption = new Label(passphraseContainer, SWT.SINGLE);
+		usernameForKeyOption.setText(Messages.getString("USERNAME"));
+
+		// Username text field
+		usernameTxtForKeyOption = new Text(passphraseContainer, SWT.BORDER);
+		GridData gdUsernameForKeyOption = new GridData(SWT.BEGINNING, SWT.BEGINNING, true, true, 2, 1);
+		gdUsernameForKeyOption.widthHint = 97;
+		usernameTxtForKeyOption.setLayoutData(gdUsernameForKeyOption);
+		usernameTxtForKeyOption.setEnabled(false);
 
 		// Port section
 		Composite portComp = new Composite(mainContainer, SWT.NONE);
@@ -220,6 +272,9 @@ public class AhenkConnectionMethodPage extends WizardPage {
 			passwordTxt.setEnabled(true);
 
 			passphraseTxt.setEnabled(false);
+			usernameTxtForKeyOption.setEnabled(false);
+			privateKeyTxt.setEnabled(false);
+			selectPrivateKeyBtn.setEnabled(false);
 		}
 
 		if (usePrivateKey.getSelection()) {
@@ -227,6 +282,9 @@ public class AhenkConnectionMethodPage extends WizardPage {
 			passwordTxt.setEnabled(false);
 
 			passphraseTxt.setEnabled(true);
+			usernameTxtForKeyOption.setEnabled(true);
+			privateKeyTxt.setEnabled(true);
+			selectPrivateKeyBtn.setEnabled(true);
 		}
 	}
 
@@ -239,7 +297,15 @@ public class AhenkConnectionMethodPage extends WizardPage {
 			config.setPassword(passwordTxt.getText());
 		} else {
 			config.setAccessMethod(AccessMethod.PRIVATE_KEY);
-			config.setUsername("root");
+			if (!"".equals(privateKeyTxt.getText()) && privateKeyTxt.getText() != null) {
+				config.setPrivateKeyPath(privateKeyTxt.getText());
+			}
+			if (!"".equals(usernameTxtForKeyOption.getText()) && usernameTxtForKeyOption.getText() != null) {
+				config.setUsername(usernameTxtForKeyOption.getText());
+			}
+			else {
+				config.setUsername("root");
+			}
 			if (!"".equals(passphraseTxt.getText()) && passphraseTxt.getText() != null) {
 				config.setPassphrase(passphraseTxt.getText());
 			}
