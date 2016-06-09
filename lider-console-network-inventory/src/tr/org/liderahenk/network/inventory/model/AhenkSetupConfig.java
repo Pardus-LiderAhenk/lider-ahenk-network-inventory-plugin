@@ -27,7 +27,7 @@ public class AhenkSetupConfig implements Serializable{
 	private AccessMethod accessMethod;
 	private String username;
 	private String password;
-	private byte[] privateKeyFile;
+	private String privateKeyPath;
 	private String passphrase;
 
 	/**
@@ -110,12 +110,12 @@ public class AhenkSetupConfig implements Serializable{
 		this.debFile = debFile;
 	}
 
-	public byte[] getPrivateKeyFile() {
-		return privateKeyFile;
+	public String getPrivateKeyPath() {
+		return privateKeyPath;
 	}
 
-	public void setPrivateKeyFile(byte[] privateKeyFile) {
-		this.privateKeyFile = privateKeyFile;
+	public void setPrivateKeyPath(String privateKeyPath) {
+		this.privateKeyPath = privateKeyPath;
 	}
 
 	public String getDownloadUrl() {
