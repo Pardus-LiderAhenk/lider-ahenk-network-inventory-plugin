@@ -4,6 +4,7 @@
 
 import paramiko
 import urllib.request
+import os
 
 from base.plugin.abstract_plugin import AbstractPlugin
 
@@ -23,9 +24,12 @@ class InstallAhenk(AbstractPlugin):
 
         if self.access_method == 'USERNAME_PASSWORD':
             self.password = self.task['password']
+        elif self.access_method == 'PRIVATE_KEY':
+            self.passphrase = self.task['passphrase']
+            self.key_path = self.task['privateKeyPath']
 
         if self.install_method == 'APT_GET':
-            self.install_command = 'sudo apt-get install -y --force-yes nmap'  # TODO name for ahenk
+            self.install_command = 'sudo apt-get install -y --force-yes ahenk'  # TODO name for ahenk
 
         elif self.install_method == 'WGET':
             self.download_url = self.task['downloadUrl']
@@ -58,6 +62,7 @@ class InstallAhenk(AbstractPlugin):
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(host, username=self.username, password=self.password)
+
         transport = ssh.get_transport()
         session = transport.open_session()
         session.set_combine_stderr(True)
@@ -70,11 +75,14 @@ class InstallAhenk(AbstractPlugin):
             sftp = ssh.open_sftp()
             sftp.put(self.deb_path, self.deb_path)
             session.exec_command(self.command)
+            stdout = session.makefile('rb', -1)
 
         elif self.install_method == 'APT_GET':
             session.exec_command(self.install_command)
-
-        stdout = session.makefile('rb', -1)
+            stdin = session.makefile('wb', -1)
+            stdout = session.makefile('rb', -1)
+            stdin.write(self.password)
+            stdin.flush()
 
         self.logger.debug('[NETWORK INVENTORY - installahenk command] Ahenk has been installed.')
 
@@ -83,7 +91,10 @@ class InstallAhenk(AbstractPlugin):
     def use_key(self, host):
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(host, username=self.username)
+
+        privatekeyfile = os.path.expanduser(self.key_path)
+        key = paramiko.RSAKey.from_private_key_file(privatekeyfile)
+        ssh.connect(host, username=self.username, pkey=key)
 
         self.logger.debug('[NETWORK INVENTORY - installahenk command] SSH connection has been started.')
 
@@ -106,3 +117,4 @@ class InstallAhenk(AbstractPlugin):
 def handle_task(task, context):
     install = InstallAhenk(task, context)
     install.handle_task()
+
