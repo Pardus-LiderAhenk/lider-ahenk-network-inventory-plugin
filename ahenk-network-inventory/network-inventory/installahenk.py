@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 # Author:Mine DOGAN <mine.dogan@agem.com.tr>
 
-import paramiko
-import urllib.request
 import os
+import urllib.request
 
-import time
+import paramiko
 
 from base.plugin.abstract_plugin import AbstractPlugin
 
@@ -31,7 +30,7 @@ class InstallAhenk(AbstractPlugin):
             self.key_path = self.task['privateKeyPath']
 
         if self.install_method == 'APT_GET':
-            self.install_command = 'sudo apt-get install -y --force-yes nmap'  # TODO name for ahenk
+            self.install_command = 'sudo apt-get install -y --force-yes ahenk'  # TODO name for ahenk
 
         elif self.install_method == 'WGET':
             self.download_url = self.task['downloadUrl']
@@ -83,7 +82,7 @@ class InstallAhenk(AbstractPlugin):
             session.exec_command(self.install_command)
             stdin = session.makefile('wb', -1)
             stdout = session.makefile('rb', -1)
-            stdin.write(self.password +'\n')
+            stdin.write(self.password + '\n')
             stdin.flush()
 
         self.logger.debug('[NETWORK INVENTORY - installahenk command] Ahenk has been installed.')
@@ -120,4 +119,3 @@ class InstallAhenk(AbstractPlugin):
 def handle_task(task, context):
     install = InstallAhenk(task, context)
     install.handle_task()
-
