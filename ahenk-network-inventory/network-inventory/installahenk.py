@@ -6,6 +6,8 @@ import paramiko
 import urllib.request
 import os
 
+import time
+
 from base.plugin.abstract_plugin import AbstractPlugin
 
 
@@ -29,7 +31,7 @@ class InstallAhenk(AbstractPlugin):
             self.key_path = self.task['privateKeyPath']
 
         if self.install_method == 'APT_GET':
-            self.install_command = 'sudo apt-get install -y --force-yes ahenk'  # TODO name for ahenk
+            self.install_command = 'sudo apt-get install -y --force-yes nmap'  # TODO name for ahenk
 
         elif self.install_method == 'WGET':
             self.download_url = self.task['downloadUrl']
@@ -81,7 +83,7 @@ class InstallAhenk(AbstractPlugin):
             session.exec_command(self.install_command)
             stdin = session.makefile('wb', -1)
             stdout = session.makefile('rb', -1)
-            stdin.write(self.password)
+            stdin.write(self.password +'\n')
             stdin.flush()
 
         self.logger.debug('[NETWORK INVENTORY - installahenk command] Ahenk has been installed.')
@@ -94,7 +96,7 @@ class InstallAhenk(AbstractPlugin):
 
         privatekeyfile = os.path.expanduser(self.key_path)
         key = paramiko.RSAKey.from_private_key_file(privatekeyfile)
-        ssh.connect(host, username=self.username, pkey=key)
+        ssh.connect(host, username=self.username, pkey=key, password=self.passphrase)
 
         self.logger.debug('[NETWORK INVENTORY - installahenk command] SSH connection has been started.')
 
@@ -106,6 +108,7 @@ class InstallAhenk(AbstractPlugin):
 
         elif self.install_method == 'APT_GET':
             stdin, stdout, stderr = ssh.exec_command(self.install_command)
+            # TODO need to write user password (because of sudo command)
 
         self.logger.debug('[NETWORK INVENTORY - installahenk command] Ahenk has been installed.')
 
