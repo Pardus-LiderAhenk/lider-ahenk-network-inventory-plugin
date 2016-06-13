@@ -46,26 +46,6 @@
       <handler
             class="tr.org.liderahenk.network.inventory.handlers.NetworkInventoryHandler"
             commandId="tr.org.liderahenk.liderconsole.commands.NetworkInventory">
-			<enabledWhen>
-		       <and>
-		          <with
-		                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.available">
-		             <equals
-		                   value="true">
-		             </equals>
-		          </with>
-		          <with
-		                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.privilegesForSelectedItem">
-		             <iterate operator="or">
-		                <or>
-		                   <equals
-		                         value="ALL">
-		                   </equals>
-		                </or>
-		             </iterate>
-		          </with>
-		       </and>
-	    	</enabledWhen>
       </handler>
    </extension>
    
