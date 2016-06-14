@@ -22,7 +22,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.e4.core.services.events.IEventBroker;
-import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -44,8 +43,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IEditorInput;
@@ -70,10 +67,12 @@ import tr.org.liderahenk.network.inventory.constants.NetworkInventoryConstants;
 import tr.org.liderahenk.network.inventory.dialogs.AhenkSetupResultDialog;
 import tr.org.liderahenk.network.inventory.dialogs.FileShareDialog;
 import tr.org.liderahenk.network.inventory.dialogs.FileShareResultDialog;
+import tr.org.liderahenk.network.inventory.editorinputs.NetworkInventoryEditorInput;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
 import tr.org.liderahenk.network.inventory.model.AhenkSetupConfig;
 import tr.org.liderahenk.network.inventory.model.AhenkSetupResult;
 import tr.org.liderahenk.network.inventory.model.FileDistResult;
+import tr.org.liderahenk.network.inventory.model.ScanResult;
 import tr.org.liderahenk.network.inventory.model.ScanResultHost;
 import tr.org.liderahenk.network.inventory.wizard.AhenkSetupWizard;
 
@@ -81,13 +80,14 @@ import tr.org.liderahenk.network.inventory.wizard.AhenkSetupWizard;
  * An editor that sends some network related commands such as network scan,
  * Ahenk installation and file sharing.
  * 
- * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner Feyzullahoğlu</a>
+ * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner
+ *         Feyzullahoğlu</a>
  * @author <a href="mailto:mine.dogan@agem.com.tr">Mine Dogan</a>
  */
 public class NetworkInventoryEditor extends EditorPart {
 
 	public static final String ID = "tr.org.liderahenk.network.inventory.editors.NetworkInventoryEditor";
-	
+
 	private boolean executeOnAgent = false;
 
 	private String userName;
@@ -106,7 +106,7 @@ public class NetworkInventoryEditor extends EditorPart {
 	private TableViewer tblInventory;
 
 	private List<String> selectedIpList;
-	
+
 	private String ipAddress;
 	private String macAddress;
 	private String hostnames;
@@ -115,32 +115,27 @@ public class NetworkInventoryEditor extends EditorPart {
 	private String distance;
 	private String vendor;
 	private String time;
-	
-	private IEventBroker eventBroker = (IEventBroker) PlatformUI.getWorkbench().getService(IEventBroker.class);
 
-	// Host colours
-	Color HOST_UP_COLOR = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_GREEN);
-	Color HOST_DOWN_COLOR = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
+	private IEventBroker eventBroker = (IEventBroker) PlatformUI.getWorkbench().getService(IEventBroker.class);
 
 	@Override
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
 		setSite(site);
 		setInput(input);
-		
+
 		NetworkInventoryEditorInput NIEditorInput = (NetworkInventoryEditorInput) input;
-		if(NIEditorInput.getDn() != null) {
+		if (NIEditorInput.getDn() != null) {
 			entryDn = NIEditorInput.getDn();
 			executeOnAgent = true;
-			
+
 			this.dnSet = new HashSet<String>();
 			dnSet.add(entryDn);
-		}
-		else {
+		} else {
 			executeOnAgent = false;
 		}
 		eventBroker.subscribe(NetworkInventoryConstants.PLUGIN_NAME.toUpperCase(Locale.ENGLISH), eventHandler);
 	}
-	
+
 	private EventHandler eventHandler = new EventHandler() {
 		@Override
 		public void handleEvent(final Event event) {
@@ -155,12 +150,13 @@ public class NetworkInventoryEditor extends EditorPart {
 						Map<String, Object> responseData = new ObjectMapper().readValue(data, 0, data.length,
 								new TypeReference<HashMap<String, Object>>() {
 						});
-						
+
 						if (responseData != null) {
 							for (int i = 0; i < responseData.size(); i++) {
 								@SuppressWarnings("unchecked")
-								Map<String, Object> host = (Map<String, Object>) responseData.get(Integer.toString(i+1));
-								
+								Map<String, Object> host = (Map<String, Object>) responseData
+										.get(Integer.toString(i + 1));
+
 								ipAddress = (String) host.get("ipAddress");
 								macAddress = (String) host.get("macAddress");
 								vendor = (String) host.get("macProvider");
@@ -169,9 +165,9 @@ public class NetworkInventoryEditor extends EditorPart {
 								hostnames = (String) host.get("hostnames");
 								ports = (String) host.get("ports");
 								os = (String) host.get("os");
-								
-								Display.getDefault().asyncExec(new InventoryRunnable(ipAddress, macAddress, vendor, time, distance,
-										hostnames, ports, os));
+
+								Display.getDefault().asyncExec(new InventoryRunnable(ipAddress, macAddress, vendor,
+										time, distance, hostnames, ports, os));
 							}
 						}
 					} catch (Exception e) {
@@ -187,13 +183,13 @@ public class NetworkInventoryEditor extends EditorPart {
 
 			job.setUser(true);
 			job.schedule();
-			
+
 		}
 	};
 
 	@Override
 	public void createPartControl(Composite parent) {
-		
+
 		Composite cmpMain = new Composite(parent, SWT.NONE);
 		cmpMain.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 		cmpMain.setLayout(new GridLayout(1, false));
@@ -207,7 +203,6 @@ public class NetworkInventoryEditor extends EditorPart {
 		createFileShareArea(cmpAction);
 
 		createTableArea(cmpMain);
-
 	}
 
 	private void createFileShareArea(Composite composite) {
@@ -342,10 +337,11 @@ public class NetworkInventoryEditor extends EditorPart {
 				if (config.getInstallMethod() == InstallMethod.WGET) {
 					parameterMap.put("downloadUrl", config.getDownloadUrl());
 				}
-				
+
 				TaskRequest task = new TaskRequest();
-				task = new TaskRequest(new ArrayList<String>(dnSet), DNType.AHENK, NetworkInventoryConstants.PLUGIN_NAME,
-						NetworkInventoryConstants.PLUGIN_VERSION, NetworkInventoryConstants.INSTALL_COMMAND, parameterMap, null, new Date());
+				task = new TaskRequest(new ArrayList<String>(dnSet), DNType.AHENK,
+						NetworkInventoryConstants.PLUGIN_NAME, NetworkInventoryConstants.PLUGIN_VERSION,
+						NetworkInventoryConstants.INSTALL_COMMAND, parameterMap, null, new Date());
 
 				Map<String, Object> resultMap = new HashMap<String, Object>();
 
@@ -363,14 +359,11 @@ public class NetworkInventoryEditor extends EditorPart {
 				ObjectMapper mapper = new ObjectMapper();
 
 				try {
-//					AhenkSetupResult setupResult = mapper.readValue(resultMap.get("result").toString(),
-//							AhenkSetupResult.class);
-//
-//					AhenkSetupResultDialog resultDialog = new AhenkSetupResultDialog(composite.getShell(),
-//							setupResult.getSetupDetailList());
-//
-//					resultDialog.open();
-
+					AhenkSetupResult setupResult = mapper.readValue(resultMap.get("result").toString(),
+							AhenkSetupResult.class);
+					AhenkSetupResultDialog resultDialog = new AhenkSetupResultDialog(composite.getShell(),
+							setupResult.getSetupDetailList());
+					resultDialog.open();
 				} catch (Exception e2) {
 					e2.printStackTrace();
 				}
@@ -403,13 +396,13 @@ public class NetworkInventoryEditor extends EditorPart {
 	private void createScanArea(Composite composite) {
 
 		Composite cmpScan = new Composite(composite, SWT.BORDER);
-		cmpScan.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
+		cmpScan.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		cmpScan.setLayout(new GridLayout(4, false));
-		
+
 		Group scanOptions = new Group(cmpScan, SWT.NONE);
 		scanOptions.setLayout(new GridLayout(1, false));
-		scanOptions.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 1, 1));
-		
+		scanOptions.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, true));
+
 		btnScanOptions[0] = new Button(scanOptions, SWT.RADIO);
 		btnScanOptions[0].setText(Messages.getString("USE_AHENK"));
 		btnScanOptions[0].addSelectionListener(new SelectionListener() {
@@ -422,7 +415,7 @@ public class NetworkInventoryEditor extends EditorPart {
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
-		
+
 		btnScanOptions[1] = new Button(scanOptions, SWT.RADIO);
 		btnScanOptions[1].setText(Messages.getString("USE_LIDER"));
 		btnScanOptions[1].addSelectionListener(new SelectionListener() {
@@ -435,16 +428,15 @@ public class NetworkInventoryEditor extends EditorPart {
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
-		
-		if(executeOnAgent) {
+
+		if (executeOnAgent) {
 			btnScanOptions[0].setEnabled(true);
 			btnScanOptions[0].setSelection(true);
-		}
-		else {
+		} else {
 			btnScanOptions[0].setEnabled(false);
 			btnScanOptions[1].setSelection(true);
 		}
-		
+
 		Label lblIpRange = new Label(cmpScan, SWT.NONE);
 		lblIpRange.setText("IP Aralığı");
 
@@ -460,37 +452,32 @@ public class NetworkInventoryEditor extends EditorPart {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (!txtIpRange.getText().isEmpty()) {
-					
+
 					// Populate request parameters
 					Map<String, Object> parameterMap = new HashMap<String, Object>();
 					parameterMap.put("ipRange", txtIpRange.getText());
 					parameterMap.put("timingTemplate", "3");
 					parameterMap.put("executeOnAgent", executeOnAgent);
-					
+
 					TaskRequest task = new TaskRequest();
-					task = new TaskRequest(new ArrayList<String>(dnSet), DNType.AHENK, NetworkInventoryConstants.PLUGIN_NAME,
-							NetworkInventoryConstants.PLUGIN_VERSION, NetworkInventoryConstants.SCAN_COMMAND, parameterMap, null, new Date());
+					task = new TaskRequest(new ArrayList<String>(dnSet), DNType.AHENK,
+							NetworkInventoryConstants.PLUGIN_NAME, NetworkInventoryConstants.PLUGIN_VERSION,
+							NetworkInventoryConstants.SCAN_COMMAND, parameterMap, null, new Date());
 
 					RestResponse response;
 					try {
 						// Post request
 						response = (RestResponse) TaskUtils.execute(task);
-
 						Map<String, Object> resultMap = response.getResultMap();
-
 						ObjectMapper mapper = new ObjectMapper();
-
-//						ScanResult scanResult = mapper.readValue(resultMap.get("result").toString(), ScanResult.class);
-//
-//						tblInventory.setInput(scanResult.getHosts());
-
+						ScanResult scanResult = mapper.readValue(resultMap.get("result").toString(), ScanResult.class);
+						tblInventory.setInput(scanResult.getHosts());
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
 				} else {
 					Notifier.warning(Messages.getString("NETWORK_SCAN"), Messages.getString("PLEASE_ENTER_IP_RANGE"));
 				}
-				
 			}
 
 			@Override
@@ -502,25 +489,8 @@ public class NetworkInventoryEditor extends EditorPart {
 
 	private void createTableArea(final Composite composite) {
 
-		tblInventory = new TableViewer(composite,
-				SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION | SWT.BORDER | SWT.CHECK);
-
+		tblInventory = SWTResourceManager.createTableViewer(composite);
 		createTableColumns();
-
-		final Table table = tblInventory.getTable();
-		table.setHeaderVisible(true);
-		table.setLinesVisible(true);
-		table.getVerticalBar().setEnabled(true);
-		table.getVerticalBar().setVisible(true);
-
-		tblInventory.setContentProvider(new ArrayContentProvider());
-
-		GridData gridData = new GridData();
-		gridData.verticalAlignment = GridData.FILL;
-		gridData.horizontalAlignment = GridData.FILL;
-		gridData.grabExcessHorizontalSpace = true;
-		gridData.grabExcessVerticalSpace = true;
-		tblInventory.getControl().setLayoutData(gridData);
 
 		// Listen checkbox selections of IP table and enable/disable install
 		// Ahenk button according to these selections
@@ -531,12 +501,12 @@ public class NetworkInventoryEditor extends EditorPart {
 				btnShareFile.setEnabled(checkIpSelection(tblInventory) && !txtFilePath.getText().isEmpty());
 			}
 		});
-
 	}
 
 	private void createTableColumns() {
 
-		TableViewerColumn ipCol = createTableViewerColumn(tblInventory, Messages.getString("IP_ADDRESS"), 100);
+		TableViewerColumn ipCol = SWTResourceManager.createTableViewerColumn(tblInventory,
+				Messages.getString("IP_ADDRESS"), 120);
 		ipCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -547,14 +517,15 @@ public class NetworkInventoryEditor extends EditorPart {
 			@Override
 			public Color getForeground(Object element) {
 				if (((ScanResultHost) element).isHostUp()) {
-					return HOST_UP_COLOR;
+					return SWTResourceManager.getSuccessColor();
 				} else {
-					return HOST_DOWN_COLOR;
+					return SWTResourceManager.getErrorColor();
 				}
 			}
 		});
 
-		TableViewerColumn hostnameCol = createTableViewerColumn(tblInventory, Messages.getString("HOST_NAME"), 50);
+		TableViewerColumn hostnameCol = SWTResourceManager.createTableViewerColumn(tblInventory,
+				Messages.getString("HOST_NAME"), 100);
 		hostnameCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -563,7 +534,8 @@ public class NetworkInventoryEditor extends EditorPart {
 			}
 		});
 
-		TableViewerColumn portsCol = createTableViewerColumn(tblInventory, Messages.getString("PORTS"), 150);
+		TableViewerColumn portsCol = SWTResourceManager.createTableViewerColumn(tblInventory,
+				Messages.getString("PORTS"), 150);
 		portsCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -572,7 +544,8 @@ public class NetworkInventoryEditor extends EditorPart {
 			}
 		});
 
-		TableViewerColumn osCol = createTableViewerColumn(tblInventory, Messages.getString("OS_INFO"), 250);
+		TableViewerColumn osCol = SWTResourceManager.createTableViewerColumn(tblInventory,
+				Messages.getString("OS_INFO"), 200);
 		osCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -581,7 +554,8 @@ public class NetworkInventoryEditor extends EditorPart {
 			}
 		});
 
-		TableViewerColumn distanceCol = createTableViewerColumn(tblInventory, Messages.getString("DISTANCE"), 30);
+		TableViewerColumn distanceCol = SWTResourceManager.createTableViewerColumn(tblInventory,
+				Messages.getString("DISTANCE"), 80);
 		distanceCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -590,7 +564,8 @@ public class NetworkInventoryEditor extends EditorPart {
 			}
 		});
 
-		TableViewerColumn uptimeCol = createTableViewerColumn(tblInventory, Messages.getString("UPTIME"), 50);
+		TableViewerColumn uptimeCol = SWTResourceManager.createTableViewerColumn(tblInventory,
+				Messages.getString("UPTIME"), 100);
 		uptimeCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -599,7 +574,8 @@ public class NetworkInventoryEditor extends EditorPart {
 			}
 		});
 
-		TableViewerColumn macAddressCol = createTableViewerColumn(tblInventory, Messages.getString("MAC_ADDRESS"), 100);
+		TableViewerColumn macAddressCol = SWTResourceManager.createTableViewerColumn(tblInventory,
+				Messages.getString("MAC_ADDRESS"), 150);
 		macAddressCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -608,7 +584,8 @@ public class NetworkInventoryEditor extends EditorPart {
 			}
 		});
 
-		TableViewerColumn macVendorCol = createTableViewerColumn(tblInventory, Messages.getString("MAC_VENDOR"), 100);
+		TableViewerColumn macVendorCol = SWTResourceManager.createTableViewerColumn(tblInventory,
+				Messages.getString("MAC_VENDOR"), 100);
 		macVendorCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -639,25 +616,6 @@ public class NetworkInventoryEditor extends EditorPart {
 		}
 
 		return false;
-	}
-
-	/**
-	 * Helper method to create table columns
-	 * 
-	 * @param tblVwrSetup
-	 * @param title
-	 * @param bound
-	 * @return
-	 */
-	private TableViewerColumn createTableViewerColumn(final TableViewer tblVwrSetup, String title, int bound) {
-		final TableViewerColumn viewerColumn = new TableViewerColumn(tblVwrSetup, SWT.NONE);
-		final TableColumn column = viewerColumn.getColumn();
-		column.setText(title);
-		column.setWidth(bound);
-		column.setResizable(true);
-		column.setMoveable(false);
-		column.setAlignment(SWT.LEFT);
-		return viewerColumn;
 	}
 
 	/**
@@ -728,7 +686,7 @@ public class NetworkInventoryEditor extends EditorPart {
 	public void setEntryDn(String entryDn) {
 		this.entryDn = entryDn;
 	}
-	
+
 	class InventoryRunnable implements Runnable {
 
 		private String ipAddress;
@@ -739,10 +697,10 @@ public class NetworkInventoryEditor extends EditorPart {
 		private String distance;
 		private String vendor;
 		private String time;
-		
+
 		public InventoryRunnable(String ipAddress, String macAddress, String vendor, String time, String distance,
 				String hostnames, String ports, String os) {
-			
+
 			this.ipAddress = ipAddress;
 			this.macAddress = macAddress;
 			this.hostnames = hostnames;
@@ -755,16 +713,16 @@ public class NetworkInventoryEditor extends EditorPart {
 
 		@Override
 		public void run() {
-			
+
 			TableItem item = new TableItem(tblInventory.getTable(), SWT.NONE);
-		    item.setText(0, ipAddress);
-		    item.setText(1, hostnames);
-		    item.setText(2, ports);
-		    item.setText(3, os);
-		    item.setText(4, distance);
-		    item.setText(5, time);
-		    item.setText(6, macAddress);
-		    item.setText(7, vendor);
+			item.setText(0, ipAddress);
+			item.setText(1, hostnames);
+			item.setText(2, ports);
+			item.setText(3, os);
+			item.setText(4, distance);
+			item.setText(5, time);
+			item.setText(6, macAddress);
+			item.setText(7, vendor);
 		}
 
 	}

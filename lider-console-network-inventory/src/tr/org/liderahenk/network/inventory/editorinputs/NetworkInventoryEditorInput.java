@@ -1,4 +1,4 @@
-package tr.org.liderahenk.network.inventory.editors;
+package tr.org.liderahenk.network.inventory.editorinputs;
 
 import tr.org.liderahenk.liderconsole.core.editorinput.DefaultEditorInput;
 

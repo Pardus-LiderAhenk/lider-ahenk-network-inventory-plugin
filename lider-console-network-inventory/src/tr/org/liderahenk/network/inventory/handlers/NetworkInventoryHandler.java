@@ -7,8 +7,8 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
 import tr.org.liderahenk.liderconsole.core.handlers.SingleSelectionHandler;
+import tr.org.liderahenk.network.inventory.editorinputs.NetworkInventoryEditorInput;
 import tr.org.liderahenk.network.inventory.editors.NetworkInventoryEditor;
-import tr.org.liderahenk.network.inventory.editors.NetworkInventoryEditorInput;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
 
 public class NetworkInventoryHandler extends SingleSelectionHandler {
