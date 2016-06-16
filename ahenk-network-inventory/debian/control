@@ -3,12 +3,12 @@ Section: unknown
 Priority: optional
 Maintainer: TUBITAK ULAKBIM
 Build-Depends: debhelper (>= 9)
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 Homepage: http://www.liderahenk.org.tr
 
-Package: network-inventory
+Package: ahenk-network-inventory
 Version: 1.0.0
 Architecture: any
 Depends: python3 (>= 3), nmap
-Description: LiderAhenk ahenk-network-inventory application
- Long Desc
+Description: Lider Ahenk network inventory plugin
+
