@@ -17,13 +17,14 @@ class ScanNetwork(AbstractPlugin):
         self.logger = self.get_logger()
         self.message_code = self.get_message_code()
 
-        self.command = 'nmap -oX - ' + self.task['ipRange']
+        self.command = 'nmap -T4 -oX - ' + self.task['ipRange']
         self.logger.debug('[NETWORK INVENTORY] Initialized')
 
     def handle_task(self):
         try:
             self.logger.debug('[NETWORK INVENTORY] Scanning')
             result_code, p_out, p_err = self.execute(self.command)
+            self.logger.debug('[NETWORK INVENTORY] Scan finished')
 
             allLines = [line for line in str(p_out).splitlines()]
             data_no_firsttwo = "".join(map(str, allLines[2:]))
