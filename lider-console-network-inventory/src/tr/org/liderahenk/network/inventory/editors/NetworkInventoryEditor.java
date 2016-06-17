@@ -7,11 +7,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -41,7 +39,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
@@ -88,12 +85,6 @@ public class NetworkInventoryEditor extends EditorPart {
 
 	public static final String ID = "tr.org.liderahenk.network.inventory.editors.NetworkInventoryEditor";
 
-	private boolean executeOnAgent = false;
-
-	private String userName;
-	private String entryDn;
-	private Set<String> dnSet;
-
 	private Button[] btnScanOptions = new Button[2];
 	private Button btnScan;
 	private Button btnAhenkInstall;
@@ -122,17 +113,6 @@ public class NetworkInventoryEditor extends EditorPart {
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
 		setSite(site);
 		setInput(input);
-
-		NetworkInventoryEditorInput NIEditorInput = (NetworkInventoryEditorInput) input;
-		if (NIEditorInput.getDn() != null) {
-			entryDn = NIEditorInput.getDn();
-			executeOnAgent = true;
-
-			this.dnSet = new HashSet<String>();
-			dnSet.add(entryDn);
-		} else {
-			executeOnAgent = false;
-		}
 		eventBroker.subscribe(NetworkInventoryConstants.PLUGIN_NAME.toUpperCase(Locale.ENGLISH), eventHandler);
 	}
 
@@ -171,7 +151,7 @@ public class NetworkInventoryEditor extends EditorPart {
 							}
 						}
 					} catch (Exception e) {
-						Notifier.error("", Messages.getString("UNEXPECTED_ERROR"));
+						Notifier.error(null, Messages.getString("UNEXPECTED_ERROR"));
 					}
 
 					monitor.worked(100);
@@ -183,7 +163,6 @@ public class NetworkInventoryEditor extends EditorPart {
 
 			job.setUser(true);
 			job.schedule();
-
 		}
 	};
 
@@ -226,9 +205,8 @@ public class NetworkInventoryEditor extends EditorPart {
 		btnFileUpload.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-
 				FileDialog dialog = new FileDialog(cmpFileShare.getShell(), SWT.OPEN);
-				dialog.setFilterPath("/home/volkan/");
+				dialog.setFilterPath(System.getProperty("user.dir"));
 				txtFilePath.setText(dialog.open());
 			}
 
@@ -326,7 +304,7 @@ public class NetworkInventoryEditor extends EditorPart {
 				parameterMap.put("username", config.getUsername());
 				parameterMap.put("port", config.getPort());
 				parameterMap.put("privateKeyPath", config.getPrivateKeyPath());
-				parameterMap.put("executeOnAgent", executeOnAgent);
+				parameterMap.put("executeOnAgent", btnScanOptions[0].getSelection());
 
 				if (config.getAccessMethod() == AccessMethod.USERNAME_PASSWORD) {
 					parameterMap.put("password", config.getPassword());
@@ -339,9 +317,15 @@ public class NetworkInventoryEditor extends EditorPart {
 				}
 
 				TaskRequest task = new TaskRequest();
-				task = new TaskRequest(new ArrayList<String>(dnSet), DNType.AHENK,
-						NetworkInventoryConstants.PLUGIN_NAME, NetworkInventoryConstants.PLUGIN_VERSION,
-						NetworkInventoryConstants.INSTALL_COMMAND, parameterMap, null, new Date());
+				ArrayList<String> dnList = null;
+				String dn = ((NetworkInventoryEditorInput) getEditorInput()).getDn();
+				if (dn != null) {
+					dnList = new ArrayList<String>();
+					dnList.add(dn);
+				}
+				task = new TaskRequest(dnList, DNType.AHENK, NetworkInventoryConstants.PLUGIN_NAME,
+						NetworkInventoryConstants.PLUGIN_VERSION, NetworkInventoryConstants.INSTALL_COMMAND,
+						parameterMap, null, new Date());
 
 				Map<String, Object> resultMap = new HashMap<String, Object>();
 
@@ -397,54 +381,38 @@ public class NetworkInventoryEditor extends EditorPart {
 
 		Composite cmpScan = new Composite(composite, SWT.BORDER);
 		cmpScan.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		cmpScan.setLayout(new GridLayout(4, false));
+		cmpScan.setLayout(new GridLayout(1, false));
 
-		Group scanOptions = new Group(cmpScan, SWT.NONE);
-		scanOptions.setLayout(new GridLayout(1, false));
-		scanOptions.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, true));
+		Composite cmpOptions = new Composite(cmpScan, SWT.NONE);
+		cmpOptions.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		cmpOptions.setLayout(new GridLayout(2, false));
 
-		btnScanOptions[0] = new Button(scanOptions, SWT.RADIO);
+		btnScanOptions[0] = new Button(cmpOptions, SWT.RADIO);
 		btnScanOptions[0].setText(Messages.getString("USE_AHENK"));
-		btnScanOptions[0].addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				executeOnAgent = true;
-			}
 
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-			}
-		});
-
-		btnScanOptions[1] = new Button(scanOptions, SWT.RADIO);
+		btnScanOptions[1] = new Button(cmpOptions, SWT.RADIO);
 		btnScanOptions[1].setText(Messages.getString("USE_LIDER"));
-		btnScanOptions[1].addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				executeOnAgent = false;
-			}
 
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-			}
-		});
-
-		if (executeOnAgent) {
-			btnScanOptions[0].setEnabled(true);
-			btnScanOptions[0].setSelection(true);
-		} else {
+		if (((NetworkInventoryEditorInput) getEditorInput()).getDn() == null) {
 			btnScanOptions[0].setEnabled(false);
+			btnScanOptions[1].setEnabled(false);
+			btnScanOptions[1].setSelection(true);
+		} else {
 			btnScanOptions[1].setSelection(true);
 		}
 
-		Label lblIpRange = new Label(cmpScan, SWT.NONE);
-		lblIpRange.setText("IP Aralığı");
+		Composite cmpIp = new Composite(cmpScan, SWT.NONE);
+		cmpIp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		cmpIp.setLayout(new GridLayout(3, false));
 
-		txtIpRange = new Text(cmpScan, SWT.RIGHT | SWT.SINGLE | SWT.LEAD | SWT.BORDER);
+		Label lblIpRange = new Label(cmpIp, SWT.NONE);
+		lblIpRange.setText(Messages.getString("IP_RANGE"));
+
+		txtIpRange = new Text(cmpIp, SWT.RIGHT | SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		txtIpRange.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		txtIpRange.setMessage(Messages.getString("EX_IP"));
 
-		btnScan = new Button(cmpScan, SWT.NONE);
+		btnScan = new Button(cmpIp, SWT.NONE);
 		btnScan.setImage(
 				SWTResourceManager.getImage(LiderConstants.PLUGIN_IDS.LIDER_CONSOLE_CORE, "icons/16/search.png"));
 		btnScan.setText(Messages.getString("START_SCAN"));
@@ -457,12 +425,18 @@ public class NetworkInventoryEditor extends EditorPart {
 					Map<String, Object> parameterMap = new HashMap<String, Object>();
 					parameterMap.put("ipRange", txtIpRange.getText());
 					parameterMap.put("timingTemplate", "3");
-					parameterMap.put("executeOnAgent", executeOnAgent);
+					parameterMap.put("executeOnAgent", btnScanOptions[0].getSelection());
 
 					TaskRequest task = new TaskRequest();
-					task = new TaskRequest(new ArrayList<String>(dnSet), DNType.AHENK,
-							NetworkInventoryConstants.PLUGIN_NAME, NetworkInventoryConstants.PLUGIN_VERSION,
-							NetworkInventoryConstants.SCAN_COMMAND, parameterMap, null, new Date());
+					ArrayList<String> dnList = null;
+					String dn = ((NetworkInventoryEditorInput) getEditorInput()).getDn();
+					if (dn != null) {
+						dnList = new ArrayList<String>();
+						dnList.add(dn);
+					}
+					task = new TaskRequest(dnList, DNType.AHENK, NetworkInventoryConstants.PLUGIN_NAME,
+							NetworkInventoryConstants.PLUGIN_VERSION, NetworkInventoryConstants.SCAN_COMMAND,
+							parameterMap, null, new Date());
 
 					RestResponse response;
 					try {
@@ -484,7 +458,6 @@ public class NetworkInventoryEditor extends EditorPart {
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
-
 	}
 
 	private void createTableArea(final Composite composite) {
@@ -669,22 +642,6 @@ public class NetworkInventoryEditor extends EditorPart {
 	@Override
 	public boolean isSaveAsAllowed() {
 		return false;
-	}
-
-	public String getUserName() {
-		return userName;
-	}
-
-	public void setUserName(String userName) {
-		this.userName = userName;
-	}
-
-	public String getEntryDn() {
-		return entryDn;
-	}
-
-	public void setEntryDn(String entryDn) {
-		this.entryDn = entryDn;
 	}
 
 	class InventoryRunnable implements Runnable {
