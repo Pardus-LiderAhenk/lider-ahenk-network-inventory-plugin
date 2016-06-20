@@ -334,7 +334,9 @@ public class NetworkInventoryEditor extends EditorPart {
 				try {
 					response = (RestResponse) TaskRestUtils.execute(task);
 
-					resultMap = response.getResultMap();
+					if(!(btnScanOptions[0].getSelection())) {
+						resultMap = response.getResultMap();
+					}
 
 				} catch (Exception e3) {
 					e3.printStackTrace();
@@ -343,11 +345,13 @@ public class NetworkInventoryEditor extends EditorPart {
 				ObjectMapper mapper = new ObjectMapper();
 
 				try {
-					AhenkSetupResult setupResult = mapper.readValue(resultMap.get("result").toString(),
-							AhenkSetupResult.class);
-					AhenkSetupResultDialog resultDialog = new AhenkSetupResultDialog(composite.getShell(),
-							setupResult.getSetupDetailList());
-					resultDialog.open();
+					if(!(btnScanOptions[0].getSelection())) {
+						AhenkSetupResult setupResult = mapper.readValue(resultMap.get("result").toString(),
+								AhenkSetupResult.class);
+						AhenkSetupResultDialog resultDialog = new AhenkSetupResultDialog(composite.getShell(),
+								setupResult.getSetupDetailList());
+						resultDialog.open();
+					}
 				} catch (Exception e2) {
 					e2.printStackTrace();
 				}
@@ -442,10 +446,13 @@ public class NetworkInventoryEditor extends EditorPart {
 					try {
 						// Post request
 						response = (RestResponse) TaskRestUtils.execute(task);
-						Map<String, Object> resultMap = response.getResultMap();
-						ObjectMapper mapper = new ObjectMapper();
-						ScanResult scanResult = mapper.readValue(resultMap.get("result").toString(), ScanResult.class);
-						tblInventory.setInput(scanResult.getHosts());
+						
+						if(!(btnScanOptions[0].getSelection())) {
+							Map<String, Object> resultMap = response.getResultMap();
+							ObjectMapper mapper = new ObjectMapper();
+							ScanResult scanResult = mapper.readValue(resultMap.get("result").toString(), ScanResult.class);
+							tblInventory.setInput(scanResult.getHosts());
+						}
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
