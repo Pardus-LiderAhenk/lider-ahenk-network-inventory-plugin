@@ -54,7 +54,7 @@ import tr.org.liderahenk.liderconsole.core.constants.LiderConstants;
 import tr.org.liderahenk.liderconsole.core.ldap.enums.DNType;
 import tr.org.liderahenk.liderconsole.core.rest.requests.TaskRequest;
 import tr.org.liderahenk.liderconsole.core.rest.responses.RestResponse;
-import tr.org.liderahenk.liderconsole.core.rest.utils.TaskUtils;
+import tr.org.liderahenk.liderconsole.core.rest.utils.TaskRestUtils;
 import tr.org.liderahenk.liderconsole.core.utils.SWTResourceManager;
 import tr.org.liderahenk.liderconsole.core.widgets.Notifier;
 import tr.org.liderahenk.liderconsole.core.xmpp.notifications.TaskStatusNotification;
@@ -332,7 +332,7 @@ public class NetworkInventoryEditor extends EditorPart {
 				// Send command
 				RestResponse response;
 				try {
-					response = (RestResponse) TaskUtils.execute(task);
+					response = (RestResponse) TaskRestUtils.execute(task);
 
 					resultMap = response.getResultMap();
 
@@ -441,7 +441,7 @@ public class NetworkInventoryEditor extends EditorPart {
 					RestResponse response;
 					try {
 						// Post request
-						response = (RestResponse) TaskUtils.execute(task);
+						response = (RestResponse) TaskRestUtils.execute(task);
 						Map<String, Object> resultMap = response.getResultMap();
 						ObjectMapper mapper = new ObjectMapper();
 						ScanResult scanResult = mapper.readValue(resultMap.get("result").toString(), ScanResult.class);

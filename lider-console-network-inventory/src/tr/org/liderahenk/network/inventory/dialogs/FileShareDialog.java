@@ -21,7 +21,7 @@ import org.eclipse.swt.widgets.Text;
 
 import tr.org.liderahenk.liderconsole.core.rest.requests.TaskRequest;
 import tr.org.liderahenk.liderconsole.core.rest.responses.RestResponse;
-import tr.org.liderahenk.liderconsole.core.rest.utils.TaskUtils;
+import tr.org.liderahenk.liderconsole.core.rest.utils.TaskRestUtils;
 import tr.org.liderahenk.liderconsole.core.utils.SWTResourceManager;
 import tr.org.liderahenk.network.inventory.constants.AccessMethod;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
@@ -247,7 +247,7 @@ public class FileShareDialog extends Dialog {
 		RestResponse response;
 		// Post request
 		try {
-			response = (RestResponse) TaskUtils.execute(task);
+			response = (RestResponse) TaskRestUtils.execute(task);
 
 			resultMap = response.getResultMap();
 
