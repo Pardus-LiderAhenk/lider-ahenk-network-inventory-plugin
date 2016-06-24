@@ -27,15 +27,17 @@ public class RunnableNmap implements Runnable {
 	private String sudoUsername;
 	private String sudoPassword;
 	private String timingTemplate;
+	private ArrayList<String> messages;
 
 	public RunnableNmap(ScanResultDto scanResultDto, String ipRange, String ports, String sudoUsername,
-			String sudoPassword, String timingTemplate) {
+			String sudoPassword, String timingTemplate, ArrayList<String> messages) {
 		this.scanResultDto = scanResultDto;
 		this.ipRange = ipRange;
 		this.ports = ports;
 		this.sudoUsername = sudoUsername;
 		this.sudoPassword = sudoPassword;
 		this.timingTemplate = timingTemplate;
+		this.messages = messages;
 	}
 
 	@Override
@@ -64,6 +66,7 @@ public class RunnableNmap implements Runnable {
 				}
 			}
 		} catch (Exception e) {
+			messages.add(e.getMessage());
 			logger.error(e.getMessage(), e);
 		}
 	}
@@ -71,7 +74,8 @@ public class RunnableNmap implements Runnable {
 	@Override
 	public String toString() {
 		return "RunnableNmap [ipRange=" + ipRange + ", ports=" + ports + ", sudoUsername=" + sudoUsername
-				+ ", sudoPassword=" + sudoPassword + ", timingTemplate=" + timingTemplate + "]";
+				+ ", sudoPassword=" + sudoPassword + ", timingTemplate=" + timingTemplate + ", messages=" + messages
+				+ "]";
 	}
 
 }

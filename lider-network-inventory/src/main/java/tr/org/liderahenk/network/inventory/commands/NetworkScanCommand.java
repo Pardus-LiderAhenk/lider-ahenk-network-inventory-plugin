@@ -76,6 +76,7 @@ public class NetworkScanCommand implements ICommand {
 			String sudoUsername = (String) parameterMap.get("sudoUsername");
 			String sudoPassword = (String) parameterMap.get("sudoPassword");
 			String timingTemplate = (String) parameterMap.get("timingTemplate");
+			ArrayList<String> messages = new ArrayList<String>();
 	
 			logger.debug("Parameter map: {}", parameterMap);
 	
@@ -170,7 +171,7 @@ public class NetworkScanCommand implements ICommand {
 	
 						logger.debug("Creating thread no: " + (i + 1));
 						RunnableNmap nmap = new RunnableNmap(scanResultDto, ipSubRange, ports, sudoUsername, sudoPassword,
-								timingTemplate);
+								timingTemplate, messages);
 						logger.debug("Executing thread no: " + (i + 1));
 						executor.execute(nmap);
 					}
@@ -182,8 +183,13 @@ public class NetworkScanCommand implements ICommand {
 						executor.shutdown();
 						// Wait for all tasks to be completed.
 						executor.awaitTermination(100000, TimeUnit.MILLISECONDS);
+						
+						if (!messages.isEmpty()) {
+							return resultFactory.create(CommandResultStatus.ERROR, messages, this);
+						}
+						
 					} catch (InterruptedException e) {
-						e.printStackTrace();
+						logger.error(e.getMessage(), e);
 					}
 	
 					logger.debug("Saving entity.");

@@ -36,6 +36,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
@@ -52,6 +53,7 @@ import org.osgi.service.event.EventHandler;
 
 import tr.org.liderahenk.liderconsole.core.constants.LiderConstants;
 import tr.org.liderahenk.liderconsole.core.ldap.enums.DNType;
+import tr.org.liderahenk.liderconsole.core.rest.enums.RestResponseStatus;
 import tr.org.liderahenk.liderconsole.core.rest.requests.TaskRequest;
 import tr.org.liderahenk.liderconsole.core.rest.responses.RestResponse;
 import tr.org.liderahenk.liderconsole.core.rest.utils.TaskRestUtils;
@@ -92,9 +94,15 @@ public class NetworkInventoryEditor extends EditorPart {
 	private Button btnShareFile;
 
 	private Text txtIpRange;
+	private Text txtPortRange;
 	private Text txtFilePath;
 	private Label lblAhenkInstall;
 	private TableViewer tblInventory;
+
+	private Combo cmbTimingTemplate;
+	// Combo values
+	private final String[] templateArr = new String[] { "PARANOID", "SNEAKY", "POLITE", "NORMAL", "AGGRESSIVE",	"INSANE" };
+	private final String[] templateValueArr = new String[] { "0", "1", "2", "3", "4", "5" };
 
 	private List<String> selectedIpList;
 
@@ -171,15 +179,19 @@ public class NetworkInventoryEditor extends EditorPart {
 
 		Composite cmpMain = new Composite(parent, SWT.NONE);
 		cmpMain.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
-		cmpMain.setLayout(new GridLayout(1, false));
+		cmpMain.setLayout(new GridLayout(2, false));
 
 		Composite cmpAction = new Composite(cmpMain, SWT.NONE);
 		cmpAction.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
-		cmpAction.setLayout(new GridLayout(3, false));
+		cmpAction.setLayout(new GridLayout(1, false));
+
+		Composite cmpSide = new Composite(cmpMain, SWT.NONE);
+		cmpSide.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
+		cmpSide.setLayout(new GridLayout(1, false));
 
 		createScanArea(cmpAction);
-		createAhenkInstallArea(cmpAction);
-		createFileShareArea(cmpAction);
+		createAhenkInstallArea(cmpSide);
+		createFileShareArea(cmpSide);
 
 		createTableArea(cmpMain);
 	}
@@ -187,10 +199,11 @@ public class NetworkInventoryEditor extends EditorPart {
 	private void createFileShareArea(Composite composite) {
 
 		final Composite cmpFileShare = new Composite(composite, SWT.BORDER);
-		cmpFileShare.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+		cmpFileShare.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 		cmpFileShare.setLayout(new GridLayout(3, false));
 
 		txtFilePath = new Text(cmpFileShare, SWT.RIGHT | SWT.SINGLE | SWT.FILL | SWT.BORDER);
+		txtFilePath.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		txtFilePath.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent arg0) {
@@ -207,7 +220,10 @@ public class NetworkInventoryEditor extends EditorPart {
 			public void widgetSelected(SelectionEvent e) {
 				FileDialog dialog = new FileDialog(cmpFileShare.getShell(), SWT.OPEN);
 				dialog.setFilterPath(System.getProperty("user.dir"));
-				txtFilePath.setText(dialog.open());
+				String open = dialog.open();
+				if (open != null) {
+					txtFilePath.setText(open);
+				}
 			}
 
 			@Override
@@ -269,7 +285,7 @@ public class NetworkInventoryEditor extends EditorPart {
 
 		Composite cmpAhenkInstall = new Composite(composite, SWT.BORDER);
 		cmpAhenkInstall.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
-		cmpAhenkInstall.setLayout(new GridLayout(2, false));
+		cmpAhenkInstall.setLayout(new GridLayout(2, true));
 
 		lblAhenkInstall = new Label(cmpAhenkInstall, PROP_TITLE);
 		lblAhenkInstall.setText(Messages.getString("FOR_AHENK_INSTALLATION"));
@@ -334,7 +350,7 @@ public class NetworkInventoryEditor extends EditorPart {
 				try {
 					response = (RestResponse) TaskRestUtils.execute(task);
 
-					if(!(btnScanOptions[0].getSelection())) {
+					if (!(btnScanOptions[0].getSelection())) {
 						resultMap = response.getResultMap();
 					}
 
@@ -345,7 +361,7 @@ public class NetworkInventoryEditor extends EditorPart {
 				ObjectMapper mapper = new ObjectMapper();
 
 				try {
-					if(!(btnScanOptions[0].getSelection())) {
+					if (!(btnScanOptions[0].getSelection())) {
 						AhenkSetupResult setupResult = mapper.readValue(resultMap.get("result").toString(),
 								AhenkSetupResult.class);
 						AhenkSetupResultDialog resultDialog = new AhenkSetupResultDialog(composite.getShell(),
@@ -389,7 +405,7 @@ public class NetworkInventoryEditor extends EditorPart {
 
 		Composite cmpOptions = new Composite(cmpScan, SWT.NONE);
 		cmpOptions.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		cmpOptions.setLayout(new GridLayout(2, false));
+		cmpOptions.setLayout(new GridLayout(6, false));
 
 		btnScanOptions[0] = new Button(cmpOptions, SWT.RADIO);
 		btnScanOptions[0].setText(Messages.getString("USE_AHENK"));
@@ -404,10 +420,27 @@ public class NetworkInventoryEditor extends EditorPart {
 		} else {
 			btnScanOptions[1].setSelection(true);
 		}
+		Label bos = new Label(cmpOptions, SWT.FILL);
+		bos.setLayoutData(new GridData(15, 30));
+
+		Label lblTimingTemp = new Label(cmpOptions, SWT.NONE);
+		lblTimingTemp.setText(Messages.getString("TIMING_TEMPLATE"));
+
+		cmbTimingTemplate = new Combo(cmpOptions, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY);
+		cmbTimingTemplate.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		cmbTimingTemplate.add("");
+		cmbTimingTemplate.setData("");
+		for (int i = 1; i <= templateArr.length; i++) {
+			String label = Messages.getString(templateArr[i-1]);
+			if (label != null && !label.isEmpty()) {
+				cmbTimingTemplate.add(label);
+				cmbTimingTemplate.setData(i + "", templateValueArr[i-1]);
+			}
+		}
 
 		Composite cmpIp = new Composite(cmpScan, SWT.NONE);
 		cmpIp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		cmpIp.setLayout(new GridLayout(3, false));
+		cmpIp.setLayout(new GridLayout(5, false));
 
 		Label lblIpRange = new Label(cmpIp, SWT.NONE);
 		lblIpRange.setText(Messages.getString("IP_RANGE"));
@@ -415,6 +448,14 @@ public class NetworkInventoryEditor extends EditorPart {
 		txtIpRange = new Text(cmpIp, SWT.RIGHT | SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		txtIpRange.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		txtIpRange.setMessage(Messages.getString("EX_IP"));
+
+		Label lblPortRange = new Label(cmpIp, SWT.NONE);
+		// lblPortRange.setLayoutData(new GridData(93, 20));
+		lblPortRange.setText(Messages.getString("PORT_RANGE"));
+
+		txtPortRange = new Text(cmpIp, SWT.RIGHT | SWT.SINGLE | SWT.LEAD | SWT.BORDER);
+		txtPortRange.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		txtPortRange.setMessage(Messages.getString("EX_PORT"));
 
 		btnScan = new Button(cmpIp, SWT.NONE);
 		btnScan.setImage(
@@ -424,11 +465,18 @@ public class NetworkInventoryEditor extends EditorPart {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (!txtIpRange.getText().isEmpty()) {
-
+					
+					// Clear table items belong to previous response result
+					if (tblInventory.getTable().getItems().length > 0) {
+						tblInventory.getTable().removeAll();
+						tblInventory.getTable().redraw();
+					}
+					
 					// Populate request parameters
 					Map<String, Object> parameterMap = new HashMap<String, Object>();
 					parameterMap.put("ipRange", txtIpRange.getText());
-					parameterMap.put("timingTemplate", "3");
+					parameterMap.put("ports", txtPortRange.getText());
+					parameterMap.put("timingTemplate", getSelectedValue(cmbTimingTemplate));
 					parameterMap.put("executeOnAgent", btnScanOptions[0].getSelection());
 
 					TaskRequest task = new TaskRequest();
@@ -446,11 +494,19 @@ public class NetworkInventoryEditor extends EditorPart {
 					try {
 						// Post request
 						response = (RestResponse) TaskRestUtils.execute(task);
-						
-						if(!(btnScanOptions[0].getSelection())) {
+
+						if (response.getStatus() != RestResponseStatus.OK) {
+							List<String> messages = response.getMessages();
+							Notifier.error(null, messages != null && !messages.isEmpty() ? messages.get(0)
+									: Messages.getString("ERROR_OCCURED"));
+							return;
+						}
+
+						if (!(btnScanOptions[0].getSelection())) {
 							Map<String, Object> resultMap = response.getResultMap();
 							ObjectMapper mapper = new ObjectMapper();
-							ScanResult scanResult = mapper.readValue(resultMap.get("result").toString(), ScanResult.class);
+							ScanResult scanResult = mapper.readValue(resultMap.get("result").toString(),
+									ScanResult.class);
 							tblInventory.setInput(scanResult.getHosts());
 						}
 					} catch (Exception e1) {
@@ -466,10 +522,24 @@ public class NetworkInventoryEditor extends EditorPart {
 			}
 		});
 	}
+	
+	/**
+	 * 
+	 * @param combo
+	 * @return selected value of the provided combo
+	 */
+	public static String getSelectedValue(Combo combo) {
+		int selectionIndex = combo.getSelectionIndex();
+		if (selectionIndex > -1 && combo.getItem(selectionIndex) != null
+				&& combo.getData(selectionIndex + "") != null) {
+			return combo.getData(selectionIndex + "").toString();
+		}
+		return "4";
+	}
 
 	private void createTableArea(final Composite composite) {
 
-		tblInventory = SWTResourceManager.createTableViewer(composite);
+		tblInventory = SWTResourceManager.createCheckboxTableViewer(composite);
 		createTableColumns();
 
 		// Listen checkbox selections of IP table and enable/disable install
@@ -677,16 +747,16 @@ public class NetworkInventoryEditor extends EditorPart {
 
 		@Override
 		public void run() {
-
+			
 			TableItem item = new TableItem(tblInventory.getTable(), SWT.NONE);
-			item.setText(0, ipAddress);
-			item.setText(1, hostnames);
-			item.setText(2, ports);
-			item.setText(3, os);
-			item.setText(4, distance);
-			item.setText(5, time);
-			item.setText(6, macAddress);
-			item.setText(7, vendor);
+			item.setText(0, ipAddress != null ? ipAddress : "");
+			item.setText(1, hostnames != null ? hostnames : "");
+			item.setText(2, ports != null ? ports : "");
+			item.setText(3, os != null ? os : "");
+			item.setText(4, distance != null ? distance : "");
+			item.setText(5, time != null ? time : "");
+			item.setText(6, macAddress != null ? macAddress : "");
+			item.setText(7, vendor != null ? vendor : "");
 		}
 
 	}

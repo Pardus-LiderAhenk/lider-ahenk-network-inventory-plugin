@@ -17,27 +17,31 @@ class ScanNetwork(AbstractPlugin):
         self.logger = self.get_logger()
         self.message_code = self.get_message_code()
 
-        self.command = 'nmap -T4 -oX - ' + self.task['ipRange']
+        self.command = self.get_nmap_command()
         self.logger.debug('[NETWORK INVENTORY] Initialized')
 
     def handle_task(self):
         try:
             self.logger.debug('[NETWORK INVENTORY] Scanning')
             result_code, p_out, p_err = self.execute(self.command)
-            self.logger.debug('[NETWORK INVENTORY] Scan finished')
+            if result_code != 0 :
+                self.logger.error('[NETWORK INVENTORY] ' + str(p_err))
+                self.context.create_response(code=self.message_code.TASK_ERROR.value,
+                                             message=str(p_err))
+            else :
+                self.logger.debug('[NETWORK INVENTORY] Scan finished')
 
-            allLines = [line for line in str(p_out).splitlines()]
-            data_no_firsttwo = "".join(map(str, allLines[2:]))
+                allLines = [line for line in str(p_out).splitlines()]
+                data_no_firsttwo = "".join(map(str, allLines[2:]))
+                root = ET.fromstringlist(data_no_firsttwo)
 
-            root = ET.fromstringlist(data_no_firsttwo)
+                data = self.get_result(root)
+                print(data)
 
-            data = self.get_result(root)
-            print(data)
-
-            self.context.create_response(code=self.message_code.TASK_PROCESSED.value,
-                                         message='User NETWORK INVENTORY task processed successfully',
-                                         data=data, content_type=ContentType.APPLICATION_JSON.value)
-            self.logger.info('[NETWORK INVENTORY] NETWORK INVENTORY task is handled successfully')
+                self.context.create_response(code=self.message_code.TASK_PROCESSED.value,
+                                             message='User NETWORK INVENTORY task processed successfully',
+                                             data=data, content_type=ContentType.APPLICATION_JSON.value)
+                self.logger.info('[NETWORK INVENTORY] NETWORK INVENTORY task is handled successfully')
         except Exception as e:
             self.logger.error(
                 '[NETWORK INVENTORY] A problem occured while handling NETWORK INVENTORY task: {0}'.format(str(e)))
@@ -129,6 +133,21 @@ class ScanNetwork(AbstractPlugin):
     def get_time(self):
         # TODO
         return ''
+
+    def get_nmap_command(self) :
+        command = 'nmap -oX'
+        command += ' - ' + self.task['ipRange']
+        if self.task['timingTemplate']:
+            command += ' -T' + str(self.task['timingTemplate'])
+        else :
+            command += ' -T3' #avarage speed
+
+        if self.task['portRange']:
+            command += ' -p ' + self.task['portRange']
+        else:
+            command += ' --top-ports 10'
+        print(str(command))
+        return command
 
 
 def handle_task(task, context):
