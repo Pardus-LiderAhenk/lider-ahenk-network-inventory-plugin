@@ -18,6 +18,8 @@ public class ScanResult implements Serializable {
 	private static final long serialVersionUID = 6257218673285744658L;
 
 	private String ipRange;
+	
+	private String portRange;
 
 	private String timingTemplate;
 
@@ -35,7 +37,7 @@ public class ScanResult implements Serializable {
 		super();
 	}
 
-	public ScanResult(String ipRange, String timingTemplate, String ports, String sudoUsername, String sudoPassword,
+	public ScanResult(String ipRange, String portRange, String timingTemplate, String ports, String sudoUsername, String sudoPassword,
 			Date scanDate, List<ScanResultHost> hosts) {
 		super();
 		this.ipRange = ipRange;
@@ -45,6 +47,7 @@ public class ScanResult implements Serializable {
 		this.sudoPassword = sudoPassword;
 		this.scanDate = scanDate;
 		this.hosts = hosts;
+		this.portRange = portRange;
 	}
 
 	public String getIpRange() {
@@ -101,6 +104,14 @@ public class ScanResult implements Serializable {
 
 	public void setHosts(List<ScanResultHost> hosts) {
 		this.hosts = hosts;
+	}
+
+	public String getPortRange() {
+		return portRange;
+	}
+
+	public void setPortRange(String portRange) {
+		this.portRange = portRange;
 	}
 
 }
