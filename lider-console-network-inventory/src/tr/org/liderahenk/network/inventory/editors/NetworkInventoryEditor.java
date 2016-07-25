@@ -101,7 +101,8 @@ public class NetworkInventoryEditor extends EditorPart {
 
 	private Combo cmbTimingTemplate;
 	// Combo values
-	private final String[] templateArr = new String[] { "PARANOID", "SNEAKY", "POLITE", "NORMAL", "AGGRESSIVE",	"INSANE" };
+	private final String[] templateArr = new String[] { "PARANOID", "SNEAKY", "POLITE", "NORMAL", "AGGRESSIVE",
+			"INSANE" };
 	private final String[] templateValueArr = new String[] { "0", "1", "2", "3", "4", "5" };
 
 	private List<String> selectedIpList;
@@ -137,7 +138,7 @@ public class NetworkInventoryEditor extends EditorPart {
 						byte[] data = taskStatus.getResult().getResponseData();
 						Map<String, Object> responseData = new ObjectMapper().readValue(data, 0, data.length,
 								new TypeReference<HashMap<String, Object>>() {
-						});
+								});
 
 						if (responseData != null) {
 							for (int i = 0; i < responseData.size(); i++) {
@@ -431,10 +432,10 @@ public class NetworkInventoryEditor extends EditorPart {
 		cmbTimingTemplate.add("");
 		cmbTimingTemplate.setData("");
 		for (int i = 1; i <= templateArr.length; i++) {
-			String label = Messages.getString(templateArr[i-1]);
+			String label = Messages.getString(templateArr[i - 1]);
 			if (label != null && !label.isEmpty()) {
 				cmbTimingTemplate.add(label);
-				cmbTimingTemplate.setData(i + "", templateValueArr[i-1]);
+				cmbTimingTemplate.setData(i + "", templateValueArr[i - 1]);
 			}
 		}
 
@@ -465,13 +466,13 @@ public class NetworkInventoryEditor extends EditorPart {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (!txtIpRange.getText().isEmpty()) {
-					
+
 					// Clear table items belong to previous response result
 					if (tblInventory.getTable().getItems().length > 0) {
 						tblInventory.getTable().removeAll();
 						tblInventory.getTable().redraw();
 					}
-					
+
 					// Populate request parameters
 					Map<String, Object> parameterMap = new HashMap<String, Object>();
 					parameterMap.put("ipRange", txtIpRange.getText());
@@ -522,7 +523,7 @@ public class NetworkInventoryEditor extends EditorPart {
 			}
 		});
 	}
-	
+
 	/**
 	 * 
 	 * @param combo
@@ -721,6 +722,12 @@ public class NetworkInventoryEditor extends EditorPart {
 		return false;
 	}
 
+	@Override
+	public void dispose() {
+		super.dispose();
+		eventBroker.unsubscribe(eventHandler);
+	}
+
 	class InventoryRunnable implements Runnable {
 
 		private String ipAddress;
@@ -747,7 +754,7 @@ public class NetworkInventoryEditor extends EditorPart {
 
 		@Override
 		public void run() {
-			
+
 			TableItem item = new TableItem(tblInventory.getTable(), SWT.NONE);
 			item.setText(0, ipAddress != null ? ipAddress : "");
 			item.setText(1, hostnames != null ? hostnames : "");
