@@ -39,15 +39,14 @@ class ScanNetwork(AbstractPlugin):
                 print(data)
 
                 self.context.create_response(code=self.message_code.TASK_PROCESSED.value,
-                                             message='User NETWORK INVENTORY task processed successfully',
+                                             message='NETWORK INVENTORY görevi başarıyla çalıştırıldı.',
                                              data=data, content_type=ContentType.APPLICATION_JSON.value)
                 self.logger.info('[NETWORK INVENTORY] NETWORK INVENTORY task is handled successfully')
         except Exception as e:
             self.logger.error(
                 '[NETWORK INVENTORY] A problem occured while handling NETWORK INVENTORY task: {0}'.format(str(e)))
             self.context.create_response(code=self.message_code.TASK_ERROR.value,
-                                         message='A problem occured while handling NETWORK INVENTORY task: {0}'.format(
-                                             str(e)))
+                                         message='NETWORK INVENTORY görevi çalıştırılırken bir hata oluştu.')
 
     def get_result(self, root):
         self.logger.debug('[NETWORK INVENTORY] Parsing nmap xml output')

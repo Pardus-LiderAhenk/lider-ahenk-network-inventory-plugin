@@ -50,14 +50,13 @@ class InstallAhenk(AbstractPlugin):
                     self.use_key(val)
 
             self.context.create_response(code=self.message_code.TASK_PROCESSED.value,
-                                         message='User NETWORK INVENTORY task processed successfully')
+                                         message='NETWORK INVENTORY görevi başarıyla çalıştırıldı.')
             self.logger.info('[NETWORK INVENTORY] NETWORK INVENTORY task is handled successfully')
         except Exception as e:
             self.logger.error(
                 '[NETWORK INVENTORY] A problem occured while handling NETWORK INVENTORY task: {0}'.format(str(e)))
             self.context.create_response(code=self.message_code.TASK_ERROR.value,
-                                         message='A problem occured while handling NETWORK INVENTORY task: {0}'.format(
-                                             str(e)))
+                                         message='NETWORK INVENTORY görevi çalıştırılırken bir hata oluştu.')
 
     def use_username_password(self, host):
         ssh = paramiko.SSHClient()
