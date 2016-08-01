@@ -60,6 +60,22 @@
            icon="icons/16/network.png"
            id="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask"
            tooltip="%command.task">
+        <visibleWhen>
+           <and>
+              <with
+                    variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.available">
+                 <equals
+                       value="true">
+                 </equals>
+              </with>
+              <with
+                    variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isAhenkSelected">
+                 <equals
+                       value="true">
+                 </equals>
+              </with>
+           </and>
+        </visibleWhen>
                   <!-- TODO Uncomment this after updating/fixing LiderSourceProvider -->
 				  <!-- <visibleWhen>
 					   <and>
