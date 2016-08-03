@@ -52,7 +52,10 @@ public class FileShareDialog extends Dialog {
 	private String filename;
 
 	private Map<String, Object> resultMap;
-
+	
+	private Text txtKeyUsername;
+	private Text txtKeyPath;
+	
 	public FileShareDialog(Shell parentShell, List<String> selectedIpList, String encodedFile, String filename) {
 		super(parentShell);
 		createButtonBar(parentShell);
@@ -67,13 +70,13 @@ public class FileShareDialog extends Dialog {
 
 		Composite mainComposite = SWTResourceManager.createComposite(parent, 1);
 
-		GridData gdNoGrapHorizontal = new GridData(SWT.LEFT, SWT.CENTER, false, true);
+//		GridData gdNoGrapHorizontal = new GridData(SWT.LEFT, SWT.CENTER, false, true);
 
 		SWTResourceManager.createLabel(mainComposite, Messages.getString("PLEASE_CHOOSE_ACCESS_METHOD"));
 
 		// --- Destination directory and port --- //
 		Composite compInfo = SWTResourceManager.createComposite(mainComposite, 2);
-		compInfo.setLayoutData(gdNoGrapHorizontal);
+//		compInfo.setLayoutData(gdNoGrapHorizontal);
 
 		GridData gdDestAndPort = new GridData();
 		gdDestAndPort.widthHint = 250;
@@ -123,7 +126,7 @@ public class FileShareDialog extends Dialog {
 		gdUserAndPass.widthHint = 150;
 
 		Composite compUserPass = SWTResourceManager.createComposite(compRadioBtns, 2);
-		compUserPass.setLayoutData(gdNoGrapHorizontal);
+//		compUserPass.setLayoutData(gdNoGrapHorizontal);
 
 		SWTResourceManager.createLabel(compUserPass, Messages.getString("USERNAME"));
 		txtUsername = SWTResourceManager.createText(compUserPass);
@@ -163,8 +166,18 @@ public class FileShareDialog extends Dialog {
 		});
 
 		Composite compPrivateKey = SWTResourceManager.createComposite(compRadioBtns, 2);
-		compPrivateKey.setLayoutData(gdNoGrapHorizontal);
-
+//		compPrivateKey.setLayoutData(gdNoGrapHorizontal);
+		
+		SWTResourceManager.createLabel(compPrivateKey, Messages.getString("USERNAME"));
+		txtKeyUsername = SWTResourceManager.createText(compPrivateKey);
+		txtKeyUsername.setEnabled(false);
+		
+		SWTResourceManager.createLabel(compPrivateKey, Messages.getString("PRIVATE_KEY_PATH"));
+		txtKeyPath = SWTResourceManager.createText(compPrivateKey);
+		txtKeyPath.setEnabled(false);
+		txtKeyPath.setText("~/.ssh/id_rsa");
+		txtKeyPath.setMessage("ENTER_LOCATION_OF_PRIVATE_KEY");
+		
 		SWTResourceManager.createLabel(compPrivateKey, Messages.getString("PASSPHRASE"));
 		txtPassphrase = SWTResourceManager.createPasswordText(compPrivateKey);
 		txtPassphrase.setEnabled(false);
@@ -192,10 +205,14 @@ public class FileShareDialog extends Dialog {
 			txtUsername.setEnabled(true);
 			txtPassword.setEnabled(true);
 			txtPassphrase.setEnabled(false);
+			txtKeyUsername.setEnabled(false);
+			txtKeyPath.setEnabled(false);
 		} else {
 			txtUsername.setEnabled(false);
 			txtPassword.setEnabled(false);
 			txtPassphrase.setEnabled(true);
+			txtKeyUsername.setEnabled(true);
+			txtKeyPath.setEnabled(true);
 		}
 	}
 
@@ -233,11 +250,15 @@ public class FileShareDialog extends Dialog {
 		parameterMap.put("file", encodedFile);
 		parameterMap.put("filename", filename);
 		parameterMap.put("destDirectory", txtDestDirectory.getText());
-		parameterMap.put("username", !txtUsername.getText().isEmpty() ? txtUsername.getText() : "root");
+		parameterMap.put("username",btnUsernamePass.getSelection() ? txtUsername.getText() : txtKeyUsername.getText());
 		parameterMap.put("password", txtPassword.getText());
 		parameterMap.put("passphrase", txtPassphrase.getText());
 		parameterMap.put("accessMethod", btnUsernamePass.getSelection() ? AccessMethod.USERNAME_PASSWORD : AccessMethod.PRIVATE_KEY);
 
+		if (!btnUsernamePass.getSelection()) {
+			parameterMap.put("privateKeyPath", txtKeyPath.getText());
+		}
+		
 		Integer port = new Integer(txtPort.getText());
 
 		parameterMap.put("port", port);
