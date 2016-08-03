@@ -58,6 +58,10 @@ public class SetupUtils {
 
 	private static final String INSTALL_PACKAGE_GDEBI = "gdebi -n {0}";
 	
+	private static final String INSTALL_PACKAGE_GDEBI_WITH_OPTS = "gdebi -n -o {0} {1}";
+	
+	private static final String INSTALL_GDEBI = "apt-get install -y gdebi";
+	
 	/**
 	 * Tries to connect via SSH. If password parameter is null, then it tries to
 	 * connect via SSH key
@@ -517,6 +521,45 @@ public class SetupUtils {
 			manager.disconnect();
 		}
 
+	}
+	
+	/**
+	 * Installs a deb package file via Gdebi non-interactively by using given
+	 * DPKG or APT options. This can be used when a specified deb package is
+	 * already provided
+	 * 
+	 * @param ip
+	 * @param username
+	 * @param password
+	 * @param port
+	 * @param privateKey
+	 * @param passphrase
+	 * @param debPackagePath
+	 * @param dpkgOpts
+	 * @throws SSHConnectionException
+	 * @throws CommandExecutionException
+	 */
+	public static void installPackageGdebiWithOpts(final String ip, final String username, final String password,
+			final Integer port, final String privateKey, final String passphrase, final String debPackagePath,
+			final String dpkgOpts) throws SSHConnectionException, CommandExecutionException {
+
+		logger.info("Installing package remotely on: {0} with username: {1}", new Object[] { ip, username });
+
+		String command;
+
+		SSHManager manager = new SSHManager(ip, username == null ? "root" : username, password, port, privateKey,
+				passphrase);
+
+		manager.connect();
+		
+		// Add given options and deb package.
+		command = INSTALL_PACKAGE_GDEBI_WITH_OPTS.replace("{0}", dpkgOpts).replace("{1}", debPackagePath);
+		manager.execCommand(INSTALL_GDEBI, new Object[] {});
+
+		manager.execCommand(command, new Object[] {});
+		manager.disconnect();
+
+		logger.info("Package {0} installed successfully", debPackagePath);
 	}
 
 }
