@@ -25,14 +25,12 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
-import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -60,20 +58,15 @@ import tr.org.liderahenk.liderconsole.core.rest.utils.TaskRestUtils;
 import tr.org.liderahenk.liderconsole.core.utils.SWTResourceManager;
 import tr.org.liderahenk.liderconsole.core.widgets.Notifier;
 import tr.org.liderahenk.liderconsole.core.xmpp.notifications.TaskStatusNotification;
-import tr.org.liderahenk.network.inventory.constants.AccessMethod;
-import tr.org.liderahenk.network.inventory.constants.InstallMethod;
 import tr.org.liderahenk.network.inventory.constants.NetworkInventoryConstants;
-import tr.org.liderahenk.network.inventory.dialogs.AhenkSetupResultDialog;
+import tr.org.liderahenk.network.inventory.dialogs.AhenkSetupDialog;
 import tr.org.liderahenk.network.inventory.dialogs.FileShareDialog;
 import tr.org.liderahenk.network.inventory.dialogs.FileShareResultDialog;
 import tr.org.liderahenk.network.inventory.editorinputs.NetworkInventoryEditorInput;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
-import tr.org.liderahenk.network.inventory.model.AhenkSetupConfig;
-import tr.org.liderahenk.network.inventory.model.AhenkSetupResult;
 import tr.org.liderahenk.network.inventory.model.FileDistResult;
 import tr.org.liderahenk.network.inventory.model.ScanResult;
 import tr.org.liderahenk.network.inventory.model.ScanResultHost;
-import tr.org.liderahenk.network.inventory.wizard.AhenkSetupWizard;
 
 /**
  * An editor that sends some network related commands such as network scan,
@@ -284,7 +277,7 @@ public class NetworkInventoryEditor extends EditorPart {
 
 	private void createAhenkInstallArea(final Composite composite) {
 
-		Composite cmpAhenkInstall = new Composite(composite, SWT.BORDER);
+		final Composite cmpAhenkInstall = new Composite(composite, SWT.BORDER);
 		cmpAhenkInstall.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 		cmpAhenkInstall.setLayout(new GridLayout(2, true));
 
@@ -300,78 +293,16 @@ public class NetworkInventoryEditor extends EditorPart {
 			public void widgetSelected(SelectionEvent e) {
 
 				setSelectedIps();
-
-				AhenkSetupWizard wizard = new AhenkSetupWizard(selectedIpList);
-
-				WizardDialog wizardDialog = new WizardDialog(Display.getCurrent().getActiveShell(), wizard);
-				wizardDialog.setMinimumPageSize(new Point(800, 600));
-				wizardDialog.setPageSize(new Point(800, 600));
-				wizardDialog.open();
-
-				AhenkSetupConfig config = wizard.getConfig();
-
-				// Add config object as parameter. It has all information that
-				// Lider needs to know.
-				Map<String, Object> parameterMap = new HashMap<String, Object>();
-
-				// Put parameters to map
-				parameterMap.put("ipList", config.getIpList());
-				parameterMap.put("accessMethod", config.getAccessMethod());
-				parameterMap.put("installMethod", config.getInstallMethod());
-				parameterMap.put("username", config.getUsername());
-				parameterMap.put("port", config.getPort());
-				parameterMap.put("privateKeyPath", config.getPrivateKeyPath());
-				parameterMap.put("executeOnAgent", btnScanOptions[0].getSelection());
-
-				if (config.getAccessMethod() == AccessMethod.USERNAME_PASSWORD) {
-					parameterMap.put("password", config.getPassword());
-				} else {
-					parameterMap.put("passphrase", config.getPassphrase());
-				}
-
-				if (config.getInstallMethod() == InstallMethod.WGET) {
-					parameterMap.put("downloadUrl", config.getDownloadUrl());
-				}
-
-				TaskRequest task = new TaskRequest();
+				
 				ArrayList<String> dnList = null;
 				String dn = ((NetworkInventoryEditorInput) getEditorInput()).getDn();
 				if (dn != null) {
 					dnList = new ArrayList<String>();
 					dnList.add(dn);
 				}
-				task = new TaskRequest(dnList, DNType.AHENK, NetworkInventoryConstants.PLUGIN_NAME,
-						NetworkInventoryConstants.PLUGIN_VERSION, NetworkInventoryConstants.INSTALL_COMMAND,
-						parameterMap, null, new Date());
-
-				Map<String, Object> resultMap = new HashMap<String, Object>();
-
-				// Send command
-				RestResponse response;
-				try {
-					response = (RestResponse) TaskRestUtils.execute(task);
-
-					if (!(btnScanOptions[0].getSelection())) {
-						resultMap = response.getResultMap();
-					}
-
-				} catch (Exception e3) {
-					e3.printStackTrace();
-				}
-
-				ObjectMapper mapper = new ObjectMapper();
-
-				try {
-					if (!(btnScanOptions[0].getSelection())) {
-						AhenkSetupResult setupResult = mapper.readValue(resultMap.get("result").toString(),
-								AhenkSetupResult.class);
-						AhenkSetupResultDialog resultDialog = new AhenkSetupResultDialog(composite.getShell(),
-								setupResult.getSetupDetailList());
-						resultDialog.open();
-					}
-				} catch (Exception e2) {
-					e2.printStackTrace();
-				}
+				
+				AhenkSetupDialog dialog = new AhenkSetupDialog(cmpAhenkInstall.getShell(), null, selectedIpList, btnScanOptions[0].getSelection(), dnList);
+				dialog.open();
 			}
 
 			@Override
