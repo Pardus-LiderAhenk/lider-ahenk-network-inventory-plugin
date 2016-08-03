@@ -96,7 +96,7 @@ public class FileDistributionCommand implements ICommand {
 		String privateKey;
 		// Get private key location in Lider machine from configuration file
 		if (accessMethod == AccessMethod.PRIVATE_KEY) {
-			privateKey = getPrivateKeyLocation();
+			privateKey = (String) parameterMap.get("privateKeyPath");
 			logger.debug("Path of private key file: " + privateKey);
 		} else {
 			privateKey = null;
@@ -311,13 +311,6 @@ public class FileDistributionCommand implements ICommand {
 			logger.error(e.getMessage(), e);
 		}
 		return temp;
-	}
-
-	private String getPrivateKeyLocation() {
-		// TODO change config file
-		String privateKeyPath = "~/.ssh/id_rsa"; 
-
-		return privateKeyPath;
 	}
 
 	@Override
