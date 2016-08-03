@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import tr.org.liderahenk.network.inventory.contants.Constants.InstallMethod;
-import tr.org.liderahenk.network.inventory.contants.Constants.PackageInstaller;
 import tr.org.liderahenk.network.inventory.dto.AhenkSetupDetailDto;
 import tr.org.liderahenk.network.inventory.dto.AhenkSetupDto;
 import tr.org.liderahenk.network.inventory.entities.AhenkSetupParameters;
@@ -42,15 +41,19 @@ public class RunnableAhenkInstaller implements Runnable {
 
 	private String passphrase;
 
-	private InstallMethod installMethod;
-
 	private String downloadUrl;
 
 	private final static String MAKE_DIR_UNDER_TMP = "mkdir /tmp/{0}";
 
+	private String xmppHost;
+	private String xmppUsername;
+	private String xmppResource;
+	private String xmppServiceName;
+	
+	
 	public RunnableAhenkInstaller(AhenkSetupDto setupDto, String ip, String username, String password, Integer port,
 			String privateKey, String passphrase, InstallMethod installMethod, String downloadUrl,
-			AhenkSetupParameters setupParams) {
+			AhenkSetupParameters setupParams, String xmppHost, String xmppUsername, String xmppResource, String xmppServiceName) {
 		super();
 		this.setupDto = setupDto;
 		this.ip = ip;
@@ -59,9 +62,12 @@ public class RunnableAhenkInstaller implements Runnable {
 		this.port = port;
 		this.privateKey = privateKey;
 		this.passphrase = passphrase;
-		this.installMethod = installMethod;
 		this.downloadUrl = downloadUrl;
 		this.setupParams = setupParams;
+		this.xmppHost = xmppHost;
+		this.xmppUsername = xmppUsername;
+		this.xmppResource = xmppResource;
+		this.xmppServiceName = xmppServiceName;
 	}
 
 	@Override
@@ -80,37 +86,70 @@ public class RunnableAhenkInstaller implements Runnable {
 				logger.info("Authentication successfull for: " + ip);
 
 				// Check installation method
-				if (installMethod == InstallMethod.APT_GET) {
-					logger.info("Installing package by APT-GET to: " + ip);
 
-					// TODO gedit değiştirilecek
-					SetupUtils.installPackage(ip, username, password, port, privateKey, passphrase, "gedit", null);
+				// In case of folder name clash use current time as postfix
+				Date date = new Date();
+				SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyyyy-HH:mm:ss");
+				String timestamp = dateFormat.format(date);
 
-				} else if (installMethod == InstallMethod.WGET) {
+				logger.info("Creating directory under /tmp");
+				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
+						MAKE_DIR_UNDER_TMP.replace("{0}", "ahenkTmpDir" + timestamp));
 
-					// In case of folder name clash use current time as postfix
-					Date date = new Date();
-					SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyyyy-HH:mm:ss");
-					String timestamp = dateFormat.format(date);
+				logger.info("Downloading file from URL: " + downloadUrl);
+				SetupUtils.downloadPackage(ip, username, password, port, privateKey, passphrase,
+						"ahenkTmpDir" + timestamp, "ahenk.deb", downloadUrl);
 
-					logger.info("Creating directory under /tmp");
-					SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
-							MAKE_DIR_UNDER_TMP.replace("{0}", "ahenkTmpDir" + timestamp));
+				logger.info("Creating repository file");
+				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
+						"touch /etc/apt/sources.list.d/liderahenk.list");
 
-					logger.info("Downloading file from URL: " + downloadUrl);
-					SetupUtils.downloadPackage(ip, username, password, port, privateKey, passphrase,
-							"ahenkTmpDir" + timestamp, "ahenk.deb", downloadUrl);
+				logger.info("Writing to repository file");
+				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
+						"echo 'deb http://ftp.pardus.org.tr/lider-ahenk/la-stable yenikusak main' > /etc/apt/sources.list.d/liderahenk.list");
 
-					logger.info("Installing downloaded package to: " + ip);
-					SetupUtils.installDownloadedPackage(ip, username, password, port, privateKey, passphrase,
-							"ahenkTmpDir" + timestamp, "ahenk.deb", PackageInstaller.DPKG);
+				logger.info("Adding key");
+				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
+						"wget -qO - http://ftp.pardus.org.tr/Release.pub | apt-key add -");
 
-				} else {
-					logAndAddDetailEntity("Installation method is not set or not selected. Installation cancelled.",
-							"ERROR");
-					setupDto.getSetupDetailList()
-							.add(new AhenkSetupDetailDto(ip, true, "Installation method is not set or not selected."));
-				}
+				logger.info("Updating package list");
+				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase, "apt-get update");
+
+				logger.info("Clearing old Ahenk files");
+				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
+						"rm -rf /etc/ahenk/ahenk.db");
+				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase, "rm -rf /opt/ahenk");
+
+				logger.info("Installing Ahenk");
+				SetupUtils.installPackageGdebiWithOpts(ip, username, password, port, privateKey, passphrase,
+						"/tmp/ahenkTmpDir" + timestamp + "/ahenk.deb", "Dpkg::Options::='--force-overwrite'");
+
+				logger.info("Stopping Ahenk service");
+				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
+						"sudo systemctl stop ahenk.service");
+
+				logger.info("Configuring Ahenk");
+				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
+						"sed -i '/host =/c\\host = " + xmppHost + "' /etc/ahenk/ahenk.conf");
+
+				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
+						"sed -i '/receiverjid =/c\\receiverjid = " + xmppUsername
+								+ "' /etc/ahenk/ahenk.conf");
+
+				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
+						"sed -i '/receiverresource =/c\\receiverresource = " + xmppResource
+								+ "' /etc/ahenk/ahenk.conf");
+
+				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
+						"sed -i '/servicename =/c\\servicename = " + xmppServiceName
+								+ "' /etc/ahenk/ahenk.conf");
+
+				logger.info("Starting Ahenk service");
+				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
+						"sudo systemctl start ahenk.service");
+
+				logger.info("Ahenk installation successfully completed.");
+
 				logAndAddDetailEntity("Successfully installed to: " + ip, "INFO");
 				setupDto.getSetupDetailList().add(new AhenkSetupDetailDto(ip, true, null));
 
@@ -167,4 +206,5 @@ public class RunnableAhenkInstaller implements Runnable {
 
 		logger.info("Detail entity added successfully.");
 	}
+
 }
