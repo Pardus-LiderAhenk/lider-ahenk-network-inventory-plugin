@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.directory.studio.entryeditors.Messages;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
@@ -32,6 +31,7 @@ import tr.org.liderahenk.liderconsole.core.widgets.LiderConfirmBox;
 import tr.org.liderahenk.network.inventory.constants.AccessMethod;
 import tr.org.liderahenk.network.inventory.constants.InstallMethod;
 import tr.org.liderahenk.network.inventory.constants.NetworkInventoryConstants;
+import tr.org.liderahenk.network.inventory.i18n.Messages;
 import tr.org.liderahenk.network.inventory.model.AhenkSetupResult;
 
 public class AhenkSetupDialog extends DefaultTaskDialog {
