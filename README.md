@@ -1,4 +1,4 @@
-# lider-ahenk-network-inventory-plugin
+# lider-ahenk-network-inventory
 
 Network inventory plugin for [Lider Ahenk project](http://www.liderahenk.org.tr) which can be used to scan network and collect valuable information about connected devices. It also provides file distribution via SCP and Ahenk installation.
 
@@ -11,9 +11,9 @@ Network inventory plugin for [Lider Ahenk project](http://www.liderahenk.org.tr)
 
 > We use Eclipse for Lider and Lider Console related development. See these documentation [here](https://github.com/Pardus-Kurumsal/lider-console/wiki/01.-Setup-Development-Environment) and [here](https://github.com/Pardus-Kurumsal/lider/wiki/01.-Setup-Development-Environment) to setup Eclipse IDE with Lider and Lider Console projects imported.
 
-1. Clone the plugin project by running `git clone https://github.com/Pardus-Kurumsal/lider-ahenk-network-inventory-plugin.git`.
+1. Clone the plugin project by running `git clone https://github.com/Pardus-Kurumsal/lider-ahenk-network-inventory.git`.
 2. Open Eclipse and import the plugin project into Eclipse as 'Existing Maven Projects'.
-3. Navigate to _lider-ahenk-network-inventory-plugin/scripts_ directory and run `build-plugin.sh`.
+3. Navigate to _lider-ahenk-network-inventory/scripts_ directory and run `build-plugin.sh`.
 
 ## How to Run
 
@@ -33,7 +33,7 @@ Network inventory plugin for [Lider Ahenk project](http://www.liderahenk.org.tr)
 
 #### Ahenk
 
-1. Create a soft link for _ahenk-network-inventory/network-inventory_ directory via `sudo ln -s lider-ahenk-network-inventory-plugin/ahenk-network-inventory/network-inventory/ /opt/ahenk/plugins`
+1. Create a soft link for _ahenk-network-inventory/network-inventory_ directory via `sudo ln -s lider-ahenk-network-inventory/ahenk-network-inventory/network-inventory/ /opt/ahenk/plugins`
 
 ## Contribution
 
