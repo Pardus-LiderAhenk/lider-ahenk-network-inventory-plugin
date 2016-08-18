@@ -10,6 +10,10 @@
 	<cm:property-placeholder persistent-id="tr.org.liderahenk.network.inventory"
 		update-strategy="reload">
 	</cm:property-placeholder>
+	
+    <service ref="fileDistTemplate" interface="tr.org.liderahenk.lider.core.api.persistence.entities.IReportTemplate" />
+	<bean id="fileDistTemplate"
+		class="tr.org.liderahenk.network.inventory.report.templates.FileDistReportTemplateImpl" />
 
 	<!-- IPluginInfo implementation is used to register plugin -->
 	<service ref="pluginInfoImpl"
