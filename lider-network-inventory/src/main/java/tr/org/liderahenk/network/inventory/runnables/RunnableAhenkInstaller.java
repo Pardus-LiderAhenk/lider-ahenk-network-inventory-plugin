@@ -47,13 +47,12 @@ public class RunnableAhenkInstaller implements Runnable {
 
 	private String xmppHost;
 	private String xmppUsername;
-	private String xmppResource;
 	private String xmppServiceName;
 	
 	
 	public RunnableAhenkInstaller(AhenkSetupDto setupDto, String ip, String username, String password, Integer port,
 			String privateKey, String passphrase, InstallMethod installMethod, String downloadUrl,
-			AhenkSetupParameters setupParams, String xmppHost, String xmppUsername, String xmppResource, String xmppServiceName) {
+			AhenkSetupParameters setupParams, String xmppHost, String xmppUsername, String xmppServiceName) {
 		super();
 		this.setupDto = setupDto;
 		this.ip = ip;
@@ -66,7 +65,6 @@ public class RunnableAhenkInstaller implements Runnable {
 		this.setupParams = setupParams;
 		this.xmppHost = xmppHost;
 		this.xmppUsername = xmppUsername;
-		this.xmppResource = xmppResource;
 		this.xmppServiceName = xmppServiceName;
 	}
 
@@ -124,10 +122,6 @@ public class RunnableAhenkInstaller implements Runnable {
 				SetupUtils.installPackageGdebiWithOpts(ip, username, password, port, privateKey, passphrase,
 						"/tmp/ahenkTmpDir" + timestamp + "/ahenk.deb", "Dpkg::Options::='--force-overwrite'");
 
-				logger.info("Stopping Ahenk service");
-				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
-						"sudo systemctl stop ahenk.service");
-
 				logger.info("Configuring Ahenk");
 				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
 						"sed -i '/host =/c\\host = " + xmppHost + "' /etc/ahenk/ahenk.conf");
@@ -136,9 +130,9 @@ public class RunnableAhenkInstaller implements Runnable {
 						"sed -i '/receiverjid =/c\\receiverjid = " + xmppUsername
 								+ "' /etc/ahenk/ahenk.conf");
 
+				// XMPP Resource name should be empty at Ahenk side if server side (Lider) is clustered
 				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
-						"sed -i '/receiverresource =/c\\receiverresource = " + xmppResource
-								+ "' /etc/ahenk/ahenk.conf");
+						"sed -i '/receiverresource =/c\\receiverresource = ' /etc/ahenk/ahenk.conf");
 
 				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
 						"sed -i '/servicename =/c\\servicename = " + xmppServiceName
@@ -146,7 +140,7 @@ public class RunnableAhenkInstaller implements Runnable {
 
 				logger.info("Starting Ahenk service");
 				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
-						"sudo systemctl start ahenk.service");
+						"sudo service ahenk start");
 
 				logger.info("Ahenk installation successfully completed.");
 
