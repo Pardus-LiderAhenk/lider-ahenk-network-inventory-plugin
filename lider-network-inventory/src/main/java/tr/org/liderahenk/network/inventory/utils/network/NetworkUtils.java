@@ -157,9 +157,9 @@ public class NetworkUtils {
 
 		// Build flags
 		StringBuilder flags = new StringBuilder(" -v ");
-		logger.error("****Timing Template : " + timingTemplate);
-		logger.error("****IP Sub Range : " + ipRange);
-		logger.error("****Port Range : " + ports);
+		logger.debug("****Timing Template : " + timingTemplate);
+		logger.debug("****IP Sub Range : " + ipRange);
+		logger.debug("****Port Range : " + ports);
 		if (ports != null && !ports.isEmpty()) {
 			flags.append(" -p ").append(ports);
 		} else {
