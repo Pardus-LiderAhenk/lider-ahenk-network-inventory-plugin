@@ -34,6 +34,12 @@ import tr.org.liderahenk.network.inventory.constants.NetworkInventoryConstants;
 import tr.org.liderahenk.network.inventory.i18n.Messages;
 import tr.org.liderahenk.network.inventory.model.AhenkSetupResult;
 
+/**
+ * A dialog for entering Ahenk installation parameters and starting the installation.
+ * 
+ * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner
+ *         Feyzullahoğlu</a>
+ */
 public class AhenkSetupDialog extends DefaultTaskDialog {
 
 	private Button btnUsePrivateKey;
