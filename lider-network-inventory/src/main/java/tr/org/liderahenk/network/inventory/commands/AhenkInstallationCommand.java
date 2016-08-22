@@ -42,7 +42,7 @@ import tr.org.liderahenk.network.inventory.runnables.RunnableAhenkInstaller;
  * machines. It can install via provided ahenk.deb file or apt-get.
  * 
  * @author <a href="mailto:emre.akkaya@agem.com.tr">Emre Akkaya</a>
- *
+ * @author <a href="mailto:caner.feyzullahoglu@agem.com.tr">Caner Feyzullahoglu</a>
  */
 public class AhenkInstallationCommand implements ICommand {
 
@@ -137,17 +137,12 @@ public class AhenkInstallationCommand implements ICommand {
 
 			logger.debug("Starting to create a new runnable to each Ahenk installation.");
 			for (final String ip : ipList) {
-				
-				logger.error("Host " + configurationService.getXmppHost());
-				logger.error("Username " + configurationService.getXmppUsername());
-				logger.error("Resource " + configurationService.getXmppResource());
-				logger.error("Service name " + configurationService.getXmppServiceName());
-				
+
 				// Execute each installation in a new runnable.
 				RunnableAhenkInstaller installer = new RunnableAhenkInstaller(ahenkSetupDto, ip, username, password,
 						port, privateKey, passphrase, installMethod, downloadUrl, setupParams,
 						configurationService.getXmppHost(), configurationService.getXmppUsername(),
-						configurationService.getXmppResource(), configurationService.getXmppServiceName());
+						configurationService.getXmppServiceName());
 
 				logger.debug("Executing installation runnable for: " + ip);
 
