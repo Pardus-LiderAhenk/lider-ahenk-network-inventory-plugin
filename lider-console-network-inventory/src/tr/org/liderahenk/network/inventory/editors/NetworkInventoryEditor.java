@@ -420,8 +420,7 @@ public class NetworkInventoryEditor extends EditorPart {
 					}
 					task = new TaskRequest(dnList, DNType.AHENK, NetworkInventoryConstants.PLUGIN_NAME,
 							NetworkInventoryConstants.PLUGIN_VERSION, NetworkInventoryConstants.SCAN_COMMAND,
-							parameterMap, null, new Date());
-
+							parameterMap, null, null, new Date());
 					RestResponse response;
 					try {
 						// Post request

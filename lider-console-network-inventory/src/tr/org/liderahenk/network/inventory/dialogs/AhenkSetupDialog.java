@@ -221,7 +221,7 @@ public class AhenkSetupDialog extends DefaultTaskDialog {
 						TaskRequest task = new TaskRequest();
 						task = new TaskRequest(dnList, DNType.AHENK, NetworkInventoryConstants.PLUGIN_NAME,
 								NetworkInventoryConstants.PLUGIN_VERSION, NetworkInventoryConstants.INSTALL_COMMAND,
-								parameterMap, null, new Date());
+								parameterMap, null, null, new Date());
 
 						Map<String, Object> resultMap = new HashMap<String, Object>();
 
