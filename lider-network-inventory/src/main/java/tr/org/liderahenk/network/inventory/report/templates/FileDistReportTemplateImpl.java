@@ -331,4 +331,9 @@ public class FileDistReportTemplateImpl extends BaseReportTemplate {
 		return this;
 	}
 
+	@Override
+	public String getCode() {
+		return "FILE-DIST-REPORT";
+	}
+
 }
