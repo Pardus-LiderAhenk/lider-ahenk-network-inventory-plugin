@@ -53,15 +53,16 @@ public class AhenkSetupDialog extends DefaultTaskDialog {
 	private Text txtPassphrase;
 
 	private Text txtDebFileUrl;
+	private Text txtReceiveFile;
 
 	private boolean executeOnAgent;
 	private List<String> selectedIpList;
 	private Button btnExecuteNow;
 	private ArrayList<String> dnList;
-
+	
 	public AhenkSetupDialog(Shell parentShell, Set<String> dnSet, List<String> selectedIpList, boolean executeOnAgent,
 			ArrayList<String> dnList) {
-		super(parentShell, dnSet);
+		super(parentShell, dnSet, true);
 		this.executeOnAgent = executeOnAgent;
 		this.selectedIpList = selectedIpList;
 		this.dnList = dnList;
@@ -139,6 +140,11 @@ public class AhenkSetupDialog extends DefaultTaskDialog {
 		txtDebFileUrl.setText("www.agem.com.tr/ahenk/ahenk_1.0_amd64.deb");
 		txtDebFileUrl.setMessage(Messages.getString("ENTER_URL_OF_AHENK_DEB"));
 
+		SWTResourceManager.createLabel(cmpMain, Messages.getString("RECEIVE_FILE_PATH"));
+		txtReceiveFile = SWTResourceManager.createText(cmpMain);
+		txtReceiveFile.setText("/tmp/");
+		txtReceiveFile.setMessage(Messages.getString("ENTER_RECEIVE_FILE_PATH"));
+
 		return cmpMain;
 	}
 
@@ -163,10 +169,10 @@ public class AhenkSetupDialog extends DefaultTaskDialog {
 	@Override
 	public void validateBeforeExecution() throws ValidationException {
 		if (btnUseUsernamePwd.getSelection() && (txtUsername.getText().isEmpty() || txtPwd.getText().isEmpty()
-				|| txtDebFileUrl.getText().isEmpty())) {
+				|| txtDebFileUrl.getText().isEmpty() || txtReceiveFile.getText().isEmpty())) {
 			throw new ValidationException(Messages.getString("PLEASE_FILL_REQUIRED_INFO"));
 		} else if (btnUsePrivateKey.getSelection() && (txtKeyUsername.getText().isEmpty()
-				|| txtKeyPath.getText().isEmpty() || txtDebFileUrl.getText().isEmpty())) {
+				|| txtKeyPath.getText().isEmpty() || txtDebFileUrl.getText().isEmpty() || txtReceiveFile.getText().isEmpty())) {
 			throw new ValidationException(Messages.getString("PLEASE_FILL_REQUIRED_INFO"));
 		}
 	}
@@ -216,6 +222,7 @@ public class AhenkSetupDialog extends DefaultTaskDialog {
 						parameterMap.put("port", new Integer(22));
 						parameterMap.put("executeOnAgent", executeOnAgent);
 						parameterMap.put("downloadUrl", txtDebFileUrl.getText());
+						parameterMap.put("receiveFile", txtReceiveFile.getText());
 
 						if (btnUseUsernamePwd.getSelection()) {
 							parameterMap.put("password", txtPwd.getText());
@@ -234,11 +241,14 @@ public class AhenkSetupDialog extends DefaultTaskDialog {
 						// Send command
 						RestResponse response;
 						try {
+							getProgressBar().setVisible(true);
 							response = (RestResponse) TaskRestUtils.execute(task);
 
 							if (!executeOnAgent) {
 								resultMap = response.getResultMap();
 							}
+							
+							getProgressBar().setVisible(false);
 
 						} catch (Exception e3) {
 							e3.printStackTrace();
