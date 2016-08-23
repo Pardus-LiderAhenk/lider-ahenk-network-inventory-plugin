@@ -1,7 +1,17 @@
 package tr.org.liderahenk.network.inventory.runnables;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,11 +58,12 @@ public class RunnableAhenkInstaller implements Runnable {
 	private String xmppHost;
 	private String xmppUsername;
 	private String xmppServiceName;
+	private String receiveFile;
 	
 	
 	public RunnableAhenkInstaller(AhenkSetupDto setupDto, String ip, String username, String password, Integer port,
 			String privateKey, String passphrase, InstallMethod installMethod, String downloadUrl,
-			AhenkSetupParameters setupParams, String xmppHost, String xmppUsername, String xmppServiceName) {
+			AhenkSetupParameters setupParams, String xmppHost, String xmppUsername, String xmppServiceName, String receiveFile) {
 		super();
 		this.setupDto = setupDto;
 		this.ip = ip;
@@ -66,6 +77,7 @@ public class RunnableAhenkInstaller implements Runnable {
 		this.xmppHost = xmppHost;
 		this.xmppUsername = xmppUsername;
 		this.xmppServiceName = xmppServiceName;
+		this.receiveFile = receiveFile;
 	}
 
 	@Override
@@ -122,25 +134,15 @@ public class RunnableAhenkInstaller implements Runnable {
 				SetupUtils.installPackageGdebiWithOpts(ip, username, password, port, privateKey, passphrase,
 						"/tmp/ahenkTmpDir" + timestamp + "/ahenk.deb", "Dpkg::Options::='--force-overwrite'");
 
-				logger.info("Configuring Ahenk");
-				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
-						"sed -i '/host =/c\\host = " + xmppHost + "' /etc/ahenk/ahenk.conf");
-
-				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
-						"sed -i '/receiverjid =/c\\receiverjid = " + xmppUsername
-								+ "' /etc/ahenk/ahenk.conf");
-
-				// XMPP Resource name should be empty at Ahenk side if server side (Lider) is clustered
-				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
-						"sed -i '/receiverresource =/c\\receiverresource = ' /etc/ahenk/ahenk.conf");
-
-				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
-						"sed -i '/servicename =/c\\servicename = " + xmppServiceName
-								+ "' /etc/ahenk/ahenk.conf");
-
+				logger.info("Preparing ahenk.conf file");
+				File ahenkConfFile = prepareConfFile();
+				
+				logger.info("Copying ahenk.conf file");
+				SetupUtils.copyFile(ip, username, password, port, privateKey, passphrase, ahenkConfFile, "/etc/ahenk/");
+				
 				logger.info("Starting Ahenk service");
 				SetupUtils.executeCommand(ip, username, password, port, privateKey, passphrase,
-						"sudo service ahenk start");
+						"service ahenk start");
 
 				logger.info("Ahenk installation successfully completed.");
 
@@ -165,6 +167,88 @@ public class RunnableAhenkInstaller implements Runnable {
 		}
 	}
 
+	private File prepareConfFile() {
+		String confText = readFile("/ahenk.conf");
+		
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("#HOST", xmppHost);
+		map.put("#LIDERJID", xmppUsername);
+		map.put("#SERVICENAME", xmppServiceName);
+		map.put("#RECEIVER_RESOURCE", "");
+		map.put("#RECEIVE_FILE", receiveFile);
+		
+		confText = SetupUtils.replace(map, confText);
+		
+		return writeToFile(confText, "ahenk.conf");
+	}
+	
+	/**
+	 * Creates file under temporary file directory and writes configuration to
+	 * it. Returns the file itself.
+	 * 
+	 * @param content
+	 * @param namePrefix
+	 * @param nameSuffix
+	 * @return returns the file itself
+	 */
+	private File writeToFile(String content, String fileName) {
+
+		File temp = null;
+		
+		try {
+			temp = new File(System.getProperty("java.io.tmpdir") + "/" + fileName);
+
+			FileWriter fileWriter = new FileWriter(temp.getAbsoluteFile());
+
+			BufferedWriter buffWriter = new BufferedWriter(fileWriter);
+
+			buffWriter.write(content);
+			buffWriter.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return temp;
+	}
+
+	/**
+	 * Reads file from classpath location of current project
+	 * 
+	 * @param fileName
+	 */
+	private String readFile(String fileName) {
+
+		BufferedReader br = null;
+		InputStream inputStream = null;
+
+		String readingText = "";
+
+		try {
+			String currentLine;
+
+			inputStream = this.getClass().getClassLoader().getResourceAsStream(fileName);
+
+			br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+
+			while ((currentLine = br.readLine()) != null) {
+				// Platform independent line separator.
+				readingText += currentLine + System.getProperty("line.separator");
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				inputStream.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return readingText;
+	}
+	
 	/**
 	 * Creates a log and saves a setup detail entity to database with same
 	 * content.
