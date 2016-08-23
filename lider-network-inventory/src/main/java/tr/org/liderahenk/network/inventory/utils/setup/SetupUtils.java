@@ -1,12 +1,9 @@
 package tr.org.liderahenk.network.inventory.utils.setup;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -320,6 +317,13 @@ public class SetupUtils {
 		}
 	}
 
+	public static String replace(Map<String, String> map, String text) {
+		for (Entry<String, String> entry : map.entrySet()) {
+			text = text.replaceAll(entry.getKey().replaceAll("#", "\\#"), entry.getValue());
+		}
+		return text;
+	}
+	
 	/**
 	 * 
 	 * @param ip
@@ -327,77 +331,29 @@ public class SetupUtils {
 	 * @param password
 	 * @param port
 	 * @param privateKey
-	 * @param fileToTransfer
+	 * @param passphrase
+	 * @param fileToTranster
 	 * @param destDirectory
 	 * @throws SSHConnectionException
 	 * @throws CommandExecutionException
 	 */
 	public static void copyFile(final String ip, final String username, final String password, final Integer port,
-			final String privateKey, final String passphrase, final File fileToTransfer, final String destDirectory)
+			final String privateKey, final String passphrase, final File fileToTranster, final String destDirectory)
 					throws SSHConnectionException, CommandExecutionException {
-		
-		logger.info("Starting to copy file");
 		String destinationDir = destDirectory;
-		
 		if (!destinationDir.endsWith("/")) {
 			destinationDir += "/";
 		}
-//		destinationDir += fileToTransfer.getName();
 
-		if (NetworkUtils.isLocal(ip)) {
+		logger.info("Copying file to: {0} with username: {1}", new Object[] { ip, username });
 
+		SSHManager manager = new SSHManager(ip, username == null ? "root" : username, password, port, privateKey,
+				passphrase);
+		manager.connect();
+		manager.copyFileToRemote(fileToTranster, destinationDir, false);
+		manager.disconnect();
 
-			logger.debug("Copying file to: {}", destinationDir);
-
-			InputStream in = null;
-			OutputStream out = null;
-
-			try {
-
-				in = new FileInputStream(fileToTransfer);
-				out = new FileOutputStream(destinationDir);
-
-				byte[] buf = new byte[1024];
-				int len;
-				while ((len = in.read(buf)) > 0) {
-					out.write(buf, 0, len);
-				}
-
-				logger.info("File {0} copied successfully", fileToTransfer.getName());
-
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} finally {
-				if (in != null) {
-					try {
-						in.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-				if (out != null) {
-					try {
-						in.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-
-		} else {
-
-			logger.debug("Copying file to: {} with username: {}", new Object[] { ip, username });
-
-			SSHManager manager = new SSHManager(ip, username == null ? "root" : username, password, port, privateKey,
-					passphrase);
-			manager.connect();
-			manager.copyFileToRemote(fileToTransfer, destinationDir, false);
-			manager.disconnect();
-
-			logger.info("File {} copied successfully", fileToTransfer.getName());
-		}
+		logger.info("File {0} copied successfully", fileToTranster.getName());
 	}
 
 	/**
