@@ -30,12 +30,12 @@ public class AhenkInstallationMethodPage extends WizardPage {
 	// Widgets
 	private Composite mainContainer = null;
 
-	private Button useAptGetBtn = null;
+	// private Button useAptGetBtn = null;
 
 	private Button useWgetBtn = null;
 
 	private Text downloadUrlTxt = null;
-	
+
 	// Status variable for the possible errors on this page
 	IStatus ipStatus;
 
@@ -57,29 +57,9 @@ public class AhenkInstallationMethodPage extends WizardPage {
 		mainContainer.setLayout(new GridLayout(1, false));
 		setControl(mainContainer);
 
-		// Install by apt-get
-		useAptGetBtn = new Button(mainContainer, SWT.RADIO);
-
-		useAptGetBtn.setText(Messages.getString("INSTALL_USING_CATALOG(BY_APT-GET)"));
-		useAptGetBtn.setSelection(true);
-
-		useAptGetBtn.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				if (useAptGetBtn.getSelection()) {
-					downloadUrlTxt.setEnabled(false);
-					updatePageCompleteStatus();
-				}
-			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-			}
-		});
-
 		useWgetBtn = new Button(mainContainer, SWT.RADIO);
 		useWgetBtn.setText(Messages.getString("INSTALL_FROM_GIVEN_URL"));
-		
+
 		useWgetBtn.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -93,17 +73,17 @@ public class AhenkInstallationMethodPage extends WizardPage {
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
-		
+
 		Composite downloadUrlContainer = new Composite(mainContainer, SWT.NONE);
 		GridLayout glDownloadUrl = new GridLayout(1, false);
 		downloadUrlContainer.setLayout(glDownloadUrl);
-		
+
 		downloadUrlTxt = new Text(downloadUrlContainer, SWT.BORDER);
 		GridData gdDownloadUrlTxt = new GridData();
 		gdDownloadUrlTxt.widthHint = 350;
 		downloadUrlTxt.setLayoutData(gdDownloadUrlTxt);
 		downloadUrlTxt.setEnabled(false);
-		
+
 		downloadUrlTxt.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e) {
@@ -115,17 +95,11 @@ public class AhenkInstallationMethodPage extends WizardPage {
 
 	private void updatePageCompleteStatus() {
 
-		// If apt-get is selected can go to next page
-		if (useAptGetBtn.getSelection()) {
+		// If install from URL is selected URL must be given
+		if (downloadUrlTxt.getText() != null && !"".equals(downloadUrlTxt.getText())) {
 			setPageComplete(true);
 		} else {
-			// If install from URL is selected URL must be given
-			if (downloadUrlTxt.getText() != null && !"".equals(downloadUrlTxt.getText())) {
-				setPageComplete(true);
-			}
-			else {
-				setPageComplete(false);
-			}
+			setPageComplete(false);
 		}
 	}
 
@@ -133,24 +107,18 @@ public class AhenkInstallationMethodPage extends WizardPage {
 	public IWizardPage getNextPage() {
 
 		AhenkConfirmPage confPage = (AhenkConfirmPage) super.getNextPage();
-		
-		if (useAptGetBtn.getSelection()) {
-			config.setInstallMethod(InstallMethod.APT_GET);
-			confPage.getInstallLabel().setText("- " + Messages.getString("USE_REPOSITORY"));
-		} 
-		else {
-			config.setInstallMethod(InstallMethod.WGET);
-			config.setDownloadUrl(downloadUrlTxt.getText());
-			confPage.getInstallLabel().setText("- " + Messages.getString("USE_GIVEN_URL"));
-		}
+
+		config.setInstallMethod(InstallMethod.WGET);
+		config.setDownloadUrl(downloadUrlTxt.getText());
+		confPage.getInstallLabel().setText("- " + Messages.getString("USE_GIVEN_URL"));
 
 		if (config.getAccessMethod() == AccessMethod.USERNAME_PASSWORD) {
 			confPage.getAccessLabel().setText("- " + Messages.getString("ACCESSING_WITH_USERNAME_AND_PASSWORD"));
 		} else {
 			confPage.getAccessLabel().setText("- " + Messages.getString("ACCESSING_WITH_PRIVATE_KEY"));
 		}
-		
+
 		return super.getNextPage();
 	}
-	
+
 }
