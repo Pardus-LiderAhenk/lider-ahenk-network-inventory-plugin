@@ -59,9 +59,6 @@ public class AhenkSetupWizard extends Wizard {
 		addPage(accessPage);
 		addPage(installMethodPage);
 		addPage(confirmPage);
-
-		// set this to true to override needsPreviousAndNextButtons() method
-		setForcePreviousAndNextButtons(true);
 	}
 
 	/**
