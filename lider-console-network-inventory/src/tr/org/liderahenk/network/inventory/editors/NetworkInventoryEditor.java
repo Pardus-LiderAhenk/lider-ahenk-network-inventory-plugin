@@ -293,15 +293,16 @@ public class NetworkInventoryEditor extends EditorPart {
 			public void widgetSelected(SelectionEvent e) {
 
 				setSelectedIps();
-				
+
 				ArrayList<String> dnList = null;
 				String dn = ((NetworkInventoryEditorInput) getEditorInput()).getDn();
 				if (dn != null) {
 					dnList = new ArrayList<String>();
 					dnList.add(dn);
 				}
-				
-				AhenkSetupDialog dialog = new AhenkSetupDialog(cmpAhenkInstall.getShell(), null, selectedIpList, btnScanOptions[0].getSelection(), dnList);
+
+				AhenkSetupDialog dialog = new AhenkSetupDialog(cmpAhenkInstall.getShell(), null, selectedIpList,
+						btnScanOptions[0].getSelection(), dnList);
 				dialog.open();
 			}
 
@@ -411,38 +412,38 @@ public class NetworkInventoryEditor extends EditorPart {
 					parameterMap.put("timingTemplate", getSelectedValue(cmbTimingTemplate));
 					parameterMap.put("executeOnAgent", btnScanOptions[0].getSelection());
 
-					TaskRequest task = new TaskRequest();
 					ArrayList<String> dnList = null;
 					String dn = ((NetworkInventoryEditorInput) getEditorInput()).getDn();
 					if (dn != null) {
 						dnList = new ArrayList<String>();
 						dnList.add(dn);
 					}
-					task = new TaskRequest(dnList, DNType.AHENK, NetworkInventoryConstants.PLUGIN_NAME,
-							NetworkInventoryConstants.PLUGIN_VERSION, NetworkInventoryConstants.SCAN_COMMAND,
-							parameterMap, null, null, new Date());
-					RestResponse response;
-					try {
-						// Post request
-						response = (RestResponse) TaskRestUtils.execute(task);
 
+					final TaskRequest task = new TaskRequest(dnList, DNType.AHENK,
+							NetworkInventoryConstants.PLUGIN_NAME, NetworkInventoryConstants.PLUGIN_VERSION,
+							NetworkInventoryConstants.SCAN_COMMAND, parameterMap, null, null, new Date());
+
+					try {
+						final RestResponse response = (RestResponse) TaskRestUtils.execute(task);
 						if (response.getStatus() != RestResponseStatus.OK) {
 							List<String> messages = response.getMessages();
-							Notifier.error(null, messages != null && !messages.isEmpty() ? messages.get(0)
-									: Messages.getString("ERROR_OCCURED"));
+							Notifier.error(null, messages != null && !messages.isEmpty()
+									? messages.get(0) : Messages.getString("ERROR_OCCURED"));
 							return;
 						}
-
 						if (!(btnScanOptions[0].getSelection())) {
 							Map<String, Object> resultMap = response.getResultMap();
 							ObjectMapper mapper = new ObjectMapper();
-							ScanResult scanResult = mapper.readValue(resultMap.get("result").toString(),
+							ScanResult scanResult;
+							scanResult = mapper.readValue(resultMap.get("result").toString(),
 									ScanResult.class);
 							tblInventory.setInput(scanResult.getHosts());
 						}
+
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
+					
 				} else {
 					Notifier.warning(Messages.getString("NETWORK_SCAN"), Messages.getString("PLEASE_ENTER_IP_RANGE"));
 				}
