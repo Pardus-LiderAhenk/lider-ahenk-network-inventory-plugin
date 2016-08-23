@@ -88,6 +88,9 @@ public class AhenkInstallationCommand implements ICommand {
 				downloadUrl = (String) parameterMap.get("downloadUrl");
 			}
 
+			// Receive file parameter in ahenk.conf
+			String receiveFile = (String) parameterMap.get("receiveFile");
+			
 			LinkedBlockingQueue<Runnable> taskQueue = new LinkedBlockingQueue<Runnable>();
 
 			final List<Runnable> running = Collections.synchronizedList(new ArrayList());
@@ -142,7 +145,7 @@ public class AhenkInstallationCommand implements ICommand {
 				RunnableAhenkInstaller installer = new RunnableAhenkInstaller(ahenkSetupDto, ip, username, password,
 						port, privateKey, passphrase, installMethod, downloadUrl, setupParams,
 						configurationService.getXmppHost(), configurationService.getXmppUsername(),
-						configurationService.getXmppServiceName());
+						configurationService.getXmppServiceName(), receiveFile);
 
 				logger.debug("Executing installation runnable for: " + ip);
 
