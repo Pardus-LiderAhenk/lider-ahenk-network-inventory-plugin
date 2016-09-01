@@ -74,6 +74,12 @@
                        value="true">
                  </equals>
               </with>
+              <with
+                    variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isSingleEntrySelected">
+                 <equals
+                       value="true">
+                 </equals>
+              </with>
            </and>
         </visibleWhen>
                   <!-- TODO Uncomment this after updating/fixing LiderSourceProvider -->
