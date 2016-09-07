@@ -14,7 +14,6 @@ import java.util.Map;
 import javax.xml.bind.DatatypeConverter;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -53,10 +52,12 @@ import tr.org.liderahenk.liderconsole.core.constants.LiderConstants;
 import tr.org.liderahenk.liderconsole.core.ldap.enums.DNType;
 import tr.org.liderahenk.liderconsole.core.rest.enums.RestResponseStatus;
 import tr.org.liderahenk.liderconsole.core.rest.requests.TaskRequest;
+import tr.org.liderahenk.liderconsole.core.rest.responses.IResponse;
 import tr.org.liderahenk.liderconsole.core.rest.responses.RestResponse;
 import tr.org.liderahenk.liderconsole.core.rest.utils.TaskRestUtils;
 import tr.org.liderahenk.liderconsole.core.utils.SWTResourceManager;
 import tr.org.liderahenk.liderconsole.core.widgets.Notifier;
+import tr.org.liderahenk.liderconsole.core.xmpp.enums.ContentType;
 import tr.org.liderahenk.liderconsole.core.xmpp.notifications.TaskStatusNotification;
 import tr.org.liderahenk.network.inventory.constants.NetworkInventoryConstants;
 import tr.org.liderahenk.network.inventory.dialogs.AhenkSetupDialog;
@@ -100,15 +101,6 @@ public class NetworkInventoryEditor extends EditorPart {
 
 	private List<String> selectedIpList;
 
-	private String ipAddress;
-	private String macAddress;
-	private String hostnames;
-	private String ports;
-	private String os;
-	private String distance;
-	private String vendor;
-	private String time;
-
 	private IEventBroker eventBroker = (IEventBroker) PlatformUI.getWorkbench().getService(IEventBroker.class);
 
 	@Override
@@ -126,33 +118,48 @@ public class NetworkInventoryEditor extends EditorPart {
 				protected IStatus run(IProgressMonitor monitor) {
 					monitor.beginTask("INVENTORY", 100);
 					try {
+
 						TaskStatusNotification taskStatus = (TaskStatusNotification) event
 								.getProperty("org.eclipse.e4.data");
-						byte[] data = taskStatus.getResult().getResponseData();
-						Map<String, Object> responseData = new ObjectMapper().readValue(data, 0, data.length,
-								new TypeReference<HashMap<String, Object>>() {
+
+						// If result contains plain text
+						if (ContentType.TEXT_PLAIN.equals(taskStatus.getResult().getContentType())) {
+
+							// Put resultId to parameter map
+							// and create new task to get result of the nmap
+							// scan task from database
+							Map<String, Object> parameterMap = new HashMap<String, Object>();
+							Long resultId = taskStatus.getResult().getId();
+							parameterMap.put("resultId", resultId);
+
+							TaskRequest taskRequest = new TaskRequest(null, null, NetworkInventoryConstants.PLUGIN_NAME,
+									NetworkInventoryConstants.PLUGIN_VERSION,
+									NetworkInventoryConstants.GET_SCAN_RESULT_COMMAND, parameterMap, null, null,
+									new Date());
+							
+							IResponse response = TaskRestUtils.execute(taskRequest);
+
+							if (response.getStatus() != RestResponseStatus.OK) {
+								List<String> messages = response.getMessages();
+								Notifier.error(null, messages != null && !messages.isEmpty() ? messages.get(0)
+										: Messages.getString("ERROR_OCCURED"));
+							} else {
+								Map<String, Object> resultMap = response.getResultMap();
+								ObjectMapper mapper = new ObjectMapper();
+								
+								final ScanResult scanResult = mapper.readValue(resultMap.get("result").toString(), ScanResult.class);
+								
+								Display.getDefault().asyncExec(new Runnable() {
+									@Override
+									public void run() {
+										tblInventory.setInput(scanResult.getHosts());
+									}
 								});
-
-						if (responseData != null) {
-							for (int i = 0; i < responseData.size(); i++) {
-								@SuppressWarnings("unchecked")
-								Map<String, Object> host = (Map<String, Object>) responseData
-										.get(Integer.toString(i + 1));
-
-								ipAddress = (String) host.get("ipAddress");
-								macAddress = (String) host.get("macAddress");
-								vendor = (String) host.get("macProvider");
-								time = (String) host.get("time");
-								distance = (String) host.get("distance");
-								hostnames = (String) host.get("hostnames");
-								ports = (String) host.get("ports");
-								os = (String) host.get("os");
-
-								Display.getDefault().asyncExec(new InventoryRunnable(ipAddress, macAddress, vendor,
-										time, distance, hostnames, ports, os));
 							}
 						}
+
 					} catch (Exception e) {
+						e.printStackTrace();
 						Notifier.error(null, Messages.getString("UNEXPECTED_ERROR"));
 					}
 
@@ -427,23 +434,22 @@ public class NetworkInventoryEditor extends EditorPart {
 						final RestResponse response = (RestResponse) TaskRestUtils.execute(task);
 						if (response.getStatus() != RestResponseStatus.OK) {
 							List<String> messages = response.getMessages();
-							Notifier.error(null, messages != null && !messages.isEmpty()
-									? messages.get(0) : Messages.getString("ERROR_OCCURED"));
+							Notifier.error(null, messages != null && !messages.isEmpty() ? messages.get(0)
+									: Messages.getString("ERROR_OCCURED"));
 							return;
 						}
 						if (!(btnScanOptions[0].getSelection())) {
 							Map<String, Object> resultMap = response.getResultMap();
 							ObjectMapper mapper = new ObjectMapper();
 							ScanResult scanResult;
-							scanResult = mapper.readValue(resultMap.get("result").toString(),
-									ScanResult.class);
+							scanResult = mapper.readValue(resultMap.get("result").toString(), ScanResult.class);
 							tblInventory.setInput(scanResult.getHosts());
 						}
 
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
-					
+
 				} else {
 					Notifier.warning(Messages.getString("NETWORK_SCAN"), Messages.getString("PLEASE_ENTER_IP_RANGE"));
 				}
@@ -658,45 +664,4 @@ public class NetworkInventoryEditor extends EditorPart {
 		super.dispose();
 		eventBroker.unsubscribe(eventHandler);
 	}
-
-	class InventoryRunnable implements Runnable {
-
-		private String ipAddress;
-		private String macAddress;
-		private String hostnames;
-		private String ports;
-		private String os;
-		private String distance;
-		private String vendor;
-		private String time;
-
-		public InventoryRunnable(String ipAddress, String macAddress, String vendor, String time, String distance,
-				String hostnames, String ports, String os) {
-
-			this.ipAddress = ipAddress;
-			this.macAddress = macAddress;
-			this.hostnames = hostnames;
-			this.ports = ports;
-			this.os = os;
-			this.distance = distance;
-			this.vendor = vendor;
-			this.time = time;
-		}
-
-		@Override
-		public void run() {
-
-			TableItem item = new TableItem(tblInventory.getTable(), SWT.NONE);
-			item.setText(0, ipAddress != null ? ipAddress : "");
-			item.setText(1, hostnames != null ? hostnames : "");
-			item.setText(2, ports != null ? ports : "");
-			item.setText(3, os != null ? os : "");
-			item.setText(4, distance != null ? distance : "");
-			item.setText(5, time != null ? time : "");
-			item.setText(6, macAddress != null ? macAddress : "");
-			item.setText(7, vendor != null ? vendor : "");
-		}
-
-	}
-
 }
