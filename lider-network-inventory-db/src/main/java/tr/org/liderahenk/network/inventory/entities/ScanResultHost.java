@@ -1,5 +1,7 @@
 package tr.org.liderahenk.network.inventory.entities;
 
+import java.io.Serializable;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -19,7 +21,9 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "P_NETWORK_SCAN_RESULT_HOST")
-public class ScanResultHost {
+public class ScanResultHost implements Serializable {
+
+	private static final long serialVersionUID = 8670893089813007443L;
 
 	@Id
 	@GeneratedValue
