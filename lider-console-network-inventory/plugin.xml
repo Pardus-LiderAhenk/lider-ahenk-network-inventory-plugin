@@ -21,27 +21,9 @@
    
    <extension
          point="org.eclipse.ui.handlers">
-      <!-- Task handler -->
        <handler
             class="tr.org.liderahenk.network.inventory.handlers.NetworkInventoryHandler"
             commandId="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask">
-           <!-- TODO Uncomment this after updating/fixing LiderSourceProvider -->
-		   <!-- <enabledWhen>
-				<and>
-		          <with
-		                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.available">
-		             <equals
-		                   value="true">
-		             </equals>
-		          </with>
-				<with
-	                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isAhenkSelected">
-	             	<equals
-		                   value="true">
-		            </equals>
-	          	</with>
-		       </and>
-		    </enabledWhen> -->        
       </handler>
       <handler
             class="tr.org.liderahenk.network.inventory.handlers.NetworkInventoryHandler"
@@ -51,65 +33,38 @@
    
    <extension 
    			point="org.eclipse.ui.menus">
-   		  <!-- Add extension point contribution for "task execution" dialogs -->
+   		 <!-- Add extension point contribution for "task execution" dialogs -->
 		<menuContribution
       		allPopups="false"
             locationURI="popup:tr.org.liderahenk.liderconsole.menus.ApplyTask?after=additions">
- 				<command
-           commandId="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask"
-           icon="icons/16/network.png"
-           id="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask"
-           tooltip="%command.task">
-        <visibleWhen>
-           <and>
-              <with
-                    variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.available">
-                 <equals
-                       value="true">
-                 </equals>
-              </with>
-              <with
-                    variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isAhenkSelected">
-                 <equals
-                       value="true">
-                 </equals>
-              </with>
-              <with
-                    variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isSingleEntrySelected">
-                 <equals
-                       value="true">
-                 </equals>
-              </with>
-           </and>
-        </visibleWhen>
-                  <!-- TODO Uncomment this after updating/fixing LiderSourceProvider -->
-				  <!-- <visibleWhen>
-					   <and>
-			                <iterate operator="or">		
-			                	<or>
-							  	<with
-					                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isSearchSelected">
-						             <equals
-						                   value="true">
-						             </equals>
-					          	</with>
-					          	<with
-					                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isEntrySelected">
-						             <equals
-						                   value="true">
-						             </equals>
-					          	</with>
-					        	</or>
-					        </iterate>
-							<with
-				                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isAhenkSelected">
-				             	<equals
-					                   value="true">
-					            </equals>
-				          	</with>
-					    </and>
-					</visibleWhen> -->               
-           		</command>
+			<command
+	           commandId="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask"
+	           icon="icons/16/network.png"
+	           id="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask"
+	           tooltip="%command.task">
+		        <visibleWhen>
+		           <and>
+		              <with
+		                    variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.available">
+		                 <equals
+		                       value="true">
+		                 </equals>
+		              </with>
+		              <with
+		                    variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isAhenkSelected">
+		                 <equals
+		                       value="true">
+		                 </equals>
+		              </with>
+		              <with
+		                    variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isSingleEntrySelected">
+		                 <equals
+		                       value="true">
+		                 </equals>
+		              </with>
+		           </and>
+		        </visibleWhen>           
+			</command>
 		</menuContribution>
          <menuContribution
             locationURI="menu:tr.org.liderahenk.liderconsole.menus.LiderMain?after=additions">
@@ -118,37 +73,26 @@
                   id="tr.org.liderahenk.liderconsole.command.NetworkInventory"
                   icon="icons/16/network.png"
                   tooltip="%command.name">
-				   <!-- <visibleWhen>
-				       <and>
-				          <with
-				                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.available">
-				             <equals
-				                   value="true">
-				             </equals>
-				          </with>
-				          <with
-				                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.privilegesForSelectedItem">
-				             <iterate operator="or">
-				                <or>
-				                   <equals
-				                         value="ALL">
-				                   </equals>
-				                </or>
-				             </iterate>
-				          </with>
-				       </and>
-				    </visibleWhen> -->
             </command>
       </menuContribution>
   </extension>
   
- <extension
-     point="org.eclipse.ui.editors">
-      <editor
-            class="tr.org.liderahenk.network.inventory.editors.NetworkInventoryEditor"
-            icon="icons/16/network.png"
-            id="tr.org.liderahenk.network.inventory.editors.NetworkInventoryEditor"
-            name="%command.name">
-      </editor>  
-   </extension>
+	<extension
+		point="org.eclipse.ui.editors">
+			<editor
+				class="tr.org.liderahenk.network.inventory.editors.NetworkInventoryEditor"
+				icon="icons/16/network.png"
+				id="tr.org.liderahenk.network.inventory.editors.NetworkInventoryEditor"
+				name="%command.name">
+			</editor>  
+	</extension>
+	   
+	   
+	<!-- Add extension point contribution for i18n messages -->
+	<extension
+  		point="tr.org.liderahenk.liderconsole.core.i18n">
+  		<task code="SCANNETWORK" label="%command.task" />
+		<plugin name="network-inventory" label="%plugin.label" />
+  	</extension>
+	   
 </plugin>
