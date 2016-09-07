@@ -48,9 +48,24 @@
 		<property name="resultFactory" ref="resultFactory" />
 		<property name="configurationService" ref="configurationService" />
 	</bean>
-	<service ref="NetworkScanCommand" interface="tr.org.liderahenk.lider.core.api.plugin.ICommand" />
+	
+	<service ref="NetworkScanCommand">
+		<interfaces>
+			<value>tr.org.liderahenk.lider.core.api.plugin.ICommand</value>
+			<value>tr.org.liderahenk.lider.core.api.plugin.ITaskAwareCommand</value>
+		</interfaces>
+	</service>
 	<bean id="NetworkScanCommand"
 		class="tr.org.liderahenk.network.inventory.commands.NetworkScanCommand">
+		<property name="pluginInfo" ref="pluginInfoImpl" />
+		<property name="pluginDbService" ref="pluginDbService" />
+		<property name="resultFactory" ref="resultFactory" />
+		<property name="commandDao" ref="commandDao" />
+	</bean>
+	
+	<service ref="GetScanResultCommand" interface="tr.org.liderahenk.lider.core.api.plugin.ICommand" />
+	<bean id="GetScanResultCommand"
+		class="tr.org.liderahenk.network.inventory.commands.GetScanResultCommand">
 		<property name="pluginInfo" ref="pluginInfoImpl" />
 		<property name="pluginDbService" ref="pluginDbService" />
 		<property name="resultFactory" ref="resultFactory" />
@@ -62,6 +77,8 @@
 		interface="tr.org.liderahenk.lider.core.api.service.ICommandResultFactory" />
 	<reference id="configurationService"
 		interface="tr.org.liderahenk.lider.core.api.configuration.IConfigurationService" />
+	<reference id="commandDao"
+		interface="tr.org.liderahenk.lider.core.api.persistence.dao.ICommandDao" />
 	
 
 </blueprint>
