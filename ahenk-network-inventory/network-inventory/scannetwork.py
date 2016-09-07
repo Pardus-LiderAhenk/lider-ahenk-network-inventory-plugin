@@ -1,46 +1,63 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 # Author:Mine DOGAN <mine.dogan@agem.com.tr>
+# Author: Caner Feyzullahoglu <caner.feyzullahoglu@agem.com.tr>
+"""
+Style Guide is PEP-8
+https://www.python.org/dev/peps/pep-0008/
+"""
 
 import json
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as Et
 
-from base.model.enum.ContentType import ContentType
 from base.plugin.abstract_plugin import AbstractPlugin
 
 
 class ScanNetwork(AbstractPlugin):
     def __init__(self, task, context):
         super(AbstractPlugin, self).__init__()
+
+        self.logger.debug('[NETWORK INVENTORY] Initialized')
         self.task = task
         self.context = context
         self.logger = self.get_logger()
         self.message_code = self.get_message_code()
 
+        self.logger.debug('[NETWORK INVENTORY] Creating nmap command')
+        uuid = self.generate_uuid()
+        self.file_path = self.Ahenk.received_dir_path() + uuid
         self.command = self.get_nmap_command()
-        self.logger.debug('[NETWORK INVENTORY] Initialized')
 
     def handle_task(self):
+        self.logger.debug('[NETWORK INVENTORY] Handling task')
         try:
-            self.logger.debug('[NETWORK INVENTORY] Scanning')
+            self.logger.debug('[NETWORK INVENTORY] Executing command: {0}'.format(self.command))
             result_code, p_out, p_err = self.execute(self.command)
-            if result_code != 0 :
-                self.logger.error('[NETWORK INVENTORY] ' + str(p_err))
+
+            if result_code != 0:
+                self.logger.error('[NETWORK INVENTORY] Error occurred while executing nmap command')
+                self.logger.error('[NETWORK INVENTORY] Error message: {0}'.format(str(p_err)))
                 self.context.create_response(code=self.message_code.TASK_ERROR.value,
-                                             message=str(p_err))
-            else :
-                self.logger.debug('[NETWORK INVENTORY] Scan finished')
+                                             message='NETWORK INVENTORY Nmap komutu çalıştırılırken hata oluştu')
+            else:
+                self.logger.debug('[NETWORK INVENTORY] Nmap command successfully executed')
 
-                allLines = [line for line in str(p_out).splitlines()]
-                data_no_firsttwo = "".join(map(str, allLines[2:]))
-                root = ET.fromstringlist(data_no_firsttwo)
+                data = {}
+                self.logger.debug('[NETWORK INVENTORY] Getting md5 of file')
+                md5sum = self.get_md5_file(str(self.file_path))
 
-                data = self.get_result(root)
-                print(data)
+                self.logger.debug('[NETWORK INVENTORY] {0} renaming to {1}'.format(self.file_path, md5sum))
+                self.rename_file(self.file_path, self.Ahenk.received_dir_path() + md5sum)
+                self.logger.debug('[NETWORK INVENTORY] Renamed file.')
 
+                data['md5'] = md5sum
+
+                self.logger.debug('[NETWORK INVENTORY] Creating response message')
                 self.context.create_response(code=self.message_code.TASK_PROCESSED.value,
                                              message='NETWORK INVENTORY görevi başarıyla çalıştırıldı.',
-                                             data=data, content_type=ContentType.APPLICATION_JSON.value)
+                                             data=json.dumps(data),
+                                             content_type=self.get_content_type().TEXT_PLAIN.value)
+
                 self.logger.info('[NETWORK INVENTORY] NETWORK INVENTORY task is handled successfully')
         except Exception as e:
             self.logger.error(
@@ -56,39 +73,47 @@ class ScanNetwork(AbstractPlugin):
         for host in root.findall('host'):
             result = {}
 
-            hostnames = host.find('hostnames')
+            host_names = host.find('hostnames')
             ports = host.find('ports')
             os = host.find('os')
             distance = host.find('distance')
+            status = host.find('status')
+            self.logger.debug('STATUS: ++++++  ' + str(status))
 
-            result['hostnames'] = self.get_hostname_list(hostnames)
+            self.logger.debug('[NETWORK INVENTORY] Getting hostname list')
+            result['hostnames'] = self.get_hostname_list(host_names)
+            self.logger.debug('[NETWORK INVENTORY] Getting port list')
             result['ports'] = self.get_port_list(ports)
+            self.logger.debug('[NETWORK INVENTORY] Getting os list')
             result['os'] = self.get_os_list(os)
+            self.logger.debug('[NETWORK INVENTORY] Getting distance list')
             result['distance'] = self.get_distance(distance)
-            result['ipAddress'], result['macAddress'], result['macProvider'] = self.get_Addresses(host)
-            result['time'] = self.get_time()
+            self.logger.debug('[NETWORK INVENTORY] Getting IP, MAC and MAC provider list')
+            result['ipAddress'], result['macAddress'], result['macProvider'] = self.get_addresses(host)
+            self.logger.debug('[NETWORK INVENTORY] Getting status')
+            result['status'] = self.get_status(host)
 
             result_list[index] = result
             index += 1
 
         return result_list
 
-    def get_Addresses(self, host):
-        ipAddress = ''
-        macAddress = ''
-        macProvider = ''
-        if host != None:
+    def get_addresses(self, host):
+        ip_address = ''
+        mac_address = ''
+        mac_provider = ''
+        if host is not None:
             for address in host.findall('address'):
                 if address.get('addrtype') == 'ipv4':
-                    ipAddress = address.get('addr')
+                    ip_address = address.get('addr')
                 if address.get('addrtype') == 'mac':
-                    macAddress = address.get('addr')
-                    macProvider = address.get('vendor')
-        return ipAddress, macAddress, macProvider
+                    mac_address = address.get('addr')
+                    mac_provider = address.get('vendor')
+        return ip_address, mac_address, mac_provider
 
     def get_hostname_list(self, hostnames):
         hostname_list = ''
-        if hostnames != None:
+        if hostnames is not None:
             for hostname in hostnames.findall('hostname'):
                 name = hostname.get('name')
                 if hostname_list != '':
@@ -100,23 +125,34 @@ class ScanNetwork(AbstractPlugin):
 
     def get_port_list(self, ports):
         port_list = ''
-        if ports != None:
+        if ports is not None:
             for port in ports.findall('port'):
                 service = port.find('service')
                 service_name = service.get('name')
-                id = port.get('portid') + '/' + port.get('protocol') + ' ' + service_name
+                port_id = port.get('portid') + '/' + port.get('protocol') + ' ' + service_name
                 if port_list != '':
-                    port_list = port_list + ', ' + id
+                    port_list = port_list + ', ' + port_id
                 else:
-                    port_list = id
+                    port_list = port_id
 
         return port_list
 
+    def get_status(self, host):
+        state = False
+        if host is not None:
+            for status in host.findall('status'):
+                if status.get('state') == 'up':
+                    state = True
+                if status.get('state') == 'down':
+                    state = False
+
+        return state
+
     def get_os_list(self, os):
         os_list = ''
-        if os != None:
-            for osmatch in os.findall('osmatch'):
-                name = osmatch.get('name')
+        if os is not None:
+            for os_match in os.findall('osmatch'):
+                name = os_match.get('name')
                 if os_list != '':
                     os_list = os_list + ', ' + name
                 else:
@@ -125,27 +161,26 @@ class ScanNetwork(AbstractPlugin):
         return os_list
 
     def get_distance(self, distance):
-        if distance != None:
+        if distance is not None:
             return distance.get('value')
         return ''
 
-    def get_time(self):
-        # TODO
-        return ''
-
-    def get_nmap_command(self) :
-        command = 'nmap -oX'
+    def get_nmap_command(self):
+        command = 'nmap -v -oX'
         command += ' - ' + self.task['ipRange']
         if self.task['timingTemplate']:
             command += ' -T' + str(self.task['timingTemplate'])
-        else :
-            command += ' -T3' #avarage speed
+        else:
+            # average speed
+            command += ' -T3'
 
-        if self.task['portRange']:
-            command += ' -p ' + self.task['portRange']
+        if self.task['ports']:
+            command += ' -p' + self.task['ports']
         else:
             command += ' --top-ports 10'
-        print(str(command))
+
+        command += ' > ' + self.file_path
+
         return command
 
 
