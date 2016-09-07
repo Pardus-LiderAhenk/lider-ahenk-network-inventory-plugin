@@ -1,5 +1,6 @@
 package tr.org.liderahenk.network.inventory.entities;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -24,13 +25,18 @@ import javax.persistence.TemporalType;
  */
 @Entity
 @Table(name = "P_NETWORK_SCAN_RESULT")
-public class ScanResult {
+public class ScanResult implements Serializable {
+
+	private static final long serialVersionUID = -2849756506403423208L;
 
 	@Id
 	@GeneratedValue
 	@Column(name = "SCAN_RESULT_ID")
 	private Long id;
 
+	@Column(name = "RESULT_ID")
+	private Long resultId;
+	
 	@Column(name = "IP_RANGE")
 	private String ipRange;
 
@@ -57,10 +63,11 @@ public class ScanResult {
 		super();
 	}
 
-	public ScanResult(Long id, String ipRange, String timingTemplate, String ports, String sudoUsername,
+	public ScanResult(Long id, Long resultId, String ipRange, String timingTemplate, String ports, String sudoUsername,
 			String sudoPassword, Date scanDate, List<ScanResultHost> hosts) {
 		super();
 		this.id = id;
+		this.resultId = resultId;
 		this.ipRange = ipRange;
 		this.timingTemplate = timingTemplate;
 		this.ports = ports;
@@ -132,6 +139,14 @@ public class ScanResult {
 
 	public void setHosts(List<ScanResultHost> hosts) {
 		this.hosts = hosts;
+	}
+
+	public Long getResultId() {
+		return resultId;
+	}
+
+	public void setResultId(Long resultId) {
+		this.resultId = resultId;
 	}
 
 }
