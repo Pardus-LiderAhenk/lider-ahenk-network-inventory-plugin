@@ -59,11 +59,11 @@ public class RunnableAhenkInstaller implements Runnable {
 	private String xmppUsername;
 	private String xmppServiceName;
 	private String receiveFile;
-	
+	private String useTls;
 	
 	public RunnableAhenkInstaller(AhenkSetupDto setupDto, String ip, String username, String password, Integer port,
 			String privateKey, String passphrase, InstallMethod installMethod, String downloadUrl,
-			AhenkSetupParameters setupParams, String xmppHost, String xmppUsername, String xmppServiceName, String receiveFile) {
+			AhenkSetupParameters setupParams, String xmppHost, String xmppUsername, String xmppServiceName, String receiveFile, String useTls) {
 		super();
 		this.setupDto = setupDto;
 		this.ip = ip;
@@ -78,6 +78,7 @@ public class RunnableAhenkInstaller implements Runnable {
 		this.xmppUsername = xmppUsername;
 		this.xmppServiceName = xmppServiceName;
 		this.receiveFile = receiveFile;
+		this.useTls = useTls;
 	}
 
 	@Override
@@ -176,6 +177,7 @@ public class RunnableAhenkInstaller implements Runnable {
 		map.put("#SERVICENAME", xmppServiceName);
 		map.put("#RECEIVER_RESOURCE", "");
 		map.put("#RECEIVE_FILE", receiveFile);
+		map.put("#USE_TLS", useTls);
 		
 		confText = SetupUtils.replace(map, confText);
 		
