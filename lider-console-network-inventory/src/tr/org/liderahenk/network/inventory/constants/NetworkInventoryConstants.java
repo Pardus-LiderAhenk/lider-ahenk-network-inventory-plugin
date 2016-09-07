@@ -10,4 +10,6 @@ public class NetworkInventoryConstants {
 	
 	public static final String INSTALL_COMMAND = "INSTALLAHENK";
 
+	public static final String GET_SCAN_RESULT_COMMAND = "GET-SCAN-RESULT";
+
 }
