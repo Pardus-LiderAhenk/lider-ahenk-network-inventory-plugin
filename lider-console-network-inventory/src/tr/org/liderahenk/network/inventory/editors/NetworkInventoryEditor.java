@@ -377,6 +377,8 @@ public class NetworkInventoryEditor extends EditorPart {
 				cmbTimingTemplate.setData(i + "", templateValueArr[i - 1]);
 			}
 		}
+		// Select 'normal' by default
+		cmbTimingTemplate.select(4);
 
 		Composite cmpIp = new Composite(cmpScan, SWT.NONE);
 		cmpIp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -396,6 +398,7 @@ public class NetworkInventoryEditor extends EditorPart {
 		txtPortRange = new Text(cmpIp, SWT.RIGHT | SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		txtPortRange.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		txtPortRange.setMessage(Messages.getString("EX_PORT"));
+		txtPortRange.setText("21-25");
 
 		btnScan = new Button(cmpIp, SWT.NONE);
 		btnScan.setImage(

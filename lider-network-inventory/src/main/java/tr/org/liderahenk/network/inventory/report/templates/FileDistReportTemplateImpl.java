@@ -31,7 +31,7 @@ public class FileDistReportTemplateImpl extends BaseReportTemplate {
 	public String getQuery() {
 		return "SELECT h.ip, "
 				+ "r.fileName, "
-				+ "CASE WHEN h.success IS NULL THEN 'Hata' ELSE 'Başarılı' END, "
+				+ "CASE WHEN h.success = False THEN 'Hata' ELSE 'Başarılı' END, "
 				+ "h.errorMessage, "
 				+ "r.username, "
 				+ "r.destDirectory, "
