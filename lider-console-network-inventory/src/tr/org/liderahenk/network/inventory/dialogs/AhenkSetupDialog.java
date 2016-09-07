@@ -12,7 +12,9 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -59,6 +61,7 @@ public class AhenkSetupDialog extends DefaultTaskDialog {
 	private List<String> selectedIpList;
 	private Button btnExecuteNow;
 	private ArrayList<String> dnList;
+	private Combo cmbUseSsl;
 	
 	public AhenkSetupDialog(Shell parentShell, Set<String> dnSet, List<String> selectedIpList, boolean executeOnAgent,
 			ArrayList<String> dnList) {
@@ -145,6 +148,12 @@ public class AhenkSetupDialog extends DefaultTaskDialog {
 		txtReceiveFile.setText("/tmp/");
 		txtReceiveFile.setMessage(Messages.getString("ENTER_RECEIVE_FILE_PATH"));
 
+		SWTResourceManager.createLabel(cmpMain, Messages.getString("AHENK_USE_SSL"));
+		cmbUseSsl = new Combo(cmpMain, SWT.DROP_DOWN | SWT.READ_ONLY);
+		cmbUseSsl.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+		cmbUseSsl.setItems(new String[] {"false", "true"});
+		cmbUseSsl.select(0);
+		
 		return cmpMain;
 	}
 
@@ -230,6 +239,8 @@ public class AhenkSetupDialog extends DefaultTaskDialog {
 							parameterMap.put("privateKeyPath", txtKeyPath.getText());
 							parameterMap.put("passphrase", txtPassphrase.getText());
 						}
+						
+						parameterMap.put("useTls", cmbUseSsl.getText());
 
 						TaskRequest task = new TaskRequest();
 						task = new TaskRequest(dnList, DNType.AHENK, NetworkInventoryConstants.PLUGIN_NAME,
