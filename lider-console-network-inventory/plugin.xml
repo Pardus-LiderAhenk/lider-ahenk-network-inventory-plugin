@@ -17,6 +17,11 @@
             id="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask"            
             name="%command.task">
       </command>
+      <command
+            categoryId="tr.org.liderahenk.liderconsole.commands.category"
+            id="tr.org.liderahenk.liderconsole.commands.NetworkInventoryMultipleFileTransfer"            
+            name="%command.multiple.file.transfer.task">
+      </command>
    </extension>
    
    <extension
@@ -25,27 +30,14 @@
        <handler
             class="tr.org.liderahenk.network.inventory.handlers.NetworkInventoryHandler"
             commandId="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask">
-           <!-- TODO Uncomment this after updating/fixing LiderSourceProvider -->
-		   <!-- <enabledWhen>
-				<and>
-		          <with
-		                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.available">
-		             <equals
-		                   value="true">
-		             </equals>
-		          </with>
-				<with
-	                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isAhenkSelected">
-	             	<equals
-		                   value="true">
-		            </equals>
-	          	</with>
-		       </and>
-		    </enabledWhen> -->        
       </handler>
       <handler
             class="tr.org.liderahenk.network.inventory.handlers.NetworkInventoryHandler"
             commandId="tr.org.liderahenk.liderconsole.commands.NetworkInventory">
+      </handler>
+      <handler
+            class="tr.org.liderahenk.network.inventory.handlers.NetworkInventoryMultipleFileTransferHandler"
+            commandId="tr.org.liderahenk.liderconsole.commands.NetworkInventoryMultipleFileTransfer">
       </handler>
    </extension>
    
@@ -82,34 +74,42 @@
               </with>
            </and>
         </visibleWhen>
-                  <!-- TODO Uncomment this after updating/fixing LiderSourceProvider -->
-				  <!-- <visibleWhen>
-					   <and>
-			                <iterate operator="or">		
-			                	<or>
-							  	<with
-					                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isSearchSelected">
-						             <equals
-						                   value="true">
-						             </equals>
-					          	</with>
-					          	<with
-					                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isEntrySelected">
-						             <equals
-						                   value="true">
-						             </equals>
-					          	</with>
-					        	</or>
-					        </iterate>
-							<with
-				                variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isAhenkSelected">
-				             	<equals
-					                   value="true">
-					            </equals>
-				          	</with>
-					    </and>
-					</visibleWhen> -->               
            		</command>
+		</menuContribution>
+		<menuContribution
+			allPopups="false"
+			locationURI="popup:tr.org.liderahenk.liderconsole.menus.ApplyTask?after=additions">
+ 			<command commandId="tr.org.liderahenk.liderconsole.commands.NetworkInventoryMultipleFileTransfer"
+ 				icon="icons/16/network.png"
+           		id="tr.org.liderahenk.liderconsole.commands.NetworkInventoryMultipleFileTransfer"
+           		tooltip="%command.multiple.file.transfer.task">
+	        	<visibleWhen>
+	        		<and>
+	              		<with variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.available">
+	                 		<equals
+	                       		value="true">
+	                 		</equals>
+	              		</with>
+	              		<or>
+	              			<with variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isAhenkSelected">
+	                 			<equals
+	                       			value="true">
+	                 			</equals>
+	              			</with>
+	              			<with variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isMultipleEntriesSelected">
+	                 			<equals
+	                       			value="true">
+	                 			</equals>
+	              			</with>
+	              			<with variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isLdapOUSelected">
+	                 			<equals
+	                       			value="true">
+	                 			</equals>
+	              			</with>
+	              		</or>
+	           		</and>
+	        	</visibleWhen>
+       		</command>
 		</menuContribution>
          <menuContribution
             locationURI="menu:tr.org.liderahenk.liderconsole.menus.LiderMain?after=additions">
