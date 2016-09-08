@@ -35,8 +35,6 @@ public class MultipleFileTransferCommand implements ICommand {
 		logger.info("Getting parameters from parameter map");
 		byte[] fileAsByteArr = DatatypeConverter.parseBase64Binary((String) parameterMap.get("encodedFile"));
 		
-		String ahenkLocalPath = (String) parameterMap.get("ahenkLocalPath");
-
 		// Send file to file server
 		logger.info("Sending file to file server");
 		String absPathOfRemoteFile = new FileCopyUtils().sendFile(
@@ -47,9 +45,9 @@ public class MultipleFileTransferCommand implements ICommand {
 				fileAsByteArr, 
 				configurationService.getFileServerAgentFilePath().replace("{0}", "lider"));
 		
-		logger.info("Putting local and remote paths of file to parameter map");
-		parameterMap.put("localPath", ahenkLocalPath);
+		logger.info("Putting remote path and removing encoded file at parameter map");
 		parameterMap.put("remotePath", absPathOfRemoteFile);
+		parameterMap.remove("encodedFile");
 		
 		logger.info("MULTIPLE-FILE-TRANSFER executed successfully, creating result");
 		return resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this);
