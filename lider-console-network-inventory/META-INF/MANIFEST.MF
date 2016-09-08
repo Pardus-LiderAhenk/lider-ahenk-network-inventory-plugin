@@ -24,7 +24,8 @@ Require-Bundle: javax.inject;bundle-version="1.0.0",
  org.eclipse.core.expressions,
  org.eclipse.e4.ui.workbench,
  tr.org.liderahenk.liderconsole.core,
- org.apache.commons.codec
+ org.apache.commons.codec,
+ org.slf4j.api
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-Vendor: Agem Bilişim
 Import-Package: org.codehaus.jackson.map,
