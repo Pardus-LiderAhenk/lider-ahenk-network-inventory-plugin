@@ -113,7 +113,7 @@ public class MultipleFileTransferTaskDialog extends DefaultTaskDialog {
 		
 		Map<String, Object> parameterMap = new HashMap<String, Object>();
 		parameterMap.put("encodedFile", encodedFile);
-		parameterMap.put("ahenkLocalPath", txtDestDirectory.getText());
+		parameterMap.put("localPath", txtDestDirectory.getText());
 		
 		return parameterMap;
 	}
