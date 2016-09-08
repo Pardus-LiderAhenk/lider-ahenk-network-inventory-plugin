@@ -12,4 +12,6 @@ public class NetworkInventoryConstants {
 
 	public static final String GET_SCAN_RESULT_COMMAND = "GET-SCAN-RESULT";
 
+	public static final String MULTIPLE_FILE_TRANSFER_COMMAND = "MULTIPLE-FILE-TRANSFER";
+
 }
