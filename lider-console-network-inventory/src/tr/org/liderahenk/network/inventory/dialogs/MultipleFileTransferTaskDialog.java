@@ -53,7 +53,7 @@ public class MultipleFileTransferTaskDialog extends DefaultTaskDialog {
 		cmpMain.setLayout(new GridLayout(1, false));
 		
 		Label lblInfo = new Label(cmpMain, SWT.NONE | SWT.SINGLE);
-		lblInfo.setText(Messages.getString("SELECT_FILE_AND_DESTINATION_DIRECTORY"));
+		lblInfo.setText(Messages.getString("SELECT_FILE_TO_SEND"));
 		
 		Composite cmpBrowseFile= new Composite(parent, SWT.NONE);
 		cmpBrowseFile.setLayout(new GridLayout(2, false));
@@ -109,11 +109,18 @@ public class MultipleFileTransferTaskDialog extends DefaultTaskDialog {
 		
 		// Read file
 		byte[] fileArray = readFileAsByteArray(txtFilePath.getText());
+		
 		String encodedFile = DatatypeConverter.printBase64Binary(fileArray);
 		
 		Map<String, Object> parameterMap = new HashMap<String, Object>();
 		parameterMap.put("encodedFile", encodedFile);
-		parameterMap.put("localPath", txtDestDirectory.getText());
+		
+		if (txtDestDirectory.getText().endsWith("/")) {
+			parameterMap.put("localPath", txtDestDirectory.getText());
+		} else {
+			parameterMap.put("localPath", txtDestDirectory.getText().trim() + "/");
+		}
+		parameterMap.put("fileName", Paths.get(txtFilePath.getText()).getFileName().toString());
 		
 		return parameterMap;
 	}
