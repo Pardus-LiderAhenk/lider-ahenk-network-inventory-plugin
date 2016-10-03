@@ -64,7 +64,7 @@ public class NetworkScanCommand implements ICommand, ITaskAwareCommand {
 	private ICommandDao commandDao;
 
 	private boolean executeOnAgent;
-
+	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public ICommandResult execute(ICommandContext context) {
@@ -222,7 +222,7 @@ public class NetworkScanCommand implements ICommand, ITaskAwareCommand {
 
 			return resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this, resultMap);
 		} else {
-			logger.info("Executing command for ahenk.");
+			logger.info("Executing command on Ahenk.");
 			return resultFactory.create(CommandResultStatus.OK, new ArrayList<String>(), this);
 		}
 	}
@@ -230,6 +230,12 @@ public class NetworkScanCommand implements ICommand, ITaskAwareCommand {
 	@Override
 	public void onTaskUpdate(ICommandExecutionResult result) {
 
+		// Do not take execute on agent value from gloabal variable
+		boolean executeOnAgent = (Boolean) result.getCommandExecution().getCommand().getTask().getParameterMap().get("executeOnAgent");
+
+		logger.info("CommandId: " + (getPluginName()
+				.equalsIgnoreCase(result.getCommandExecution().getCommand().getTask().getPlugin().getName()) ? "true" : "false"));
+		
 		if (executeOnAgent && result.getCommandExecution().getCommand().getTask() != null
 				&& getCommandId()
 						.equalsIgnoreCase(result.getCommandExecution().getCommand().getTask().getCommandClsId())
