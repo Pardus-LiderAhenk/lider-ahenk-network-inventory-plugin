@@ -15,6 +15,7 @@ class GetFile(AbstractPlugin):
 
         self.logger = self.get_logger()
         self.logger.debug('[NETWORK INVENTORY] Initialized')
+
         self.task = task
         self.context = context
         self.message_code = self.get_message_code()
