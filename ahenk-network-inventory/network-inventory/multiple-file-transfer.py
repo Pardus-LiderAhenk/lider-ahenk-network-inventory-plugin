@@ -14,7 +14,7 @@ class GetFile(AbstractPlugin):
         super(AbstractPlugin, self).__init__()
 
         self.logger = self.get_logger()
-        self.logger.debug('[NETWORK INVENTORY] Initialized')
+        self.logger.debug('Initialized')
 
         self.task = task
         self.context = context
@@ -22,16 +22,16 @@ class GetFile(AbstractPlugin):
 
     def handle_task(self):
         parameter_map = self.task
-        self.logger.debug('[NETWORK INVENTORY] Handling task')
+        self.logger.debug('Handling task')
 
-        self.logger.debug('[NETWORK INVENTORY] Fetching file from: {0} to {1}'.format(parameter_map['remotePath'],
-                                                                                      parameter_map['localPath']))
+        self.logger.debug('Fetching file from: {0} to {1}'.format(parameter_map['remotePath'],
+                                                                  parameter_map['localPath']))
 
         try:
             self.context.fetch_file(parameter_map['remotePath'], local_path=parameter_map['localPath'],
                                     file_name=parameter_map['fileName'])
 
-            self.logger.debug('[NETWORK INVENTORY] Creating response')
+            self.logger.debug('Creating response')
             self.context.create_response(code=self.message_code.TASK_PROCESSED.value,
                                          message='NETWORK INVENTORY dosya paylaşım görevi başarıyla çalıştırıldı.')
 

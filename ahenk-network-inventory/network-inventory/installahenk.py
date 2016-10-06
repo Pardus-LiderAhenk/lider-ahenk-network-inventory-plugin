@@ -38,7 +38,7 @@ class InstallAhenk(AbstractPlugin):
         self.deb_path = '/tmp/ahenk.deb'
         self.command = 'gdebi -n {}'.format(self.deb_path)
 
-        self.logger.debug('[NETWORK INVENTORY - installahenk command] Initialized')
+        self.logger.debug('Initialized')
 
     def handle_task(self):
         try:
@@ -51,10 +51,10 @@ class InstallAhenk(AbstractPlugin):
 
             self.context.create_response(code=self.message_code.TASK_PROCESSED.value,
                                          message='NETWORK INVENTORY görevi başarıyla çalıştırıldı.')
-            self.logger.info('[NETWORK INVENTORY] NETWORK INVENTORY task is handled successfully')
+            self.logger.info('NETWORK INVENTORY task is handled successfully')
         except Exception as e:
             self.logger.error(
-                '[NETWORK INVENTORY] A problem occured while handling NETWORK INVENTORY task: {0}'.format(str(e)))
+                'A problem occured while handling NETWORK INVENTORY task: {0}'.format(str(e)))
             self.context.create_response(code=self.message_code.TASK_ERROR.value,
                                          message='NETWORK INVENTORY görevi çalıştırılırken bir hata oluştu.')
 
@@ -68,7 +68,7 @@ class InstallAhenk(AbstractPlugin):
         session.set_combine_stderr(True)
         session.get_pty()
 
-        self.logger.debug('[NETWORK INVENTORY - installahenk command] SSH connection has been started.')
+        self.logger.debug('SSH connection has been started.')
 
         if self.install_method == 'WGET':
             urllib.request.urlretrieve(self.download_url, self.deb_path)
@@ -84,9 +84,7 @@ class InstallAhenk(AbstractPlugin):
             stdin.write(self.password + '\n')
             stdin.flush()
 
-        self.logger.debug('[NETWORK INVENTORY - installahenk command] Ahenk has been installed.')
-
-        print(stdout.read())
+        self.logger.debug('Ahenk has been installed.')
 
     def use_key(self, host):
         ssh = paramiko.SSHClient()
@@ -96,7 +94,7 @@ class InstallAhenk(AbstractPlugin):
         key = paramiko.RSAKey.from_private_key_file(privatekeyfile)
         ssh.connect(host, username=self.username, pkey=key, password=self.passphrase)
 
-        self.logger.debug('[NETWORK INVENTORY - installahenk command] SSH connection has been started.')
+        self.logger.debug('SSH connection has been started.')
 
         if self.install_method == 'WGET':
             urllib.request.urlretrieve(self.download_url, self.deb_path)
@@ -108,11 +106,7 @@ class InstallAhenk(AbstractPlugin):
             stdin, stdout, stderr = ssh.exec_command(self.install_command)
             # TODO need to write user password (because of sudo command)
 
-        self.logger.debug('[NETWORK INVENTORY - installahenk command] Ahenk has been installed.')
-
-        print(stdout.read())
-
-        self.logger.debug('[NETWORK INVENTORY - installahenk command] Ahenk has been installed.')
+        self.logger.debug('Ahenk has been installed.')
 
 
 def handle_task(task, context):

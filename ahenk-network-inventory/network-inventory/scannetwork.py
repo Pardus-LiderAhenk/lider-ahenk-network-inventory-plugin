@@ -8,7 +8,6 @@ https://www.python.org/dev/peps/pep-0008/
 """
 
 import json
-import xml.etree.ElementTree as Et
 
 from base.plugin.abstract_plugin import AbstractPlugin
 
@@ -17,56 +16,56 @@ class ScanNetwork(AbstractPlugin):
     def __init__(self, task, context):
         super(AbstractPlugin, self).__init__()
 
-        self.logger.debug('[NETWORK INVENTORY] Initialized')
+        self.logger.debug('Initialized')
         self.task = task
         self.context = context
         self.logger = self.get_logger()
         self.message_code = self.get_message_code()
 
-        self.logger.debug('[NETWORK INVENTORY] Creating nmap command')
+        self.logger.debug('Creating nmap command')
         uuid = self.generate_uuid()
         self.file_path = self.Ahenk.received_dir_path() + uuid
         self.command = self.get_nmap_command()
 
     def handle_task(self):
-        self.logger.debug('[NETWORK INVENTORY] Handling task')
+        self.logger.debug('Handling task')
         try:
-            self.logger.debug('[NETWORK INVENTORY] Executing command: {0}'.format(self.command))
+            self.logger.debug('Executing command: {0}'.format(self.command))
             result_code, p_out, p_err = self.execute(self.command)
 
             if result_code != 0:
-                self.logger.error('[NETWORK INVENTORY] Error occurred while executing nmap command')
-                self.logger.error('[NETWORK INVENTORY] Error message: {0}'.format(str(p_err)))
+                self.logger.error('Error occurred while executing nmap command')
+                self.logger.error('Error message: {0}'.format(str(p_err)))
                 self.context.create_response(code=self.message_code.TASK_ERROR.value,
                                              message='NETWORK INVENTORY Nmap komutu çalıştırılırken hata oluştu')
             else:
-                self.logger.debug('[NETWORK INVENTORY] Nmap command successfully executed')
+                self.logger.debug('Nmap command successfully executed')
 
                 data = {}
-                self.logger.debug('[NETWORK INVENTORY] Getting md5 of file')
+                self.logger.debug('Getting md5 of file')
                 md5sum = self.get_md5_file(str(self.file_path))
 
-                self.logger.debug('[NETWORK INVENTORY] {0} renaming to {1}'.format(self.file_path, md5sum))
+                self.logger.debug('{0} renaming to {1}'.format(self.file_path, md5sum))
                 self.rename_file(self.file_path, self.Ahenk.received_dir_path() + md5sum)
-                self.logger.debug('[NETWORK INVENTORY] Renamed file.')
+                self.logger.debug('Renamed file.')
 
                 data['md5'] = md5sum
 
-                self.logger.debug('[NETWORK INVENTORY] Creating response message')
+                self.logger.debug('Creating response message')
                 self.context.create_response(code=self.message_code.TASK_PROCESSED.value,
                                              message='NETWORK INVENTORY görevi başarıyla çalıştırıldı.',
                                              data=json.dumps(data),
                                              content_type=self.get_content_type().TEXT_PLAIN.value)
 
-                self.logger.info('[NETWORK INVENTORY] NETWORK INVENTORY task is handled successfully')
+                self.logger.info('NETWORK INVENTORY task is handled successfully')
         except Exception as e:
             self.logger.error(
-                '[NETWORK INVENTORY] A problem occured while handling NETWORK INVENTORY task: {0}'.format(str(e)))
+                'A problem occured while handling NETWORK INVENTORY task: {0}'.format(str(e)))
             self.context.create_response(code=self.message_code.TASK_ERROR.value,
                                          message='NETWORK INVENTORY görevi çalıştırılırken bir hata oluştu.')
 
     def get_result(self, root):
-        self.logger.debug('[NETWORK INVENTORY] Parsing nmap xml output')
+        self.logger.debug('Parsing nmap xml output')
         result_list = {}
         index = 1
 
@@ -80,17 +79,17 @@ class ScanNetwork(AbstractPlugin):
             status = host.find('status')
             self.logger.debug('STATUS: ++++++  ' + str(status))
 
-            self.logger.debug('[NETWORK INVENTORY] Getting hostname list')
+            self.logger.debug('Getting hostname list')
             result['hostnames'] = self.get_hostname_list(host_names)
-            self.logger.debug('[NETWORK INVENTORY] Getting port list')
+            self.logger.debug('Getting port list')
             result['ports'] = self.get_port_list(ports)
-            self.logger.debug('[NETWORK INVENTORY] Getting os list')
+            self.logger.debug('Getting os list')
             result['os'] = self.get_os_list(os)
-            self.logger.debug('[NETWORK INVENTORY] Getting distance list')
+            self.logger.debug('Getting distance list')
             result['distance'] = self.get_distance(distance)
-            self.logger.debug('[NETWORK INVENTORY] Getting IP, MAC and MAC provider list')
+            self.logger.debug('Getting IP, MAC and MAC provider list')
             result['ipAddress'], result['macAddress'], result['macProvider'] = self.get_addresses(host)
-            self.logger.debug('[NETWORK INVENTORY] Getting status')
+            self.logger.debug('Getting status')
             result['status'] = self.get_status(host)
 
             result_list[index] = result
