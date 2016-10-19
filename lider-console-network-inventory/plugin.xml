@@ -46,35 +46,7 @@
 		<menuContribution
       		allPopups="false"
             locationURI="popup:tr.org.liderahenk.liderconsole.menus.ApplyTask?after=additions">
- 				<command
-           commandId="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask"
-           icon="icons/16/network.png"
-           id="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask"
-           tooltip="%command.task">
-        <visibleWhen>
-           <and>
-              <with
-                    variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.available">
-                 <equals
-                       value="true">
-                 </equals>
-              </with>
-              <with
-                    variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isAhenkSelected">
-                 <equals
-                       value="true">
-                 </equals>
-              </with>
-              <with
-                    variable="tr.org.liderahenk.liderconsole.core.sourceproviders.main.isSingleEntrySelected">
-                 <equals
-                       value="true">
-                 </equals>
-              </with>
-           </and>
-        </visibleWhen>
-           		</command>
-			<command
+ 			<command
 	           commandId="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask"
 	           icon="icons/16/network.png"
 	           id="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask"
@@ -100,12 +72,8 @@
 		                 </equals>
 		              </with>
 		           </and>
-		        </visibleWhen>           
+		        </visibleWhen>
 			</command>
-		</menuContribution>
-		<menuContribution
-			allPopups="false"
-			locationURI="popup:tr.org.liderahenk.liderconsole.menus.ApplyTask?after=additions">
  			<command commandId="tr.org.liderahenk.liderconsole.commands.NetworkInventoryMultipleFileTransfer"
  				icon="icons/16/network.png"
            		id="tr.org.liderahenk.liderconsole.commands.NetworkInventoryMultipleFileTransfer"
@@ -138,6 +106,7 @@
 	        	</visibleWhen>
        		</command>
 		</menuContribution>
+		
          <menuContribution
             locationURI="menu:tr.org.liderahenk.liderconsole.menus.LiderMain?after=additions">
             <command
