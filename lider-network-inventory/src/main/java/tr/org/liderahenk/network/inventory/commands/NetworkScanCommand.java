@@ -64,7 +64,7 @@ public class NetworkScanCommand implements ICommand, ITaskAwareCommand {
 	private ICommandDao commandDao;
 
 	private boolean executeOnAgent;
-	
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public ICommandResult execute(ICommandContext context) {
@@ -231,16 +231,12 @@ public class NetworkScanCommand implements ICommand, ITaskAwareCommand {
 	public void onTaskUpdate(ICommandExecutionResult result) {
 
 		// Do not take execute on agent value from gloabal variable
-		boolean executeOnAgent = (Boolean) result.getCommandExecution().getCommand().getTask().getParameterMap().get("executeOnAgent");
+		boolean executeOnAgent = (Boolean) result.getCommandExecution().getCommand().getTask().getParameterMap()
+				.get("executeOnAgent");
+		logger.info("CommandId: " + (getPluginName().equalsIgnoreCase(
+				result.getCommandExecution().getCommand().getTask().getPlugin().getName()) ? "true" : "false"));
 
-		logger.info("CommandId: " + (getPluginName()
-				.equalsIgnoreCase(result.getCommandExecution().getCommand().getTask().getPlugin().getName()) ? "true" : "false"));
-		
-		if (executeOnAgent && result.getCommandExecution().getCommand().getTask() != null
-				&& getCommandId()
-						.equalsIgnoreCase(result.getCommandExecution().getCommand().getTask().getCommandClsId())
-				&& getPluginName()
-						.equalsIgnoreCase(result.getCommandExecution().getCommand().getTask().getPlugin().getName())) {
+		if (executeOnAgent) {
 			logger.info("Executing on task update: SCANNETWORK");
 
 			// Get complete result from database with result id
@@ -296,7 +292,6 @@ public class NetworkScanCommand implements ICommand, ITaskAwareCommand {
 			logger.info("Saving entity object");
 			pluginDbService.save(scanResult);
 		}
-
 	}
 
 	/**
