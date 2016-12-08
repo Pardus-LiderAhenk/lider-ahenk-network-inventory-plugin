@@ -1,5 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>tr.org.liderahenk</groupId>
@@ -31,7 +31,7 @@
 		<lider.ahenk.version>1.0.0-SNAPSHOT</lider.ahenk.version>
 		<jackson.version>1.9.13</jackson.version>
 		<aries.blueprint.version>1.1.0</aries.blueprint.version>
-		<tycho.version>0.23.0</tycho.version>
+		<tycho.version>0.25.0</tycho.version>
 		<jsch.version>0.1.53</jsch.version>
 		<geronimo.jpa.version>1.1</geronimo.jpa.version>
 		<commons.codec.version>1.6</commons.codec.version>
@@ -53,7 +53,8 @@
 		<module>lider-network-inventory</module>
 		<module>lider-network-inventory-feature</module>
 		<module>lider-network-inventory-db</module>
-	</modules>
+    <module>lider-console-network-inventory-feature</module>
+  </modules>
 
 	<build>
 		<plugins>
