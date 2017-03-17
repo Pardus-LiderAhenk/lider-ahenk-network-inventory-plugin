@@ -35,7 +35,29 @@ public class MultipleFileTransferTaskDialog extends DefaultTaskDialog {
 
 	private Text txtFilePath;
 	private Text txtDestDirectory;
+
+	private Button btnEditUserPermissions;
+
+	private Button btnCanReadUser;
+	private Button btnCanWriteUser;
+	private Button btnCanExecuteUser;
+
+	private Text txtFileOwnerUser;
+
+	private Button btnEditGroupPermissions;
+
+	private Button btnCanReadGroup;
+	private Button btnCanWriteGroup;
+	private Button btnCanExecuteGroup;
+
+	private Text txtFileOwnerGroup;
+
+	private Button btnEditOtherPermissions;
 	
+	private Button btnCanReadOther;
+	private Button btnCanWriteOther;
+	private Button btnCanExecuteOther;
+
 	public MultipleFileTransferTaskDialog(Shell parentShell, Set<String> dnSet) {
 		super(parentShell, dnSet);
 	}
@@ -92,6 +114,145 @@ public class MultipleFileTransferTaskDialog extends DefaultTaskDialog {
 		txtDestDirectory = new Text(cmpFileDest, SWT.NONE | SWT.BORDER | SWT.SINGLE);
 		txtDestDirectory.setMessage(Messages.getString("ENTER_DESTINATION_DIRECTORY_AT_AHENK"));
 		
+		final Composite cmpPermissions = new Composite(parent, SWT.BORDER);
+		cmpPermissions.setLayout(new GridLayout(3, true));
+		cmpPermissions.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+		final Composite cmpUserPermissions = new Composite(cmpPermissions, SWT.BORDER);
+		cmpUserPermissions.setLayout(new GridLayout(1, true));
+		cmpUserPermissions.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		
+		btnEditUserPermissions = new Button(cmpUserPermissions, SWT.CHECK | SWT.BORDER);
+		btnEditUserPermissions.setText(Messages.getString("EDIT_USER_PERMISSONS"));
+		btnEditUserPermissions.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				if (btnEditUserPermissions.getSelection()) {
+					btnCanReadUser.setEnabled(true);
+					btnCanWriteUser.setEnabled(true);
+					btnCanExecuteUser.setEnabled(true);
+					txtFileOwnerUser.setEnabled(true);
+				} else {
+					btnCanReadUser.setEnabled(false);
+					btnCanWriteUser.setEnabled(false);
+					btnCanExecuteUser.setEnabled(false);
+					txtFileOwnerUser.setEnabled(false);
+				}
+			}
+			@Override
+			public void widgetDefaultSelected(SelectionEvent event) {
+			}
+		});
+
+		final Composite cmpUserRwe = new Composite(cmpUserPermissions, SWT.NONE);
+		cmpUserRwe.setLayout(new GridLayout(3, true));
+
+		btnCanReadUser = new Button(cmpUserRwe, SWT.CHECK | SWT.BORDER);
+		btnCanReadUser.setText(Messages.getString("READ"));
+		btnCanReadUser.setEnabled(false);
+		btnCanWriteUser = new Button(cmpUserRwe, SWT.CHECK | SWT.BORDER);
+		btnCanWriteUser.setText(Messages.getString("WRITE"));
+		btnCanWriteUser.setEnabled(false);
+		btnCanExecuteUser = new Button(cmpUserRwe, SWT.CHECK | SWT.BORDER);
+		btnCanExecuteUser.setText(Messages.getString("EXECUTE"));
+		btnCanExecuteUser.setEnabled(false);
+
+		final Composite cmpUserOwner = new Composite(cmpUserPermissions, SWT.NONE);
+		cmpUserOwner.setLayout(new GridLayout(2, false));
+
+		Label lblFileOwnerUser = new Label(cmpUserOwner, SWT.NONE);
+		lblFileOwnerUser.setText(Messages.getString("USER_OWNER"));
+		
+		txtFileOwnerUser = new Text(cmpUserOwner, SWT.NONE | SWT.BORDER | SWT.SINGLE);
+		txtFileOwnerUser.setMessage(Messages.getString("ENTER_USER_OWNER_OF_FILE"));
+		txtFileOwnerUser.setEnabled(false);
+		
+		final Composite cmpGroupPermissions = new Composite(cmpPermissions, SWT.BORDER);
+		cmpGroupPermissions.setLayout(new GridLayout(1, true));
+		cmpGroupPermissions.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		
+		btnEditGroupPermissions = new Button(cmpGroupPermissions, SWT.CHECK | SWT.BORDER);
+		btnEditGroupPermissions.setText(Messages.getString("EDIT_GROUP_PERMISSONS"));
+		btnEditGroupPermissions.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				if (btnEditGroupPermissions.getSelection()) {
+					btnCanReadGroup.setEnabled(true);
+					btnCanWriteGroup.setEnabled(true);
+					btnCanExecuteGroup.setEnabled(true);
+					txtFileOwnerGroup.setEnabled(true);
+				} else {
+					btnCanReadGroup.setEnabled(false);
+					btnCanWriteGroup.setEnabled(false);
+					btnCanExecuteGroup.setEnabled(false);
+					txtFileOwnerGroup.setEnabled(false);
+				}
+			}
+			@Override
+			public void widgetDefaultSelected(SelectionEvent event) {
+			}
+		});
+		
+		final Composite cmpGroupRwe = new Composite(cmpGroupPermissions, SWT.NONE);
+		cmpGroupRwe.setLayout(new GridLayout(3, true));
+		
+		btnCanReadGroup = new Button(cmpGroupRwe, SWT.CHECK | SWT.BORDER);
+		btnCanReadGroup.setText(Messages.getString("READ"));
+		btnCanReadGroup.setEnabled(false);
+		btnCanWriteGroup = new Button(cmpGroupRwe, SWT.CHECK | SWT.BORDER);
+		btnCanWriteGroup.setText(Messages.getString("WRITE"));
+		btnCanWriteGroup.setEnabled(false);
+		btnCanExecuteGroup = new Button(cmpGroupRwe, SWT.CHECK | SWT.BORDER);
+		btnCanExecuteGroup.setText(Messages.getString("EXECUTE"));
+		btnCanExecuteGroup.setEnabled(false);
+		
+		final Composite cmpGroupOwner = new Composite(cmpGroupPermissions, SWT.NONE);
+		cmpGroupOwner.setLayout(new GridLayout(2, false));
+		
+		Label lblFileOwnerGroup = new Label(cmpGroupOwner, SWT.NONE);
+		lblFileOwnerGroup.setText(Messages.getString("GROUP_OWNER"));
+		
+		txtFileOwnerGroup = new Text(cmpGroupOwner, SWT.NONE | SWT.BORDER | SWT.SINGLE);
+		txtFileOwnerGroup.setMessage(Messages.getString("ENTER_GROUP_OWNER_OF_FILE"));
+		txtFileOwnerGroup.setEnabled(false);
+		
+		final Composite cmpOtherPermissions = new Composite(cmpPermissions, SWT.BORDER);
+		cmpOtherPermissions.setLayout(new GridLayout(1, true));
+		cmpOtherPermissions.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		
+		btnEditOtherPermissions = new Button(cmpOtherPermissions, SWT.CHECK | SWT.BORDER);
+		btnEditOtherPermissions.setText(Messages.getString("EDIT_OTHER_PERMISSONS"));
+		btnEditOtherPermissions.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				if (btnEditOtherPermissions.getSelection()) {
+					btnCanReadOther.setEnabled(true);
+					btnCanWriteOther.setEnabled(true);
+					btnCanExecuteOther.setEnabled(true);
+				} else {
+					btnCanReadOther.setEnabled(false);
+					btnCanWriteOther.setEnabled(false);
+					btnCanExecuteOther.setEnabled(false);
+				}
+			}
+			@Override
+			public void widgetDefaultSelected(SelectionEvent event) {
+			}
+		});
+
+		final Composite cmpOtherRwe = new Composite(cmpOtherPermissions, SWT.NONE);
+		cmpOtherRwe.setLayout(new GridLayout(3, true));
+
+		btnCanReadOther = new Button(cmpOtherRwe, SWT.CHECK | SWT.BORDER);
+		btnCanReadOther.setText(Messages.getString("READ"));
+		btnCanReadOther.setEnabled(false);
+		btnCanWriteOther = new Button(cmpOtherRwe, SWT.CHECK | SWT.BORDER);
+		btnCanWriteOther.setText(Messages.getString("WRITE"));
+		btnCanWriteOther.setEnabled(false);
+		btnCanExecuteOther = new Button(cmpOtherRwe, SWT.CHECK | SWT.BORDER);
+		btnCanExecuteOther.setText(Messages.getString("EXECUTE"));
+		btnCanExecuteOther.setEnabled(false);
+
 		return cmpMain;
 	}
 
@@ -121,6 +282,35 @@ public class MultipleFileTransferTaskDialog extends DefaultTaskDialog {
 			parameterMap.put("localPath", txtDestDirectory.getText().trim() + "/");
 		}
 		parameterMap.put("fileName", Paths.get(txtFilePath.getText()).getFileName().toString());
+
+		if (btnEditUserPermissions.getSelection()) {
+			parameterMap.put("editUserPermissions", btnEditUserPermissions.getSelection());
+			
+			parameterMap.put("readUser", btnCanReadUser.getSelection());
+			parameterMap.put("writeUser", btnCanWriteUser.getSelection());
+			parameterMap.put("executeUser", btnCanExecuteUser.getSelection());
+			
+			parameterMap.put("ownerUser", txtFileOwnerUser.getText());
+		}
+
+		if (btnEditGroupPermissions.getSelection()) {
+			parameterMap.put("editGroupPermissions", btnEditGroupPermissions.getSelection());
+			
+			parameterMap.put("readGroup", btnCanReadGroup.getSelection());
+			parameterMap.put("writeGroup", btnCanWriteGroup.getSelection());
+			parameterMap.put("executeGroup", btnCanExecuteGroup.getSelection());
+			
+			parameterMap.put("ownerGroup", txtFileOwnerGroup.getText());
+		}
+
+		if (btnEditOtherPermissions.getSelection()) {
+			parameterMap.put("editOtherPermissions", btnEditOtherPermissions.getSelection());
+			
+			parameterMap.put("readOther", btnCanReadOther.getSelection());
+			parameterMap.put("writeOther", btnCanWriteOther.getSelection());
+			parameterMap.put("executeOther", btnCanExecuteOther.getSelection());
+		}
+		
 		
 		return parameterMap;
 	}
