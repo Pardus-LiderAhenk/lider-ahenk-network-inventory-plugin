@@ -41,8 +41,8 @@ class GetFile(AbstractPlugin):
                     permissions += '+w' if parameter_map['writeUser'] else '-w'
                     permissions += '+x,' if parameter_map['executeUser'] else '-x,'
                     if parameter_map['ownerUser']:
-                        chown_command = 'chown ' + parameter_map['ownerUser'] + ': ' + parameter_map['localPath'] \
-                                        + parameter_map['fileName']
+                        chown_command = 'chown ' + parameter_map['ownerUser'] + ': "' + parameter_map['localPath'] \
+                                        + parameter_map['fileName'] + '"'
                         self.logger.debug('Executing chown: ' + chown_command)
                         result_code, p_out, p_err = self.execute(chown_command)
                         if result_code != 0:
@@ -55,9 +55,9 @@ class GetFile(AbstractPlugin):
                     permissions += '+w' if parameter_map['writeGroup'] else '-w'
                     permissions += '+x,' if parameter_map['executeGroup'] else '-x,'
                     if parameter_map['ownerGroup']:
-                        chown_command = 'chown ' + ':' + parameter_map['ownerGroup'] + ' ' \
+                        chown_command = 'chown ' + ':' + parameter_map['ownerGroup'] + ' "' \
                                         + parameter_map['localPath'] \
-                                        + parameter_map['fileName']
+                                        + parameter_map['fileName'] + '"'
                         self.logger.debug('Executing chown: ' + chown_command)
                         result_code, p_out, p_err = self.execute(chown_command)
                         if result_code != 0:
@@ -70,8 +70,8 @@ class GetFile(AbstractPlugin):
                     permissions += '+w' if parameter_map['writeOther'] else '-w'
                     permissions += '+x' if parameter_map['executeOther'] else '-x'
                 if permissions:
-                    chmod_command = 'chmod ' + permissions + ' ' + parameter_map['localPath'] \
-                                    + parameter_map['fileName']
+                    chmod_command = 'chmod ' + permissions + ' "' + parameter_map['localPath'] \
+                                    + parameter_map['fileName'] + '"'
                     self.logger.debug('Executing chmod: ' + chmod_command)
                     result_code, p_out, p_err = self.execute(chmod_command)
                     if result_code != 0:
