@@ -136,5 +136,27 @@
   		<task code="SCANNETWORK" label="%command.task" />
 		<plugin name="network-inventory" label="%plugin.label" />
   	</extension>
+	 
+	 
+	 	<!-- Add extension point contribution for "task execution" dialogs -->
+	<extension
+  		point="tr.org.liderahenk.liderconsole.core.taskmenu">
+  		<taskItem label="%command.task" pluginName="network-inventory" pluginVersion="1.0.0" taskCommandId="tr.org.liderahenk.liderconsole.commands.NetworkInventory" />
+  	</extension>
+  	
+	 	<!-- Add extension point contribution for "task execution" dialogs -->
+	<extension
+  		point="tr.org.liderahenk.liderconsole.core.taskmenu">
+  		<taskItem label="%command.task" pluginName="network-inventory" pluginVersion="1.0.0" taskCommandId="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask" />
+  	</extension>
+  	
+	 	<!-- Add extension point contribution for "task execution" dialogs -->
+	<extension
+  		point="tr.org.liderahenk.liderconsole.core.taskmenu">
+  		<taskItem label="%command.task" pluginName="network-inventory" pluginVersion="1.0.0" taskCommandId="tr.org.liderahenk.liderconsole.commands.NetworkInventoryMultipleFileTransfer" />
+  	</extension>
+  	
+
+	 
 	   
 </plugin>
