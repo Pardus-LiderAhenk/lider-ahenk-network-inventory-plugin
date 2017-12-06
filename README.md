@@ -33,7 +33,7 @@ Network inventory plugin for [Lider Ahenk project](http://www.liderahenk.org.tr)
 
 #### Ahenk
 
-1. Create a soft link for _ahenk-network-inventory/network-inventory_ directory via `sudo ln -s lider-ahenk-network-inventory/ahenk-network-inventory/network-inventory/ /opt/ahenk/plugins`
+1. Create a soft link for _ahenk-network-inventory/network-inventory_ directory via `sudo ln -s lider-ahenk-network-inventory/ahenk-network-inventory/network-inventory/ /usr/share/ahenk/plugins`
 
 ## Contribution
 
