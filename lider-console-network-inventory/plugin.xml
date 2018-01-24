@@ -142,7 +142,7 @@
 	<extension
   		point="tr.org.liderahenk.liderconsole.core.taskmenu">
   		<taskItem label="%command.task" pluginName="network-inventory" 
-  		pluginVersion="1.0.0" taskCommandId="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask" 
+  		pluginVersion="1.1" taskCommandId="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask" 
   		description="Ağdaki cihazları belirtilen ip aralığı ve port aralığına göre listelemek, bulunan cihazlara ahenk yüklemek ve dosya paylaşımı yapmak için geliştirilmiştir.&#xA;Ağ taraması yapmak için tıklayınız.." 
   		imagePath="network.png"/>
   	</extension>
@@ -150,7 +150,7 @@
 	<extension
   		point="tr.org.liderahenk.liderconsole.core.taskmenu">
   		<taskItem label="%command.multiple.file.transfer.task" pluginName="network-inventory" 
-  		pluginVersion="1.0.0" taskCommandId="tr.org.liderahenk.liderconsole.commands.NetworkInventoryMultipleFileTransfer" selectionType="multi" 
+  		pluginVersion="1.1" taskCommandId="tr.org.liderahenk.liderconsole.commands.NetworkInventoryMultipleFileTransfer" selectionType="multi" 
   		description="Seçilen ahenk/ahenklere dosya paylaşımı yapmayı sağlayan eklentidir.&#xA;Dosya paylaşımı yapmak için tıklayınız.."
   		imagePath="share.png"/>
   	</extension>

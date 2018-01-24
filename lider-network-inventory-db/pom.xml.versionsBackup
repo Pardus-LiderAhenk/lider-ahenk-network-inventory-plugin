@@ -5,10 +5,10 @@
 	<parent>
 		<groupId>tr.org.liderahenk</groupId>
 		<artifactId>network-inventory</artifactId>
-		<version>1.1</version>
+		<version>1.0.0</version>
 	</parent>
 
-	<artifactId>lider-network-inventory</artifactId>
+	<artifactId>lider-network-inventory-db</artifactId>
 	<url>http://www.liderahenk.org.tr</url>
 	<packaging>bundle</packaging>
 
@@ -42,72 +42,20 @@
 			<groupId>org.apache.geronimo.specs</groupId>
 			<artifactId>geronimo-jpa_2.0_spec</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>tr.org.liderahenk</groupId>
-			<artifactId>lider-network-inventory-db</artifactId>
-			<version>1.1</version>
-			<type>bundle</type>
-		</dependency>
-		<dependency>
-			<groupId>commons-codec</groupId>
-			<artifactId>commons-codec</artifactId>
-		</dependency>
 	</dependencies>
 
 	<build>
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>true</filtering>
-			</resource>
-		</resources>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-resources-plugin</artifactId>
-				<version>${maven.resources.plugin.version}</version>
-				<executions>
-					<execution>
-						<id>filter</id>
-						<phase>generate-resources</phase>
-						<goals>
-							<goal>resources</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>build-helper-maven-plugin</artifactId>
-				<version>${build.helper.maven.plugin.version}</version>
-				<executions>
-					<execution>
-						<id>attach-artifacts</id>
-						<phase>package</phase>
-						<goals>
-							<goal>attach-artifact</goal>
-						</goals>
-						<configuration>
-							<artifacts>
-								<artifact>
-									<file>target/classes/tr.org.liderahenk.network.inventory.cfg</file>
-									<type>cfg</type>
-								</artifact>
-							</artifacts>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-bundle-plugin</artifactId>
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<_removeheaders>Import-Service,Export-Service</_removeheaders>					
+						<_removeheaders>Import-Service,Export-Service</_removeheaders>	
+						<Fragment-Host>lider-persistence-mariadb;bundle-version="[1.0.0,2)"</Fragment-Host>
 						<Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
 						<Bundle-Version>${project.version}</Bundle-Version>
-						<Import-Package>tr.org.liderahenk.network.inventory.entities, !tr.org.liderahenk.network.inventory.*, !org.nmap4j.*, *</Import-Package>
 					</instructions>
 				</configuration>
 			</plugin>
