@@ -107,7 +107,7 @@
        		</command>
 		</menuContribution>
 		
-         <menuContribution
+         <!-- <menuContribution
             locationURI="menu:tr.org.liderahenk.liderconsole.menus.LiderMain?after=additions">
             <command
                   commandId="tr.org.liderahenk.liderconsole.commands.NetworkInventory"
@@ -115,7 +115,7 @@
                   icon="icons/16/network.png"
                   tooltip="%command.name">
             </command>
-      </menuContribution>
+      </menuContribution> -->
   </extension>
   
 	<extension
@@ -139,13 +139,13 @@
 	 
 
 	 	<!-- Add extension point contribution for "task execution" dialogs -->
-	<extension
+	<!-- <extension
   		point="tr.org.liderahenk.liderconsole.core.taskmenu">
   		<taskItem label="%command.task" pluginName="network-inventory" 
   		pluginVersion="1.0.0" taskCommandId="tr.org.liderahenk.liderconsole.commands.NetworkInventoryTask" 
   		description="Ağdaki cihazları belirtilen ip aralığı ve port aralığına göre listelemek, bulunan cihazlara ahenk yüklemek ve dosya paylaşımı yapmak için geliştirilmiştir.&#xA;Ağ taraması yapmak için tıklayınız.." 
   		imagePath="network.png"/>
-  	</extension>
+  	</extension> -->
   	
 	<extension
   		point="tr.org.liderahenk.liderconsole.core.taskmenu">
